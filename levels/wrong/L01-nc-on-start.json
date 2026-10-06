@@ -1,0 +1,1 @@
+{"level": "L01", "diag": "nc_on_start", "note": "NC contact on Start_PB: motor runs when the button is NOT pressed", "lines": ["/Start_PB (Conveyor_Motor)"]}

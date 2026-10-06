@@ -1,0 +1,1 @@
+{"level": "L03", "diag": "nc_on_nc_stop", "note": "NC contact on EStop_OK: runs only while the E-stop is pressed", "lines": ["[Reset_PB | Ready] /EStop_OK Door_Closed (Ready)", "[Start_PB | Conveyor_Motor] Stop_PB Ready (Conveyor_Motor)"]}

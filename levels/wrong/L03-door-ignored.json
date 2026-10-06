@@ -1,0 +1,1 @@
+{"level": "L03", "diag": "door_not_checked", "note": "the door is never looked at", "lines": ["[Reset_PB | Ready] EStop_OK (Ready)", "[Start_PB | Conveyor_Motor] Stop_PB Ready (Conveyor_Motor)"]}

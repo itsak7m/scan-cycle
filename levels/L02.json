@@ -1,0 +1,98 @@
+{
+  "id": "L02", "order": 2,
+  "title": {"en": "Start / Stop with Seal-in", "ar": "تشغيل وإيقاف مع تثبيت"},
+  "concept": "NC-wired stop, parallel branch, seal-in",
+  "workOrder": {
+    "en": "Start starts the conveyor and it keeps running after you release. Stop stops it. The Stop button is wired normally closed. Stop always wins.",
+    "ar": "{{Start}} بيشغّل الناقل وبيضل شغّال بعد ما تفلت. {{Stop}} بيوقفه. زر {{Stop}} موصول مغلق عادةً ({{NC}}). الـ {{Stop}} دايمًا بيغلب."
+  },
+  "datasheets": [
+    {
+      "id": "stop_pb", "title": {"en": "Stop push button (wired NC)", "ar": "زر الإيقاف (موصول NC)"},
+      "rows": [["Tag", "Stop_PB  (I0.1)"], ["Wiring", "Normally closed (NC)"], ["Not pressed", "bit = 1"], ["Pressed", "bit = 0"], ["Wire broken", "bit = 0 (like pressed)"]],
+      "note": {"en": "NC wiring is fail-safe: a broken wire looks like a pressed Stop, so the machine stops.", "ar": "التوصيل {{NC}} آمن عند الفشل: سلك مقطوع بيشبه ضغط {{Stop}} فالماكينة بتوقف."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Stop_PB", "wave": "1111101111"}]}
+    },
+    {
+      "id": "seal_in", "title": {"en": "Seal-in behaviour", "ar": "سلوك التثبيت"},
+      "rows": [["Start pulse", "starts the motor"], ["After release", "motor keeps running"], ["Stop pressed", "motor stops, even if Start is held"]],
+      "note": {"en": "The motor output remembers itself: it feeds its own condition. This is the classic start/stop circuit.", "ar": "مخرج المحرك بيتذكر حاله: بيغذّي شرطه بنفسه. هاي دارة التشغيل والإيقاف الكلاسيكية."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Start_PB", "wave": "0010000000"}, {"name": "Stop_PB", "wave": "1111110111"}, {"name": "Conveyor_Motor", "wave": "0011111000"}]}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH"],
+  "tags": ["Start_PB", "Stop_PB", "Conveyor_Motor"],
+  "plant": {"stations": ["infeed", "filler", "exit"], "bottlesPerMin": 20},
+  "starter": {"lines": ["Start_PB (Conveyor_Motor)"]},
+  "example": {"mode": "completion", "title": {"en": "Complete the rung", "ar": "كمّل الـ rung"}},
+  "scenarios": [
+    {
+      "id": "L02-start-tap", "title": {"en": "A start tap keeps the motor running", "ar": "ضغطة {{Start}} بتخلّي المحرك شغّال"}, "seed": 21, "durationMs": 8000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"t": 490, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "Before Start the motor must be OFF", "ar": "قبل {{Start}} لازم المحرك يكون مطفي"}},
+        {"t": 500, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "Start must start the motor", "ar": "{{Start}} لازم يشغّل المحرك"}},
+        {"window": [800, 8000], "always": {"Conveyor_Motor": true}, "msg": {"en": "After you release Start the motor must keep running", "ar": "بعد ما تفلت {{Start}} لازم المحرك يضل شغّال"}}
+      ]
+    },
+    {
+      "id": "L02-stop-tap", "title": {"en": "A stop tap stops the motor", "ar": "ضغطة {{Stop}} بتوقف المحرك"}, "seed": 22, "durationMs": 8000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}, {"t": 3000, "press": "Stop_PB", "ms": 300}],
+      "asserts": [
+        {"t": 2990, "expect": {"Conveyor_Motor": true}, "tol": 0},
+        {"t": 3000, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "Stop must stop the motor in the same scan", "ar": "{{Stop}} لازم يوقف المحرك بنفس الـ scan"}},
+        {"window": [3000, 8000], "always": {"Conveyor_Motor": false}, "msg": {"en": "After Stop the motor must stay OFF", "ar": "بعد {{Stop}} لازم المحرك يضل مطفي"}}
+      ]
+    },
+    {
+      "id": "L02-stop-wins", "title": {"en": "Both pressed: Stop wins", "ar": "الاثنين مضغوطين: {{Stop}} بيغلب"}, "seed": 23, "durationMs": 7000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}, {"t": 2000, "press": "Start_PB", "ms": 1500}, {"t": 2000, "press": "Stop_PB", "ms": 500}],
+      "asserts": [
+        {"t": 1990, "expect": {"Conveyor_Motor": true}, "tol": 0},
+        {"window": [2000, 2490], "always": {"Conveyor_Motor": false}, "msg": {"en": "While Stop is pressed the motor must be OFF, even if Start is pressed too", "ar": "طول ما {{Stop}} مضغوط لازم المحرك يكون مطفي، حتى لو {{Start}} مضغوط"}},
+        {"t": 4500, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "Stop was released while Start was held, so the motor runs again and keeps running", "ar": "فلتّ {{Stop}} و{{Start}} لسا مضغوط، فالمحرك بيرجع يشتغل وبيضل شغّال"}}
+      ]
+    },
+    {
+      "id": "L02-wire-break", "title": {"en": "Wire break on the Stop button", "ar": "سلك {{Stop}} مقطوع"}, "seed": 24, "durationMs": 9000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}, {"t": 3000, "set": {"Stop_PB": false}}, {"t": 5000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"t": 2990, "expect": {"Conveyor_Motor": true}, "tol": 0},
+        {"t": 3000, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "A broken Stop wire reads 0, like a pressed Stop: the motor must stop", "ar": "سلك {{Stop}} مقطوع بيقرا 0 زي الضغط: لازم المحرك يوقف"}},
+        {"window": [5000, 9000], "always": {"Conveyor_Motor": false}, "msg": {"en": "With the Stop wire broken the motor must not start", "ar": "والسلك مقطوع لازم المحرك ما يشتغل"}}
+      ]
+    },
+    {
+      "id": "L02-stop-held", "title": {"en": "Start while Stop is held", "ar": "{{Start}} والـ {{Stop}} ممسوك"}, "seed": 25, "durationMs": 7000,
+      "events": [{"t": 0, "set": {"Stop_PB": false}}, {"t": 500, "press": "Start_PB", "ms": 300}, {"t": 2000, "set": {"Stop_PB": true}}, {"t": 2500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 1990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Start must not work while Stop is held", "ar": "{{Start}} ما لازم يشتغل والـ {{Stop}} ممسوك"}},
+        {"t": 3000, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "After Stop is released, Start works again", "ar": "بعد ما تفلت {{Stop}}، {{Start}} بيشتغل من جديد"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 6, "seedBase": 2000, "vary": {"shiftMs": [0, 600]}},
+  "diagnostics": ["nc_on_nc_stop", "no_seal_in", "seal_bypasses_stop", "nc_on_start", "double_coil"],
+  "hints": [
+    {"en": "Open the failed test. Is the motor running when it should stop, or does it stop when it should keep running?", "ar": "افتح الفحص اللي فشل. هل المحرك شغّال وهو لازم يوقف، ولا بيوقف وهو لازم يضل شغّال؟"},
+    {"en": "Two questions. (1) What keeps the motor on after you release Start? (2) What is the BIT of Stop_PB when nobody presses it?", "ar": "سؤالين. (1) شو اللي بيخلّي المحرك شغّال بعد ما تفلت {{Start}}؟ (2) شو قيمة البت تبع {{Stop_PB}} لما ما حدا بيضغطه؟"},
+    {"en": "The motor feeds itself: put a contact of the motor in parallel with Start. Stop goes in series, after the branch.", "ar": "المحرك بيغذّي نفسه: حط {{contact}} للمحرك على التوازي مع {{Start}}. والـ {{Stop}} على التوالي بعد الفرع.", "lines": ["[Start_PB | Conveyor_Motor]"]}
+  ],
+  "glossary": ["normally_closed", "seal_in", "latch", "holding_contact", "fail_safe", "wire_break", "momentary", "priority"],
+  "glossaryDefs": [
+    {"id": "normally_closed", "en": "normally closed (NC)", "ar": "مغلق عادةً", "ex": {"en": "A normally closed Stop button gives 1 until you press it.", "ar": "زر {{Stop}} المغلق عادةً بيعطي 1 لحد ما تضغطه."}},
+    {"id": "seal_in", "en": "seal-in", "ar": "تثبيت ذاتي", "ex": {"en": "A seal-in keeps the motor on after Start is released.", "ar": "الـ {{seal-in}} بيخلّي المحرك شغّال بعد ما تفلت {{Start}}."}},
+    {"id": "latch", "en": "latch", "ar": "قفل (يتذكّر الحالة)", "ex": {"en": "A latch remembers that Start was pressed.", "ar": "الـ {{latch}} بيتذكّر إنه {{Start}} انضغط."}},
+    {"id": "holding_contact", "en": "holding contact", "ar": "ملامس التثبيت", "ex": {"en": "The holding contact reads the motor output itself.", "ar": "{{holding contact}} بيقرا مخرج المحرك نفسه."}},
+    {"id": "fail_safe", "en": "fail-safe", "ar": "آمن عند الفشل", "ex": {"en": "NC wiring is fail-safe: a fault stops the machine.", "ar": "توصيل {{NC}} {{fail-safe}}: العطل بيوقف الماكينة."}},
+    {"id": "wire_break", "en": "wire break", "ar": "قطع السلك", "ex": {"en": "A wire break on Stop gives 0, so the motor stops.", "ar": "قطع سلك {{Stop}} بيعطي 0 فالمحرك بيوقف."}},
+    {"id": "momentary", "en": "momentary", "ar": "لحظي", "ex": {"en": "A momentary button is on only while you press it.", "ar": "الزر اللحظي شغّال بس وإنت بتضغطه."}},
+    {"id": "priority", "en": "priority", "ar": "أولوية", "ex": {"en": "Stop has priority over Start.", "ar": "{{Stop}} إله أولوية على {{Start}}."}}
+  ],
+  "explain": {"frames": [
+    {"en": "When {input} is pressed, {output} turns ON and keeps running.", "ar": "لما {input} ينضغط، {output} بيشتغل وبيضل شغّال."},
+    {"en": "The motor output feeds itself, so it stays ON after the button is released.", "ar": "مخرج المحرك بيغذّي نفسه، فبيضل شغّال بعد ما تفلت الزر."},
+    {"en": "When {input2} is pressed, {output} turns OFF, even if Start is pressed.", "ar": "لما {input2} ينضغط، {output} بينطفي، حتى لو {{Start}} مضغوط."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 1}, {"id": "clean", "noLint": true}]
+}

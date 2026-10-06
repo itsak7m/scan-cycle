@@ -1,0 +1,105 @@
+{
+  "id": "L03", "order": 3,
+  "title": {"en": "Interlocks", "ar": "القفل الأمني"},
+  "concept": "Permissives, safety feedback, no auto-restart",
+  "workOrder": {
+    "en": "The conveyor may run only when the E-stop is healthy and the door is closed. After an E-stop or an open door, the line must not restart by itself. The operator presses Reset, then Start.",
+    "ar": "الناقل بيشتغل بس لما زر الطوارئ سليم والباب مسكّر. بعد طوارئ أو باب مفتوح، الخط ما لازم يرجع يشتغل لحاله. المشغّل بيضغط {{Reset}} وبعدين {{Start}}."
+  },
+  "datasheets": [
+    {
+      "id": "safety_relay", "title": {"en": "Safety relay and E-stop", "ar": "رلاي السلامة وزر الطوارئ"},
+      "rows": [["Tag", "EStop_OK  (I0.2)"], ["Healthy", "bit = 1"], ["E-stop pressed or door open", "bit = 0"], ["Power cut", "done by the relay, in hardware"]],
+      "note": {"en": "The safety relay cuts motor power by itself. The PLC only gets the feedback. The PLC must still make sure the line does not restart alone.", "ar": "رلاي السلامة بيقطع كهربا المحرك لحاله. الـ {{PLC}} بس بياخد التغذية الراجعة. ولازم الـ {{PLC}} يتأكد إنه الخط ما يرجع يشتغل لحاله."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "EStop_OK", "wave": "1111000011"}, {"name": "Conveyor_Motor", "wave": "0111000000"}]}
+    },
+    {
+      "id": "guard_door", "title": {"en": "Guard door switch", "ar": "مفتاح باب الحماية"},
+      "rows": [["Tag", "Door_Closed  (I0.3)"], ["Door closed", "bit = 1"], ["Door open", "bit = 0"], ["Reset_PB", "I1.0, momentary NO"]],
+      "note": {"en": "Closing the door is not enough to restart. The operator must press Reset.", "ar": "تسكير الباب مش كفاية. المشغّل لازم يضغط {{Reset}}."}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH"],
+  "tags": ["Start_PB", "Stop_PB", "EStop_OK", "Door_Closed", "Reset_PB", "Conveyor_Motor"],
+  "plant": {"stations": ["infeed", "filler", "exit"], "bottlesPerMin": 20},
+  "starter": null,
+  "example": {"mode": "none"},
+  "scenarios": [
+    {
+      "id": "L03-normal", "title": {"en": "Reset, then Start, then Stop", "ar": "{{Reset}} ثم {{Start}} ثم {{Stop}}"}, "seed": 31, "durationMs": 7000,
+      "events": [{"t": 500, "press": "Reset_PB", "ms": 300}, {"t": 1500, "press": "Start_PB", "ms": 300}, {"t": 4000, "press": "Stop_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 1490], "always": {"Conveyor_Motor": false}, "msg": {"en": "Reset alone must not start the conveyor", "ar": "{{Reset}} لحاله ما لازم يشغّل الناقل"}},
+        {"t": 1500, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "After Reset, Start must start the conveyor", "ar": "بعد {{Reset}}، {{Start}} لازم يشغّل الناقل"}},
+        {"window": [1800, 3990], "always": {"Conveyor_Motor": true}, "msg": {"en": "The conveyor must keep running after Start is released", "ar": "الناقل لازم يضل شغّال بعد ما تفلت {{Start}}"}},
+        {"t": 4000, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "Stop must stop the conveyor", "ar": "{{Stop}} لازم يوقف الناقل"}}
+      ]
+    },
+    {
+      "id": "L03-estop-mid-run", "title": {"en": "E-stop in the middle of a run", "ar": "طوارئ أثناء التشغيل"}, "seed": 32, "durationMs": 9000,
+      "events": [{"t": 500, "press": "Reset_PB", "ms": 300}, {"t": 1500, "press": "Start_PB", "ms": 300}, {"t": 4000, "estop": true}],
+      "asserts": [
+        {"t": 3990, "expect": {"Conveyor_Motor": true}, "tol": 0},
+        {"t": 4000, "expect": {"Conveyor_Motor": false}, "tol": 10, "msg": {"en": "E-stop: the PLC output must go OFF within one scan", "ar": "طوارئ: مخرج الـ {{PLC}} لازم ينطفي خلال {{scan}} واحد"}},
+        {"window": [4010, 9000], "always": {"Conveyor_Motor": false}, "msg": {"en": "With the E-stop pressed the conveyor must stay OFF", "ar": "وزر الطوارئ مضغوط لازم الناقل يضل مطفي"}}
+      ]
+    },
+    {
+      "id": "L03-no-auto-restart", "title": {"en": "E-stop released: no restart by itself", "ar": "فلتّ الطوارئ: ما في تشغيل تلقائي"}, "seed": 33, "durationMs": 10000,
+      "events": [{"t": 500, "press": "Reset_PB", "ms": 300}, {"t": 1500, "press": "Start_PB", "ms": 300}, {"t": 4000, "estop": true}, {"t": 6000, "estop": false}, {"t": 7000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [4000, 6990], "always": {"Conveyor_Motor": false}, "msg": {"en": "When the E-stop is released the conveyor must NOT start by itself", "ar": "لما تفلت الطوارئ الناقل ما لازم يشتغل لحاله"}},
+        {"window": [7000, 10000], "always": {"Conveyor_Motor": false}, "msg": {"en": "Start without Reset must not work after an E-stop", "ar": "{{Start}} بدون {{Reset}} ما لازم يشتغل بعد طوارئ"}}
+      ]
+    },
+    {
+      "id": "L03-reset-start", "title": {"en": "After an E-stop: Reset, then Start", "ar": "بعد طوارئ: {{Reset}} ثم {{Start}}"}, "seed": 34, "durationMs": 10000,
+      "events": [{"t": 500, "press": "Reset_PB", "ms": 300}, {"t": 1500, "press": "Start_PB", "ms": 300}, {"t": 4000, "estop": true}, {"t": 5000, "estop": false}, {"t": 6000, "press": "Reset_PB", "ms": 300}, {"t": 7000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [4000, 6990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Reset alone must not restart the conveyor", "ar": "{{Reset}} لحاله ما لازم يرجّع الناقل"}},
+        {"t": 7000, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "Reset, then Start: the conveyor must run again", "ar": "{{Reset}} ثم {{Start}}: لازم الناقل يرجع يشتغل"}},
+        {"window": [7300, 10000], "always": {"Conveyor_Motor": true}}
+      ]
+    },
+    {
+      "id": "L03-door-open", "title": {"en": "Door opened during the run", "ar": "فتح الباب أثناء التشغيل"}, "seed": 35, "durationMs": 12000,
+      "events": [{"t": 500, "press": "Reset_PB", "ms": 300}, {"t": 1500, "press": "Start_PB", "ms": 300}, {"t": 4000, "door": "open"}, {"t": 6000, "door": "closed"}, {"t": 6500, "press": "Start_PB", "ms": 300}, {"t": 8000, "press": "Reset_PB", "ms": 300}, {"t": 9000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"t": 4000, "expect": {"Conveyor_Motor": false}, "tol": 10, "msg": {"en": "Door open: the conveyor must stop within one scan", "ar": "الباب مفتوح: لازم الناقل يوقف خلال {{scan}} واحد"}},
+        {"window": [4010, 8990], "always": {"Conveyor_Motor": false}, "msg": {"en": "After the door is closed again the conveyor still needs Reset, then Start", "ar": "بعد ما ينسكّر الباب لسا بده {{Reset}} ثم {{Start}}"}},
+        {"t": 9000, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "Reset, then Start: the conveyor runs again", "ar": "{{Reset}} ثم {{Start}}: الناقل بيرجع يشتغل"}}
+      ]
+    },
+    {
+      "id": "L03-door-during-reset", "title": {"en": "Door opens while Reset is held", "ar": "الباب بيفتح وزر {{Reset}} ممسوك"}, "seed": 36, "durationMs": 9000,
+      "events": [{"t": 500, "press": "Reset_PB", "ms": 2000}, {"t": 1000, "door": "open"}, {"t": 3000, "door": "closed"}, {"t": 3500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [1000, 9000], "always": {"Conveyor_Motor": false}, "msg": {"en": "Reset must not work while the door is open, and the line stays blocked until a new Reset", "ar": "{{Reset}} ما بيشتغل والباب مفتوح، والخط بيضل مقفول لحد {{Reset}} جديد"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 6, "seedBase": 3000, "vary": {"shiftMs": [0, 500]}},
+  "diagnostics": ["nc_on_nc_stop", "reset_not_required", "auto_restart_latch_not_cleared", "reset_starts_motor", "door_not_checked", "nc_on_start"],
+  "hints": [
+    {"en": "Open the failed test. Is it the E-stop, the door or the Reset step? Compare the motor with the safety bits at that time.", "ar": "افتح الفحص اللي فشل. هل هو الطوارئ ولا الباب ولا خطوة {{Reset}}؟ قارن المحرك مع بتات السلامة بهداك الوقت."},
+    {"en": "Where does your program remember that the line is READY? What clears that memory when the E-stop or the door drops?", "ar": "وين برنامجك بيتذكّر إنه الخط جاهز ({{READY}})؟ وشو اللي بيمسح هالذاكرة لما الطوارئ أو الباب يسقط؟"},
+    {"en": "Make a READY bit: Reset sets it, and it needs EStop_OK and Door_Closed in series. Then Start needs READY.", "ar": "اعمل بت جاهزية ({{READY}}): {{Reset}} بيشغّله، وبده {{EStop_OK}} و{{Door_Closed}} على التوالي. وبعدين {{Start}} بده {{READY}}.", "lines": ["[Reset_PB | Ready] EStop_OK Door_Closed (Ready)"]}
+  ],
+  "glossary": ["interlock", "emergency_stop", "guard_door", "safety_relay", "reset", "permissive", "auto_restart", "hardwired"],
+  "glossaryDefs": [
+    {"id": "interlock", "en": "interlock", "ar": "قفل أمني (تعشيق)", "ex": {"en": "The door interlock stops the line when the door opens.", "ar": "الـ {{interlock}} تبع الباب بيوقف الخط لما الباب يفتح."}},
+    {"id": "emergency_stop", "en": "emergency stop (E-stop)", "ar": "إيقاف الطوارئ", "ex": {"en": "Press the E-stop and everything stops.", "ar": "اضغط {{E-stop}} وكل شي بيوقف."}},
+    {"id": "guard_door", "en": "guard door", "ar": "باب الحماية", "ex": {"en": "The guard door must be closed to run.", "ar": "باب الحماية لازم يكون مسكّر عشان يشتغل."}},
+    {"id": "safety_relay", "en": "safety relay", "ar": "رلاي السلامة", "ex": {"en": "The safety relay cuts the motor power.", "ar": "رلاي السلامة بيقطع كهربا المحرك."}},
+    {"id": "reset", "en": "reset", "ar": "إعادة ضبط", "ex": {"en": "The operator presses Reset after a stop.", "ar": "المشغّل بيضغط {{Reset}} بعد الإيقاف."}},
+    {"id": "permissive", "en": "permissive", "ar": "شرط سماح", "ex": {"en": "A permissive is a condition that must be true to run.", "ar": "{{permissive}} هو شرط لازم يتحقق عشان يشتغل."}},
+    {"id": "auto_restart", "en": "auto-restart", "ar": "إعادة التشغيل التلقائي", "ex": {"en": "Auto-restart after an E-stop is dangerous.", "ar": "{{auto-restart}} بعد طوارئ خطير."}},
+    {"id": "hardwired", "en": "hardwired", "ar": "موصول بالأسلاك مباشرة", "ex": {"en": "The safety circuit is hardwired, not in the PLC.", "ar": "دارة السلامة {{hardwired}}، مش جوّا الـ {{PLC}}."}}
+  ],
+  "explain": {"frames": [
+    {"en": "The line is READY after {input} is pressed, if {safe1} and {safe2} are ON.", "ar": "الخط بيصير جاهز بعد ما {input} ينضغط، إذا {safe1} و{safe2} شغّالين."},
+    {"en": "READY turns OFF when {safe1} or {safe2} goes OFF.", "ar": "الجاهزية بتنطفي لما {safe1} أو {safe2} ينطفي."},
+    {"en": "Start works only when the line is READY.", "ar": "{{Start}} بيشتغل بس لما الخط جاهز."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 3}, {"id": "clean", "noLint": true}]
+}

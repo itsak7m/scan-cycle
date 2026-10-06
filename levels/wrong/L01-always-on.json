@@ -1,0 +1,1 @@
+{"level": "L01", "diag": "coil_always_powered", "note": "coil with no contact in front: motor always runs", "lines": ["(Conveyor_Motor)"]}

@@ -48,7 +48,7 @@
     t.eq(s.read('EStop_OK'), 1, 'released: relay closes again (auto reset) — the PLC must prevent the restart');
     SC.plant.applyEvent(s.P, { door: 'open' });
     s.step(); s.step();
-    t.eq([s.read('Door_Closed'), s.read('EStop_OK')], [0, 0], 'door open: Door_Closed = 0 and the relay opens');
+    t.eq([s.read('Door_Closed'), s.read('EStop_OK'), s.P.relayOpen], [0, 1, true], 'door open: Door_Closed = 0, EStop_OK stays 1, but the relay still cuts motor power');
   });
 
   T.suite('plant: stopper, filler, level', (t) => {

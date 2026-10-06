@@ -1,0 +1,1 @@
+{"level": "L03", "diag": "reset_starts_motor", "note": "Reset acts as a second start button", "lines": ["[Start_PB | Reset_PB | Conveyor_Motor] Stop_PB EStop_OK Door_Closed (Conveyor_Motor)"]}

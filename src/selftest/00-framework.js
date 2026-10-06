@@ -29,7 +29,7 @@
     const t0 = Date.now();
     const rows = [];
     for (const s of suites) {
-      if (only && !s.name.includes(only)) continue;
+      if (only && !s.name.includes(only) && s.name.indexOf('levels') !== 0) continue;
       const ctx = mkCtx(rows, s.name);
       try { s.fn(ctx); } catch (e) { rows.push({ suite: s.name, name: '(suite crashed)', ok: false, detail: String(e && e.stack || e) }); }
     }

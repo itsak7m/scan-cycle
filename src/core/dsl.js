@@ -147,5 +147,12 @@
     };
   }
 
-  SC.dsl = { parseRung, parseProgram, PARAMS };
+  // a program may be given as program JSON or as {lines:[...ladder text...]}
+  function programFrom(x) {
+    if (!x) return { v: 1, rungs: [] };
+    if (x.lines) return parseProgram(x.lines);
+    return x;
+  }
+
+  SC.dsl = { parseRung, parseProgram, programFrom, PARAMS };
 })();

@@ -1,0 +1,1 @@
+{"level": "L02", "diag": "nc_on_nc_stop", "note": "NC contact on the NC-wired Stop: the machine never starts", "lines": ["[Start_PB | Conveyor_Motor] /Stop_PB (Conveyor_Motor)"]}

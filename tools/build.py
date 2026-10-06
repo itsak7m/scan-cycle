@@ -17,7 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CORE_ORDER = [
     "prng", "addr", "dsl", "compile", "blocks", "scan", "lint",
-    "iolist", "plant", "sim", "scenario", "diagnostics", "demo",
+    "iolist", "plant", "sim", "scenario", "fixtures", "diagnostics", "levels", "demo",
 ]
 UI_ORDER = [
     "dom", "i18n", "glossary", "symbols", "plantView", "palette", "grid", "tagtable", "report", "share", "app-ui",
@@ -111,10 +111,19 @@ def build(with_fixtures):
 
 
 def main():
+    out = None
+    if "--out" in sys.argv:
+        out = sys.argv[sys.argv.index("--out") + 1]
     idx = build(False)
-    write("index.html", idx)
     st = build(True)
-    write("selftest.html", st)
+    if out:
+        os.makedirs(out, exist_ok=True)
+        for name, text in (("index.html", idx), ("selftest.html", st)):
+            with open(os.path.join(out, name), "w", encoding="utf-8", newline="\n") as f:
+                f.write(text)
+    else:
+        write("index.html", idx)
+        write("selftest.html", st)
     print(f"index.html     {len(idx.encode('utf-8')) / 1024:.0f} KB")
     print(f"selftest.html  {len(st.encode('utf-8')) / 1024:.0f} KB")
     if len(idx.encode("utf-8")) > 1024 * 1024:

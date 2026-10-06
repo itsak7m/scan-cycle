@@ -2,8 +2,7 @@
 """Run the in-browser self-test headlessly (Edge/Chrome/Brave) and print a summary.
 
 Usage:
-  python tools/selftest.py              # build + run everything
-  python tools/selftest.py --no-build   # skip the build step
+  python tools/selftest.py              # build (into a temp dir) + run everything
   python tools/selftest.py --only L05   # only suites/levels whose name contains L05
   python tools/selftest.py --verbose    # print every row, not just failures
 
@@ -36,13 +35,14 @@ def find_browser():
 def main():
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = sys.argv[1:]
-    if "--no-build" not in args:
-        subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build.py")])
+    # build into a private temp dir so parallel runs never overwrite each other (or the repo's index.html)
+    work = tempfile.mkdtemp(prefix="sc-build-")
+    subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build.py"), "--out", work], stdout=subprocess.DEVNULL)
     only = None
     if "--only" in args:
         only = args[args.index("--only") + 1]
     verbose = "--verbose" in args
-    url = "file:///" + os.path.join(ROOT, "selftest.html").replace("\\", "/")
+    url = "file:///" + os.path.join(work, "selftest.html").replace("\\", "/")
     url += "?selftest" + (f"&only={only}" if only else "")
     with tempfile.TemporaryDirectory() as prof:
         cmd = [

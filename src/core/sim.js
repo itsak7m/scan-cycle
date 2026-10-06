@@ -123,7 +123,9 @@
     }
 
     sim.step = (withRec) => {
-      while (sim.evIdx < events.length && events[sim.evIdx].t <= sim.t) applyEvent(events[sim.evIdx++]);
+      let applied = false;
+      while (sim.evIdx < events.length && events[sim.evIdx].t <= sim.t) { applyEvent(events[sim.evIdx++]); applied = true; }
+      if (applied) SC.plant.refreshSensors(P); // a hardwired event (E-stop, door, fault) is visible to this very scan
       // sensor snapshot -> input image
       for (const io of INPUT_IO) {
         const f = sim.forces[io._a.canon];

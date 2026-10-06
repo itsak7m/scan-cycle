@@ -1,0 +1,1 @@
+{"level": "L02", "diag": "nc_on_start", "note": "NC contact on Start", "lines": ["[/Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)"]}

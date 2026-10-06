@@ -1,0 +1,1 @@
+{"level": "L01", "diag": "double_coil", "note": "two rungs write the same coil, the last one (NC) wins", "lines": ["Start_PB (Conveyor_Motor)", "/Start_PB (Conveyor_Motor)"]}

@@ -1,0 +1,1 @@
+{"level": "L02", "diag": "no_seal_in", "note": "no holding contact: runs only while Start is held", "lines": ["Start_PB Stop_PB (Conveyor_Motor)"]}

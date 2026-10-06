@@ -1,0 +1,1 @@
+{"level": "L03", "diag": "reset_not_required", "note": "interlocks are in the start circuit but Reset is never needed", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB EStop_OK Door_Closed (Conveyor_Motor)"]}

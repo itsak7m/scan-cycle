@@ -1,0 +1,1 @@
+{"level": "L03", "diag": "auto_restart_latch_not_cleared", "note": "the safety bits only gate the output; the run latch survives the E-stop and the motor restarts by itself", "lines": ["[Start_PB | Run] Stop_PB (Run)", "Run EStop_OK Door_Closed (Conveyor_Motor)"]}

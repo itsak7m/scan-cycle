@@ -1,0 +1,102 @@
+{
+  "id": "L01", "order": 1,
+  "title": {"en": "Conveyor Jog", "ar": "تشغيل الناقل"},
+  "concept": "NO contact and coil",
+  "workOrder": {
+    "en": "Run the conveyor only while the Start button is pressed. When you release the button, the conveyor must stop.",
+    "ar": "شغّل الناقل فقط طول ما زر {{Start}} مضغوط. لما تفلت الزر، لازم الناقل يوقف."
+  },
+  "datasheets": [
+    {
+      "id": "start_pb", "title": {"en": "Start push button", "ar": "زر التشغيل"},
+      "rows": [["Tag", "Start_PB  (I0.0)"], ["Type", "Momentary, normally open (NO)"], ["Not pressed", "bit = 0"], ["Pressed", "bit = 1"]],
+      "note": {"en": "A momentary button only gives 1 while your finger is on it.", "ar": "الزر اللحظي بيعطي 1 بس وإصبعك عليه."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Start_PB", "wave": "0011110000"}]}
+    },
+    {
+      "id": "conv_contactor", "title": {"en": "Conveyor contactor", "ar": "كونتاكتور الناقل"},
+      "rows": [["Tag", "Conveyor_Motor  (Q0.0)"], ["Type", "Contactor coil, 24 V"], ["Bit = 1", "Motor runs"], ["Bit = 0", "Motor stops"]],
+      "note": {"en": "The PLC output bit switches the contactor. Contactor on = the belt moves.", "ar": "بت المخرج بيشغّل الكونتاكتور. الكونتاكتور شغّال = السير بيتحرك."}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT"],
+  "tags": ["Start_PB", "Conveyor_Motor"],
+  "plant": {"stations": ["infeed", "filler", "exit"], "bottlesPerMin": 20},
+  "starter": null,
+  "example": {
+    "mode": "full",
+    "title": {"en": "Worked example: alarm lamp while Ack is pressed", "ar": "مثال محلول: مصباح الإنذار طول ما زر {{Ack}} مضغوط"},
+    "lines": ["Ack_PB (Alarm_Lamp)"],
+    "explain": [
+      {"rung": 1,
+       "en": "Ack_PB is an input. It is wired normally open, so its bit is 0 until you press it. The NO contact passes power only when its bit is 1. The coil copies the power to Alarm_Lamp, an output. Press = lamp on. Release = lamp off. The PLC repeats this every scan.",
+       "ar": "الـ {{Ack_PB}} مدخل. موصول مفتوح عادةً، فالبت = 0 لحد ما تضغطه. الـ {{NO contact}} بيمرّر الـ power بس لما البت = 1. الـ {{coil}} بينسخ الـ power على {{Alarm_Lamp}} (مخرج). ضغط = المصباح شغّال. فلت = المصباح مطفي. والـ {{PLC}} بيعيد هاد كل {{scan}}."}
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "L01-press-2s", "title": {"en": "Press for 2 seconds", "ar": "اضغط ثانيتين"}, "seed": 11, "durationMs": 8000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 2000}],
+      "asserts": [
+        {"t": 490, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "Before you press Start, the motor must be OFF", "ar": "قبل ما تضغط {{Start}}، لازم المحرك يكون مطفي"}},
+        {"t": 500, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "The motor must start in the same scan that sees Start", "ar": "لازم المحرك يشتغل بنفس الـ scan اللي بيشوف فيه {{Start}}"}},
+        {"t": 2490, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "The motor must keep running while Start is held", "ar": "لازم المحرك يضل شغّال طول ما {{Start}} مضغوط"}},
+        {"t": 2500, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "When you release Start, the motor must stop at once", "ar": "لما تفلت {{Start}}، لازم المحرك يوقف فورًا"}},
+        {"window": [2500, 8000], "always": {"Conveyor_Motor": false}, "msg": {"en": "After the release the motor must stay OFF", "ar": "بعد ما تفلت لازم المحرك يضل مطفي"}}
+      ]
+    },
+    {
+      "id": "L01-tap-03s", "title": {"en": "Short tap, 0.3 seconds", "ar": "ضغطة قصيرة، 0.3 ثانية"}, "seed": 12, "durationMs": 6000,
+      "events": [{"t": 1000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 990], "always": {"Conveyor_Motor": false}, "msg": {"en": "The motor must be OFF before the tap", "ar": "لازم المحرك يكون مطفي قبل الضغطة"}},
+        {"t": 1000, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "Even a short tap must start the motor", "ar": "حتى الضغطة القصيرة لازم تشغّل المحرك"}},
+        {"t": 1290, "expect": {"Conveyor_Motor": true}, "tol": 0},
+        {"t": 1300, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "The motor must stop when the tap ends", "ar": "لازم المحرك يوقف لما تنتهي الضغطة"}},
+        {"window": [1300, 6000], "always": {"Conveyor_Motor": false}}
+      ]
+    },
+    {
+      "id": "L01-hold-5s", "title": {"en": "Hold for 5 seconds", "ar": "اضغط 5 ثواني"}, "seed": 13, "durationMs": 9000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 5000}],
+      "asserts": [
+        {"window": [500, 5490], "always": {"Conveyor_Motor": true}, "msg": {"en": "The motor must run the whole time Start is held", "ar": "لازم المحرك يضل شغّال طول ما {{Start}} مضغوط"}},
+        {"t": 5500, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "The motor must stop when Start is released", "ar": "لازم المحرك يوقف لما تفلت {{Start}}"}}
+      ]
+    },
+    {
+      "id": "L01-two-presses", "title": {"en": "Two presses", "ar": "ضغطتين"}, "seed": 14, "durationMs": 9000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 1000}, {"t": 3000, "press": "Start_PB", "ms": 1500}],
+      "asserts": [
+        {"t": 500, "expect": {"Conveyor_Motor": true}, "tol": 0},
+        {"t": 1500, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "Released: the motor must be OFF", "ar": "فلتّ الزر: لازم المحرك يكون مطفي"}},
+        {"window": [1500, 2990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Between the presses the motor must stay OFF", "ar": "بين الضغطتين لازم المحرك يضل مطفي"}},
+        {"t": 3000, "expect": {"Conveyor_Motor": true}, "tol": 0, "msg": {"en": "The second press must start the motor again", "ar": "الضغطة الثانية لازم تشغّل المحرك مرة ثانية"}},
+        {"t": 4500, "expect": {"Conveyor_Motor": false}, "tol": 0}
+      ]
+    }
+  ],
+  "hidden": {"count": 5, "seedBase": 1000, "vary": {"shiftMs": [0, 700], "jitterMs": [0, 400]}},
+  "diagnostics": ["nc_on_start", "coil_always_powered", "double_coil"],
+  "hints": [
+    {"en": "Open the failed test. Look at the Start button and the motor at that time. Is the motor ON when it should be OFF, or the other way?", "ar": "افتح الفحص اللي فشل. شوف زر {{Start}} والمحرك بهداك الوقت. هل المحرك شغّال وهو لازم يكون مطفي، ولا العكس؟"},
+    {"en": "Look at your rung. What is in front of the coil? What is the bit of Start_PB when the button is NOT pressed?", "ar": "شوف الـ {{rung}} تبعك. شو اللي قبل الـ {{coil}}؟ شو قيمة بت {{Start_PB}} لما الزر مش مضغوط؟"},
+    {"en": "The motor coil needs a contact in front of it that conducts when Start_PB is 1.", "ar": "ملف المحرك بده {{contact}} قبله بيمرّر لما {{Start_PB}} = 1.", "lines": ["Start_PB"]}
+  ],
+  "glossary": ["plc", "input", "output", "rung", "contact", "coil", "normally_open", "scan_cycle"],
+  "glossaryDefs": [
+    {"id": "plc", "en": "PLC", "ar": "المتحكم المنطقي القابل للبرمجة", "ex": {"en": "The PLC reads the buttons and switches the motor.", "ar": "الـ {{PLC}} بيقرا الأزرار وبيشغّل المحرك."}},
+    {"id": "input", "en": "input", "ar": "مدخل", "ex": {"en": "Start_PB is an input.", "ar": "{{Start_PB}} مدخل."}},
+    {"id": "output", "en": "output", "ar": "مخرج", "ex": {"en": "Conveyor_Motor is an output.", "ar": "{{Conveyor_Motor}} مخرج."}},
+    {"id": "rung", "en": "rung", "ar": "درجة (سطر منطق)", "ex": {"en": "One rung is one line of ladder logic.", "ar": "الـ {{rung}} الواحد هو سطر منطق واحد."}},
+    {"id": "contact", "en": "contact", "ar": "ملامس", "ex": {"en": "A contact reads the bit of an input.", "ar": "الـ {{contact}} بيقرا بت المدخل."}},
+    {"id": "coil", "en": "coil", "ar": "ملف (مخرج المنطق)", "ex": {"en": "The coil writes the power into the output bit.", "ar": "الـ {{coil}} بيكتب الـ power بالبت تبع المخرج."}},
+    {"id": "normally_open", "en": "normally open", "ar": "مفتوح عادةً", "ex": {"en": "A normally open button gives 0 until you press it.", "ar": "الزر المفتوح عادةً بيعطي 0 لحد ما تضغطه."}},
+    {"id": "scan_cycle", "en": "scan cycle", "ar": "دورة المسح", "ex": {"en": "The PLC repeats the scan cycle every 10 ms.", "ar": "الـ {{PLC}} بيعيد دورة المسح كل 10 ms."}}
+  ],
+  "explain": {"frames": [
+    {"en": "When {input} is pressed, {output} turns ON.", "ar": "لما {input} ينضغط، {output} بيشتغل."},
+    {"en": "When {input} is released, {output} turns OFF.", "ar": "لما {input} ينفلت، {output} بينطفي."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 1}, {"id": "clean", "noLint": true}]
+}

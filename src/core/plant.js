@@ -140,7 +140,7 @@
     s.Pump_Home = P.pump.pos <= 0.02 ? 1 : 0;
     s.Pump_Full = P.pump.pos >= 0.98 ? 1 : 0;
     s.Conv_Encoder = !P.enc.mute && P.enc.acc < c.encPitch / 2 ? 1 : 0;
-    s.EStop_OK = P.hw.estop || P.hw.doorOpen ? 0 : 1;
+    s.EStop_OK = P.hw.estop ? 0 : 1; // E-stop chain only; the guard door has its own bit (both open the safety relay)
     s.Door_Closed = P.hw.doorOpen ? 0 : 1;
     return s;
   }
@@ -354,5 +354,7 @@
     };
   }
 
-  SC.plant = { DEFAULTS, makeCfg, init, stepMut, step, clone, applyEvent, setFault, kpis, isDefective, OUT_NAMES, has };
+  function refreshSensors(P) { P.sens = computeSensors(P); }
+
+  SC.plant = { DEFAULTS, makeCfg, init, stepMut, step, clone, applyEvent, setFault, kpis, isDefective, OUT_NAMES, has, refreshSensors };
 })();

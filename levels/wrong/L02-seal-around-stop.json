@@ -1,0 +1,1 @@
+{"level": "L02", "diag": "seal_bypasses_stop", "note": "the holding branch also bypasses Stop: Stop does nothing once running", "lines": ["[Start_PB Stop_PB | Conveyor_Motor] (Conveyor_Motor)"]}

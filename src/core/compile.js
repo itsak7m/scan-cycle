@@ -96,7 +96,7 @@
           if (write) { E('write_to_output_pin', ri, el, `${tok} cannot be written`, `لا يمكن الكتابة على ${tok}`); return null; }
           return { k: 'iq', name: m[1], f: m[2] };
         }
-        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`);
+        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`); errors[errors.length - 1].tok = tok;
         return null;
       }
       if (write && a.arr === 'I') { E('write_to_input', ri, el, `${tok} is an input — you cannot write to it`, `${tok} مدخل — لا يمكن الكتابة عليه`); return null; }
@@ -129,7 +129,7 @@
           if (write) { E('write_to_output_pin', ri, el, `${tok} cannot be written`, `لا يمكن الكتابة على ${tok}`); return null; }
           return { k: 'if', name: m[1], f: m[2] };
         }
-        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`);
+        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`); errors[errors.length - 1].tok = tok;
         return null;
       }
       if (write && a.arr === 'IW') { E('write_to_input', ri, el, `${tok} is an input word`, `${tok} مدخل`); return null; }
