@@ -332,6 +332,7 @@
         h('h1', null, U.tEl('app')), h('p', { class: 'lead' }, U.tEl('tagline')),
         h('div', { class: 'maptools' },
           h('button', { class: 'btn', type: 'button', onclick: () => { review.innerHTML = ''; U.glossary.review(review, showMap); review.scrollIntoView({ behavior: U.motion() }); } }, '🔤 ' + tr('Term review', 'مراجعة المصطلحات') + (due ? ` (${due} ${tr('due', 'مستحق')})` : '')),
+          h('a', { class: 'btn', href: 'docs/catalog.html', target: '_blank', rel: 'noopener' }, '📖 ' + tr('Game guide (Arabic)', 'دليل اللعبة (عربي)')),
           h('span', { class: 'stars' }, '★ ' + U.totalStars() + '/' + (ST.levels.length * 3))),
         review,
         h('div', { class: 'levelmap' }, cards),

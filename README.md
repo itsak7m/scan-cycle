@@ -4,6 +4,7 @@
 You write the ladder logic. The game runs the line and grades your program like a FAT (factory acceptance test) — with fault injection, E-stop in the middle of a cycle, and hidden randomized variants.
 
 **▶ Play it:** https://itsak7m.github.io/scan-cycle/ — works offline, no install, no account.
+**📖 Full game guide (Arabic, searchable):** [docs/catalog.html](https://itsak7m.github.io/scan-cycle/docs/catalog.html) — primer on PLC basics, the I/O catalog, every instruction, every level, glossary.
 Source: single file `index.html` (vanilla JS, no framework, no build step to play) · MIT license.
 
 ![Scan Cycle level screen](docs/screenshots/level.png)
