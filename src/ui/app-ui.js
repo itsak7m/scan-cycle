@@ -46,7 +46,7 @@
     ST.program = program;
     if (userTags) ST.userTags = userTags;
     if (!ST.sim) return;
-    const tags = SC.levelTags(ST.level).concat(ST.userTags);
+    const tags = SC.mergeTags(SC.levelTags(ST.level), ST.userTags);
     ST.sim.compiled = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
     ST.listeners.forEach((f) => f());
   };
@@ -59,12 +59,14 @@
     ST.last = ts;
     if (!ST.paused) {
       ST.acc += dt * ST.speed;
-      let n = 0;
-      while (ST.acc >= SC.SCAN_MS && n < 400) { ST.sim.step(); ST.acc -= SC.SCAN_MS; n++; }
+      const n = Math.min(400, Math.floor(ST.acc / SC.SCAN_MS));
+      for (let i = 0; i < n; i++) ST.sim.step(i === n - 1);
+      ST.acc -= n * SC.SCAN_MS;
       if (n >= 400) ST.acc = 0;
     }
     ST.view.draw(ST.paused ? 0 : ST.acc / SC.SCAN_MS);
     updateIO(ts);
+    if (ST.ladder && ts - (ST.lastPaint || 0) > 90) { ST.lastPaint = ts; ST.ladder.paint(ST.sim); }
   }
 
   // ---------------------------------------------------------------- I/O strip + panel
@@ -198,7 +200,8 @@
   function openLevel(L) {
     cancelAnimationFrame(ST.raf);
     ST.level = L;
-    ST.userTags = [];
+    ST.ladder = null;
+    ST.userTags = (L.tags || []).filter((t) => typeof t === 'object' && t.user).map((t) => SC.util.clone(t));
     ST.program = SC.util.clone(L.starter || { v: 1, rungs: [] });
     ST.fatResult = null;
     ST.paused = false; ST.speed = 1;
@@ -215,7 +218,7 @@
     const speedBtns = [0.25, 0.5, 1, 2, 4, 8].map((s) => h('button', { type: 'button', class: 'spd' + (s === ST.speed ? ' sel' : ''), 'aria-pressed': String(s === ST.speed),
       onclick: (e) => { ST.speed = s; speedBtns.forEach((b) => { const on = b === e.currentTarget; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', String(on)); }); document.getElementById('fastwarn').hidden = s < 8; } }, '×' + s));
     const runBtn = h('button', { type: 'button', class: 'btn', onclick: () => { ST.paused = !ST.paused; runBtn.textContent = ST.paused ? '▶ ' + U.t('run') : '⏸ ' + U.t('pause'); stepBtn.disabled = !ST.paused; } }, '⏸ ' + U.t('pause'));
-    const stepBtn = h('button', { type: 'button', class: 'btn', disabled: true, onclick: () => { ST.sim.step(); } }, '⏭ ' + U.t('step'));
+    const stepBtn = h('button', { type: 'button', class: 'btn', disabled: true, onclick: () => { ST.sim.step(true); if (ST.ladder) ST.ladder.paint(ST.sim); } }, '⏭ ' + U.t('step'));
     const restartBtn = h('button', { type: 'button', class: 'btn', onclick: () => { newSim(); buildAll(); } }, '↻ ' + U.t('restart'));
     const ioBox = h('div', { class: 'io' });
     const panelBox = h('div', { class: 'panelbox' });
@@ -240,7 +243,10 @@
         h('p', { id: 'fastwarn', class: 'warn small', hidden: true }, '⚠ ', U.tEl('fastWarn'))),
       h('section', { class: 'card' }, h('h3', null, U.tEl('panel')), panelBox),
       h('section', { class: 'card' }, h('h3', null, 'I/O'), ioBox),
-      h('section', { class: 'card' }, h('h3', null, U.tEl('ladder')), ladderBox));
+      h('section', { class: 'card' }, h('h3', null, U.tEl('ladder')), ladderBox),
+      h('section', { class: 'card' }, h('h3', null, U.tEl('tags')), h('div', { id: 'tags-mount' })),
+      h('details', { class: 'card', ontoggle: (e) => { if (e.target.open) U.mountTransfer(document.getElementById('xfer-mount')); } },
+        h('summary', null, h('b', null, U.tEl('transfer'))), h('div', { id: 'xfer-mount' })));
 
     root.append(header, h('div', { class: 'level-grid' }, wo, stage));
 
@@ -248,13 +254,25 @@
     function buildAll() {
       ioBox.innerHTML = ''; panelBox.innerHTML = '';
       buildIO(ioBox); buildPanel(panelBox);
-      if (U.mountLadder) U.mountLadder(ladderBox);
-      else ladderBox.append(h('pre', { class: 'prog-text' }, programText()));
+      mountLadder(ladderBox);
+      U.mountTags(document.getElementById('tags-mount'));
     }
     newSim();
     buildAll();
     ST.last = 0;
     ST.raf = requestAnimationFrame(frame);
+  }
+
+  function mountLadder(box) {
+    box.innerHTML = '';
+    const L = ST.level;
+    const host = {
+      program: ST.program, userTags: ST.userTags,
+      baseTags: () => SC.levelTags(L).filter((t) => !t.user),
+      palette: () => (L.palette ? L.palette : null),
+      setProgram: (p, u, initial) => { U.setProgram(p, u); if (!initial && U.onProgramChanged) U.onProgramChanged(p, u); },
+    };
+    ST.ladder = U.Ladder(box, host);
   }
 
   function programText() {
@@ -302,6 +320,7 @@
     if (location.hash === '#sandbox') openLevel(sandboxLevel());
     else showMap();
   };
+  U.onProgramChanged = () => { clearTimeout(U._refT); U._refT = setTimeout(() => { U.refreshTags(); U.refreshTransfer(); }, 150); };
   U.openLevel = openLevel;
   U.showMap = showMap;
   U.rerender = rerender;

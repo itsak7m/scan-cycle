@@ -37,6 +37,7 @@
     runFat: { en: 'Run FAT', ar: 'شغّل فحص {{FAT}}' },
     langBtn: { en: 'عربي', ar: 'English' },
     theme: { en: 'Theme', ar: 'المظهر' },
+    transfer: { en: 'Same program in TIA Portal / CODESYS', ar: 'نفس البرنامج بـ {{TIA Portal}} / {{CODESYS}}' },
     soon: { en: 'Coming soon', ar: 'قريبًا' },
     locked: { en: 'Locked', ar: 'مقفل' },
     offlineNote: { en: 'Works offline. Your progress is saved in this browser.', ar: 'بيشتغل بدون إنترنت. تقدمك محفوظ بهاد المتصفح.' },

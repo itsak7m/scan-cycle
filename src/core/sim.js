@@ -31,7 +31,7 @@
     const level = opts.level || {};
     const scenario = opts.scenario || {};
     const seed = opts.seed !== undefined ? opts.seed : (scenario.seed || 1);
-    const tags = SC.levelTags(level).concat(opts.userTags || []);
+    const tags = SC.mergeTags(SC.levelTags(level), opts.userTags || []);
     const allTags = SC.IO.map((t) => t).concat(tags.filter((t) => !SC.ioByName[t.name]));
     const tagByName = Object.create(null);
     for (const t of allTags) tagByName[t.name] = Object.assign({ _a: A.parseAddr(t.addr) }, t);

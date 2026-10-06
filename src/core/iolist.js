@@ -87,6 +87,14 @@
     return out;
   }
 
+  // merge tag lists by name (later entries override earlier ones)
+  function mergeTags() {
+    const map = new Map();
+    for (const list of arguments) for (const t of list || []) map.set(t.name, Object.assign({}, map.get(t.name) || {}, t));
+    return Array.from(map.values());
+  }
+
+  SC.mergeTags = mergeTags;
   SC.IO = IO;
   SC.ioByName = byName;
   SC.levelTags = levelTags;

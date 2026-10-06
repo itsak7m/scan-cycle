@@ -67,3 +67,19 @@ button { font: inherit; color: inherit; }
 .lvl b { font-family: var(--mono); font-size: 1.1rem; }
 .lvl.sbx { border-style: dashed; }
 .prog-text { font-family: var(--mono); font-size: .8rem; white-space: pre-wrap; margin: 0; }
+
+/* ---------- tag table / transfer ---------- */
+.tbl-wrap { overflow-x: auto; }
+table.tags { border-collapse: collapse; width: 100%; font-size: .82rem; }
+table.tags th, table.tags td { border-bottom: 1px solid var(--line); padding: 3px 6px; text-align: left; vertical-align: middle; }
+table.tags th { color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; }
+table.tags input { width: 100%; min-height: 34px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); padding: 0 6px; font: inherit; }
+table.tags tr.user td:first-child input { font-family: var(--mono); font-weight: 700; }
+.mono { font-family: var(--mono); }
+.code { background: var(--ground); padding: 10px; border-radius: 6px; overflow: auto; font-size: .8rem; }
+.tabs { display: flex; gap: 6px; margin: 8px 0; }
+.tab { min-height: 40px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; font-weight: 600; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+details > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.rung-grid.static .cell { cursor: default; }
+.rung-grid.static .cell:hover { background: none; }

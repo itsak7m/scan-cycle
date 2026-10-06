@@ -76,6 +76,22 @@ button { font: inherit; color: inherit; }
 .lvl.sbx { border-style: dashed; }
 .prog-text { font-family: var(--mono); font-size: .8rem; white-space: pre-wrap; margin: 0; }
 
+/* ---------- tag table / transfer ---------- */
+.tbl-wrap { overflow-x: auto; }
+table.tags { border-collapse: collapse; width: 100%; font-size: .82rem; }
+table.tags th, table.tags td { border-bottom: 1px solid var(--line); padding: 3px 6px; text-align: left; vertical-align: middle; }
+table.tags th { color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; }
+table.tags input { width: 100%; min-height: 34px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); padding: 0 6px; font: inherit; }
+table.tags tr.user td:first-child input { font-family: var(--mono); font-weight: 700; }
+.mono { font-family: var(--mono); }
+.code { background: var(--ground); padding: 10px; border-radius: 6px; overflow: auto; font-size: .8rem; }
+.tabs { display: flex; gap: 6px; margin: 8px 0; }
+.tab { min-height: 40px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; font-weight: 600; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+details > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+.rung-grid.static .cell { cursor: default; }
+.rung-grid.static .cell:hover { background: none; }
+
 :root {
   --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #5E7279; --line: #C6D0D2;
   --power: #0B6E78; --alarm: #B3461E; --ok: #2F6B4C; --amber: #9A6B12;
@@ -103,6 +119,88 @@ code, pre { font-family: var(--mono); }
 .selftest tr.ok td:first-child { color: var(--ok); font-weight: 600; }
 .selftest tr.bad td:first-child { color: var(--alarm); font-weight: 700; }
 .st-good { color: var(--ok); } .st-bad { color: var(--alarm); }
+
+/* ---------- ladder editor ---------- */
+.ladder-mount { min-height: 80px; }
+.ld-tb { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.chip-st { padding: 3px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; border: 1.5px solid currentColor; }
+.chip-st.ok { color: var(--ok); } .chip-st.warn { color: var(--amber); } .chip-st.bad { color: var(--alarm); }
+.rung { border: 1px solid var(--line); border-radius: 6px; margin-bottom: 10px; background: var(--ground); }
+.rung-head { display: flex; gap: 6px; padding: 4px 8px; align-items: center; }
+.rung-n { font-weight: 700; font-family: var(--mono); font-size: .8rem; white-space: nowrap; }
+.rung-note { flex: 1; min-width: 60px; min-height: 36px; border: 1px solid transparent; background: transparent; color: var(--ink); padding: 0 6px; border-radius: 4px; font: inherit; }
+.rung-note:hover, .rung-note:focus { border-color: var(--line); background: var(--surface); }
+.rung-scroll { overflow-x: auto; padding: 4px 8px 10px; }
+.rung-grid { position: relative; }
+.rowwrap { display: contents; }
+.rail { position: absolute; top: 0; bottom: 0; width: 5px; background: var(--ink); border-radius: 2px; }
+.rail.left { left: 4px; } .rail.right { right: 4px; }
+.cell { position: absolute; cursor: pointer; border-radius: 4px; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.cell.filled { touch-action: none; }
+.cell:hover { background: color-mix(in srgb, var(--power) 9%, transparent); }
+.cell.sel { outline: 2px solid var(--power); outline-offset: -2px; }
+.cell:focus-visible { outline: 3px solid var(--power); outline-offset: -2px; }
+.cell.dragging { opacity: .35; }
+.cell.drop { outline: 3px dashed var(--power); outline-offset: -3px; }
+.cell svg { display: block; overflow: visible; pointer-events: none; }
+:is(.cell, .ico, .drag-ghost) .w-in, :is(.cell, .ico, .drag-ghost) .w-out { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+:is(.cell, .ico, .drag-ghost) .sym { stroke: var(--ink); stroke-width: 2; fill: none; stroke-linecap: round; }
+:is(.cell, .ico, .drag-ghost) .sym.blk { fill: var(--surface); }
+:is(.cell, .ico, .drag-ghost) .sym-fill { fill: none; stroke: none; }
+:is(.cell, .ico, .drag-ghost) text { fill: var(--ink); font-family: var(--mono); }
+.c-tag { font-size: 9.5px; font-weight: 700; }
+.c-addr, .c-state { font-size: 8.5px; fill: var(--muted) !important; }
+.sym-t { font-size: 11px; font-weight: 700; }
+.blk-h { font-size: 11px; font-weight: 700; }
+.blk-p { font-size: 9px; }
+.blk-live { font-size: 9px; font-weight: 700; fill: var(--power) !important; }
+.c-warn { font-size: 11px; fill: var(--amber) !important; } .c-warn.err { fill: var(--alarm) !important; }
+.cell.has-msg { background: color-mix(in srgb, var(--amber) 10%, transparent); }
+/* power flow: bold line + filled symbol + ON text  vs  thin + hollow + OFF text */
+.cell[data-pin="1"] .w-in { stroke: var(--power); stroke-width: 4.5; }
+.cell[data-pout="1"] .w-out { stroke: var(--power); stroke-width: 4.5; }
+.cell[data-pout="1"] .sym { stroke: var(--power); stroke-width: 3; }
+.cell[data-pout="1"] .sym-fill { fill: var(--power); opacity: .85; }
+.cell[data-pout="1"] .c-state { fill: var(--power) !important; font-weight: 700; }
+.cell[data-pout="1"] .sym.blk { fill: color-mix(in srgb, var(--power) 14%, var(--surface)); }
+.vbar { position: absolute; width: 4px; background: var(--muted); border-radius: 2px; pointer-events: none; }
+.vbar[data-on="1"] { background: var(--power); width: 7px; margin-left: -1.5px; }
+.bh { position: absolute; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); color: var(--muted); font-size: 14px; line-height: 1; padding: 0; opacity: 0; cursor: pointer; z-index: 3; }
+.bh::after { content: ''; position: absolute; inset: -11px; }
+.bh.on { opacity: .0; }
+.rung:hover .bh, .rung:focus-within .bh { opacity: .75; }
+@media (hover: none) { .bh { opacity: .6; } }
+.ld-issues { margin-top: 6px; }
+.iss { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 4px 6px; cursor: pointer; font-size: .85rem; border-radius: 4px; }
+.iss:hover { background: var(--ground); }
+.iss.error { color: var(--alarm); } .iss.warn { color: var(--amber); }
+.ld-keys { margin-top: 8px; }
+.drag-ghost { position: fixed; z-index: 90; pointer-events: none; opacity: .9; background: var(--surface); border: 1px solid var(--power); border-radius: 4px; }
+
+/* ---------- palette popover / dialogs ---------- */
+.pal { position: absolute; z-index: 60; background: var(--surface); border: 1.5px solid var(--ink); border-radius: 8px; padding: 8px 10px; width: min(540px, 94vw); box-shadow: 0 8px 28px rgba(0, 0, 0, .25); max-height: 80vh; overflow: auto; }
+.pal.sheet { position: fixed; left: 0; right: 0; bottom: 0; top: auto !important; width: auto; border-radius: 14px 14px 0 0; max-height: 72vh; }
+.pal-head { display: flex; justify-content: space-between; align-items: center; }
+.pal h5 { margin: 8px 0 4px; font-size: .78rem; text-transform: uppercase; color: var(--muted); letter-spacing: .04em; }
+.pal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.pal-btn { min-height: 66px; border: 1.5px solid var(--line); background: var(--surface); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 2px; font-family: var(--mono); font-size: .72rem; }
+.pal-btn:hover, .pal-btn:focus-visible { border-color: var(--power); background: var(--ground); }
+.pal-btn kbd { font-size: .62rem; border: 1px solid var(--line); border-radius: 3px; padding: 0 3px; color: var(--muted); }
+.pal-actions { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
+.modal-back { position: fixed; inset: 0; background: rgba(10, 20, 24, .5); display: grid; place-items: center; z-index: 100; padding: 10px; }
+.modal { background: var(--surface); border-radius: 10px; padding: 16px 18px; width: min(540px, 100%); max-height: 92vh; overflow: auto; border: 1.5px solid var(--ink); }
+.modal-t { margin: 0 0 6px; }
+.modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.frow { display: block; margin: 12px 0; }
+.flab { display: block; font-weight: 700; font-size: .85rem; margin-bottom: 3px; }
+.frow input, .frow select { width: 100%; min-height: 44px; padding: 0 10px; border: 1.5px solid var(--ink); border-radius: 6px; background: var(--surface); color: var(--ink); font-family: var(--mono); font-size: 1rem; }
+.err { color: var(--alarm); min-height: 1em; font-weight: 600; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.chip { min-height: 36px; padding: 0 10px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); cursor: pointer; font-family: var(--mono); }
+.ask { padding: 8px; background: var(--ground); border-radius: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 9px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 200; max-width: 90vw; }
+.toast.show { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 
 </style>
 </head>
@@ -1082,6 +1180,14 @@ code, pre { font-family: var(--mono); }
     return out;
   }
 
+  // merge tag lists by name (later entries override earlier ones)
+  function mergeTags() {
+    const map = new Map();
+    for (const list of arguments) for (const t of list || []) map.set(t.name, Object.assign({}, map.get(t.name) || {}, t));
+    return Array.from(map.values());
+  }
+
+  SC.mergeTags = mergeTags;
   SC.IO = IO;
   SC.ioByName = byName;
   SC.levelTags = levelTags;
@@ -1485,7 +1591,7 @@ code, pre { font-family: var(--mono); }
     const level = opts.level || {};
     const scenario = opts.scenario || {};
     const seed = opts.seed !== undefined ? opts.seed : (scenario.seed || 1);
-    const tags = SC.levelTags(level).concat(opts.userTags || []);
+    const tags = SC.mergeTags(SC.levelTags(level), opts.userTags || []);
     const allTags = SC.IO.map((t) => t).concat(tags.filter((t) => !SC.ioByName[t.name]));
     const tagByName = Object.create(null);
     for (const t of allTags) tagByName[t.name] = Object.assign({ _a: A.parseAddr(t.addr) }, t);
@@ -1946,6 +2052,7 @@ code, pre { font-family: var(--mono); }
     runFat: { en: 'Run FAT', ar: 'شغّل فحص {{FAT}}' },
     langBtn: { en: 'عربي', ar: 'English' },
     theme: { en: 'Theme', ar: 'المظهر' },
+    transfer: { en: 'Same program in TIA Portal / CODESYS', ar: 'نفس البرنامج بـ {{TIA Portal}} / {{CODESYS}}' },
     soon: { en: 'Coming soon', ar: 'قريبًا' },
     locked: { en: 'Locked', ar: 'مقفل' },
     offlineNote: { en: 'Works offline. Your progress is saved in this browser.', ar: 'بيشتغل بدون إنترنت. تقدمك محفوظ بهاد المتصفح.' },
@@ -1968,6 +2075,111 @@ code, pre { font-family: var(--mono); }
   };
   // both languages stacked (used for work orders)
   U.S = S;
+})();
+
+</script>
+<script>
+/* ==== src/ui/symbols.js ==== */
+/* Ladder symbols (IEC conventions) as inline SVG, plus element metadata. Cell box: 84 x 68, wire at y = 40. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+
+  const CELL_W = 84, CELL_H = 68, WIRE_Y = 40;
+
+  // t: element type, key: keyboard shortcut in the editor, group: palette group
+  const EL = [
+    { t: 'NO', group: 'contacts', key: 'n', en: 'NO contact', ar: 'ملامس {{NO}}', tip: { en: 'Normally open contact: passes power when its bit is 1.', ar: 'ملامس مفتوح عادةً: بيمرّر الـ power لما البت = 1.' } },
+    { t: 'NC', group: 'contacts', key: 'c', en: 'NC contact', ar: 'ملامس {{NC}}', tip: { en: 'Normally closed contact: passes power when its bit is 0.', ar: 'ملامس مغلق عادةً: بيمرّر الـ power لما البت = 0.' } },
+    { t: 'POS', group: 'contacts', key: 'p', en: 'Positive edge', ar: 'حافة صاعدة', tip: { en: 'Passes power for exactly one scan when the power on its left goes 0 → 1. Needs its own M bit.', ar: 'بيمرّر الـ power لـ scan واحد بالضبط لما الـ power قبله ينتقل 0 ← 1. بده بت M خاص فيه.' } },
+    { t: 'NEG', group: 'contacts', key: '', en: 'Negative edge', ar: 'حافة هابطة', tip: { en: 'Passes power for one scan when the power on its left goes 1 → 0. Needs its own M bit.', ar: 'بيمرّر الـ power لـ scan واحد لما الـ power قبله ينتقل 1 ← 0. بده بت M خاص فيه.' } },
+    { t: 'CMP', group: 'contacts', key: '=', en: 'Compare', ar: 'مقارنة', tip: { en: 'Passes power when IN1 op IN2 is true.', ar: 'بيمرّر الـ power لما IN1 op IN2 تكون صح.' } },
+    { t: 'OUT', group: 'outputs', key: 'o', en: 'Coil', ar: 'ملف {{Coil}}', tip: { en: 'Writes the rung power into its bit on every scan.', ar: 'بيكتب الـ power بالبت كل {{scan}}.' } },
+    { t: 'SET', group: 'outputs', key: 's', en: 'Set coil', ar: 'ملف {{Set}}', tip: { en: 'If power: bit := 1. Otherwise it does nothing (the bit keeps its value).', ar: 'إذا في power: البت := 1. غير هيك ما بيعمل شي (البت بيضل زي ما هو).' } },
+    { t: 'RST', group: 'outputs', key: 'r', en: 'Reset coil', ar: 'ملف {{Reset}}', tip: { en: 'If power: bit := 0. Otherwise it does nothing.', ar: 'إذا في power: البت := 0. غير هيك ما بيعمل شي.' } },
+    { t: 'MOVE', group: 'outputs', key: 'm', en: 'Move', ar: 'نقل {{Move}}', tip: { en: 'When powered: OUT := IN.', ar: 'لما في power: OUT := IN.' } },
+    { t: 'ADD', group: 'outputs', key: '', en: 'Add', ar: 'جمع {{Add}}', tip: { en: 'When powered, on EVERY scan: OUT := IN1 + IN2. Put an edge contact before it!', ar: 'لما في power، بكل {{scan}}: OUT := IN1 + IN2. حط {{edge}} قبله!' } },
+    { t: 'SUB', group: 'outputs', key: '', en: 'Subtract', ar: 'طرح {{Sub}}', tip: { en: 'When powered, on EVERY scan: OUT := IN1 - IN2.', ar: 'لما في power، بكل {{scan}}: OUT := IN1 - IN2.' } },
+    { t: 'SHL', group: 'outputs', key: '', en: 'Shift left', ar: 'إزاحة يسار', tip: { en: 'When powered: shift the word left by 1, bit 0 := the IN bit.', ar: 'لما في power: إزاحة الـ {{word}} لليسار بمقدار 1، والبت 0 := بت الـ IN.' } },
+    { t: 'SHR', group: 'outputs', key: '', en: 'Shift right', ar: 'إزاحة يمين', tip: { en: 'When powered: shift the word right by 1, bit 15 := the IN bit.', ar: 'لما في power: إزاحة الـ {{word}} لليمين بمقدار 1، والبت 15 := بت الـ IN.' } },
+    { t: 'TON', group: 'blocks', key: 't', en: 'TON on-delay', ar: 'مؤقّت {{TON}}', tip: { en: 'Q turns on after IN has been on for PT. IN off resets it.', ar: 'الـ Q بيشتغل بعد ما الـ IN يضل شغّال مدة PT. لما الـ IN ينطفي بيرجع للصفر.' } },
+    { t: 'TOF', group: 'blocks', key: '', en: 'TOF off-delay', ar: 'مؤقّت {{TOF}}', tip: { en: 'Q follows IN on; after IN drops, Q stays on for PT.', ar: 'الـ Q بيتبع الـ IN؛ بعد ما الـ IN ينطفي، الـ Q بيضل شغّال مدة PT.' } },
+    { t: 'TP', group: 'blocks', key: '', en: 'TP pulse', ar: 'مؤقّت {{TP}} نبضة', tip: { en: 'A rising edge on IN gives a pulse of exactly PT. Not retriggerable while running.', ar: 'حافة صاعدة على IN بتعطي نبضة مدتها PT بالضبط. ما بتنعاد وهي شغّالة.' } },
+    { t: 'TONR', group: 'blocks', key: '', en: 'TONR retentive', ar: 'مؤقّت {{TONR}} محتفظ', tip: { en: 'Like TON, but the elapsed time is kept when IN drops. R resets it.', ar: 'زي {{TON}} بس بيحتفظ بالوقت لما الـ IN ينطفي. الـ R بيصفّره.' } },
+    { t: 'CTU', group: 'blocks', key: 'u', en: 'CTU count up', ar: 'عدّاد {{CTU}}', tip: { en: 'Counts rising edges on CU. Q = CV ≥ PV. R resets.', ar: 'بيعدّ الحواف الصاعدة على CU. الـ Q = CV ≥ PV. الـ R بيصفّر.' } },
+    { t: 'CTD', group: 'blocks', key: '', en: 'CTD count down', ar: 'عدّاد {{CTD}}', tip: { en: 'LD loads PV; counts down on rising edges. Q = CV ≤ 0.', ar: 'الـ LD بيحمّل PV؛ بيعدّ تنازليًا. الـ Q = CV ≤ 0.' } },
+    { t: 'CTUD', group: 'blocks', key: '', en: 'CTUD up/down', ar: 'عدّاد {{CTUD}}', tip: { en: 'Up on CU edges, down on CD edges.', ar: 'بيزيد على حواف CU وبينقص على حواف CD.' } },
+  ];
+  const ELMAP = Object.create(null);
+  EL.forEach((e) => { ELMAP[e.t] = e; });
+
+  const trunc = (s, n) => { s = String(s === undefined ? '' : s); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+  const X = (s) => U.esc(s);
+
+  // label shown above the symbol and small text below it
+  function labels(el, addrOf) {
+    switch (el.t) {
+      case 'NO': case 'NC': case 'OUT': case 'SET': case 'RST': case 'POS': case 'NEG':
+        return { top: el.a || '?', bottom: el.a ? addrOf(el.a) : '' };
+      case 'TON': case 'TOF': case 'TP': case 'TONR': case 'CTU': case 'CTD': case 'CTUD':
+        return { top: el.i || '?', bottom: '' };
+      default: return { top: '', bottom: '' };
+    }
+  }
+
+  // inner SVG markup for a cell. `el` null = empty wire cell (only when `wire`)
+  function symbolSvg(el, wire) {
+    const w = '<path class="w-in" d="M0 40 H%a"/><path class="w-out" d="M%b 40 H84"/>';
+    const wires = (a, b) => `<path class="w-in" d="M0 ${WIRE_Y} H${a}"/><path class="w-out" d="M${b} ${WIRE_Y} H${CELL_W}"/>`;
+    if (!el) return wire ? `<path class="w-in" d="M0 ${WIRE_Y} H42"/><path class="w-out" d="M42 ${WIRE_Y} H${CELL_W}"/>` : '';
+    switch (el.t) {
+      case 'NO': return wires(33, 51) + '<path class="sym" d="M33 26 V54 M51 26 V54"/><rect class="sym-fill" x="34.5" y="27" width="15" height="26"/>';
+      case 'NC': return wires(33, 51) + '<path class="sym" d="M33 26 V54 M51 26 V54"/><rect class="sym-fill" x="34.5" y="27" width="15" height="26"/><path class="sym" d="M30 55 L54 25"/>';
+      case 'POS': case 'NEG': return wires(33, 51) + '<path class="sym" d="M33 26 V54 M51 26 V54"/><rect class="sym-fill" x="34.5" y="27" width="15" height="26"/>' + `<text class="sym-t" x="42" y="45" text-anchor="middle">${el.t === 'POS' ? 'P' : 'N'}</text>`;
+      case 'OUT': return wires(30, 54) + '<path class="sym" d="M34 26 Q25 40 34 54 M50 26 Q59 40 50 54"/><ellipse class="sym-fill" cx="42" cy="40" rx="8" ry="12"/>';
+      case 'SET': case 'RST': return wires(30, 54) + '<path class="sym" d="M34 26 Q25 40 34 54 M50 26 Q59 40 50 54"/><ellipse class="sym-fill" cx="42" cy="40" rx="8" ry="12"/>' + `<text class="sym-t" x="42" y="45" text-anchor="middle">${el.t === 'SET' ? 'S' : 'R'}</text>`;
+      case 'TON': case 'TOF': case 'TP': case 'TONR':
+        return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
+          + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
+          + `<text class="blk-p" x="10" y="43">IN</text><text class="blk-p" x="74" y="43" text-anchor="end">Q</text>`
+          + `<text class="blk-p blk-pt" x="42" y="57" text-anchor="middle">PT ${X(trunc(el.pt, 9))}</text>`
+          + '<text class="blk-live" x="42" y="12" text-anchor="middle"></text>';
+      case 'CTU': case 'CTD': case 'CTUD':
+        return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
+          + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
+          + `<text class="blk-p" x="10" y="43">${el.t === 'CTD' ? 'CD' : 'CU'}</text><text class="blk-p" x="74" y="43" text-anchor="end">Q</text>`
+          + `<text class="blk-p blk-pt" x="42" y="57" text-anchor="middle">PV ${X(trunc(el.pv, 6))}${el.rs ? ' R' : el.ld ? ' LD' : ''}</text>`
+          + '<text class="blk-live" x="42" y="12" text-anchor="middle"></text>';
+      case 'CMP':
+        return wires(6, 78) + '<rect class="sym blk" x="6" y="20" width="72" height="42" rx="3"/>'
+          + `<text class="blk-p" x="42" y="34" text-anchor="middle">${X(trunc(el.a, 10))}</text>`
+          + `<text class="blk-h" x="42" y="47" text-anchor="middle">${X(el.op === '<>' ? '≠' : el.op === '>=' ? '≥' : el.op === '<=' ? '≤' : el.op || '?')}</text>`
+          + `<text class="blk-p" x="42" y="59" text-anchor="middle">${X(trunc(el.b, 10))}</text>`;
+      case 'MOVE': case 'ADD': case 'SUB':
+        return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
+          + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
+          + (el.t === 'MOVE'
+            ? `<text class="blk-p" x="42" y="44" text-anchor="middle">${X(trunc(el.a, 10))}</text><text class="blk-p" x="42" y="58" text-anchor="middle">→ ${X(trunc(el.o, 8))}</text>`
+            : `<text class="blk-p" x="42" y="43" text-anchor="middle">${X(trunc(el.a, 5))} ${el.t === 'ADD' ? '+' : '−'} ${X(trunc(el.b, 5))}</text><text class="blk-p" x="42" y="58" text-anchor="middle">→ ${X(trunc(el.o, 8))}</text>`);
+      case 'SHL': case 'SHR':
+        return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
+          + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
+          + `<text class="blk-p" x="42" y="44" text-anchor="middle">${X(trunc(el.w, 10))}</text><text class="blk-p" x="42" y="58" text-anchor="middle">in: ${X(trunc(el.b, 7))}</text>`;
+    }
+    return '';
+  }
+
+  // palette icon (smaller, no wire power classes)
+  function iconSvg(t) {
+    const demo = { NO: { t: 'NO' }, NC: { t: 'NC' }, POS: { t: 'POS' }, NEG: { t: 'NEG' }, OUT: { t: 'OUT' }, SET: { t: 'SET' }, RST: { t: 'RST' } }[t];
+    const el = demo || { t, pt: 'T#3s', pv: 5, op: '>=', a: 'A', b: 'B', o: 'O', w: 'W', i: '' };
+    return `<svg class="ico" viewBox="0 0 ${CELL_W} ${CELL_H}" width="56" height="45" aria-hidden="true">${symbolSvg(el, false)}</svg>`;
+  }
+
+  U.CELL_W = CELL_W; U.CELL_H = CELL_H; U.WIRE_Y = WIRE_Y;
+  U.EL = EL; U.ELMAP = ELMAP;
+  U.symbolSvg = symbolSvg; U.iconSvg = iconSvg; U.cellLabels = labels;
 })();
 
 </script>
@@ -2267,6 +2479,940 @@ code, pre { font-family: var(--mono); }
 
 </script>
 <script>
+/* ==== src/ui/palette.js ==== */
+/* Palette popover, parameter dialogs and tag helpers for the ladder editor. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const A = SC.addr;
+
+  // ---------------------------------------------------------------- modal
+  function modal(title, body, buttons, opts) {
+    opts = opts || {};
+    const back = h('div', { class: 'modal-back' });
+    const box = h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': title });
+    const close = (v) => { back.remove(); document.removeEventListener('keydown', onKey, true); if (opts.onClose) opts.onClose(v); };
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); close(null); }
+      if (e.key === 'Enter' && opts.enterSubmits !== false && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); if (opts.onEnter) opts.onEnter(); }
+    }
+    box.append(h('h3', { class: 'modal-t' }, title), body, h('div', { class: 'modal-btns' }, buttons(close)));
+    back.append(box);
+    back.addEventListener('pointerdown', (e) => { if (e.target === back) close(null); });
+    document.addEventListener('keydown', onKey, true);
+    document.body.append(back);
+    const first = box.querySelector('input,select,button.primary');
+    if (first) setTimeout(() => first.focus(), 0);
+    return { close, box };
+  }
+  U.modal = modal;
+
+  // ---------------------------------------------------------------- tags
+  function allTags(ctx) { return ctx.tags(); }
+  function tagKind(t) { const a = A.parseAddr(t.addr); return a ? a.kind : null; }
+
+  // Resolve text typed into a tag field. kind: 'bit' | 'bitw' | 'edge' | 'int' | 'intw' | 'intval'
+  // returns {ok, value, created?, error?}
+  function resolveTag(text, kind, ctx) {
+    text = String(text === undefined ? '' : text).trim();
+    if (!text) return { ok: false, error: { en: 'Required', ar: 'مطلوب' } };
+    const want = kind === 'bit' || kind === 'bitw' || kind === 'edge' ? 'bit' : 'word';
+    const write = kind === 'bitw' || kind === 'edge' || kind === 'intw';
+    if (kind === 'intval' && /^-?\d+$/.test(text)) return { ok: true, value: text };
+    if (kind === 'intval' && /^T#/i.test(text)) return A.parseTime(text) !== null ? { ok: true, value: text } : { ok: false, error: { en: 'Not a valid time literal', ar: 'قيمة وقت غير صالحة' } };
+    const tags = allTags(ctx);
+    const tm = A.makeTagMap(tags);
+    let a = null, tag = tm.byName[text];
+    if (tag) a = A.parseAddr(tag.addr);
+    else a = A.parseAddr(text);
+    if (a) {
+      if (a.kind !== want) return { ok: false, error: want === 'bit' ? { en: 'This is not a bit (Bool) tag', ar: 'هاد مش tag من نوع Bool' } : { en: 'This is not an Int (word) tag', ar: 'هاد مش tag من نوع Int' } };
+      if (write && (a.arr === 'I' || a.arr === 'IW')) return { ok: false, error: { en: 'Inputs cannot be written', ar: 'ما بصير نكتب على مدخل' } };
+      if (kind === 'edge' && a.arr !== 'M') return { ok: false, error: { en: 'Edge memory must be an M bit', ar: 'ذاكرة الـ edge لازم تكون بت M' } };
+      return { ok: true, value: text };
+    }
+    const m = /^([A-Za-z_]\w*)\.(Q|QU|QD|ET|CV|PT)$/.exec(text);
+    if (m && ctx.insts().indexOf(m[1]) >= 0) {
+      if (write) return { ok: false, error: { en: 'Block outputs cannot be written', ar: 'مخارج البلوكات ما بتنكتب' } };
+      if (want === 'bit' && /^Q/.test(m[2])) return { ok: true, value: text };
+      if (want === 'word' && !/^Q/.test(m[2])) return { ok: true, value: text };
+      return { ok: false, error: { en: 'Wrong type for this field', ar: 'نوع غير مناسب لهالحقل' } };
+    }
+    if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) {
+      if (A.parseAddr(text)) return { ok: false, error: { en: 'Bad name', ar: 'اسم غير صالح' } };
+      const addr = A.nextFreeAddr(tags, want);
+      if (!addr) return { ok: false, error: { en: 'No free memory addresses left', ar: 'ما ضل عناوين ذاكرة فاضية' } };
+      return { ok: true, value: text, created: { name: text, addr, type: want === 'bit' ? 'Bool' : 'Int', user: true, src: 'mem', desc: { en: '', ar: '' } } };
+    }
+    return { ok: false, error: { en: 'Use letters, digits and _ (start with a letter)', ar: 'استخدم حروف وأرقام و _ (وابدأ بحرف)' } };
+  }
+
+  function describeTag(text, ctx) {
+    const t = A.makeTagMap(allTags(ctx)).byName[String(text).trim()];
+    if (!t) return null;
+    const d = t.desc || {};
+    return { name: t.name, addr: U.useCodesys ? A.toCodesys(t.addr) : t.addr, type: t.type, en: d.en || '', ar: d.ar || '', wiring: t.wiring };
+  }
+
+  // ---------------------------------------------------------------- field definitions
+  const LAB = {
+    a: { en: 'Tag', ar: 'الـ {{Tag}}' }, inst: { en: 'Instance name', ar: 'اسم الـ {{instance}}' },
+    pt: { en: 'PT (preset time)', ar: 'PT (الوقت المحدد)' }, pv: { en: 'PV (preset value)', ar: 'PV (القيمة المحددة)' },
+    rs: { en: 'R (reset) — optional', ar: 'R (تصفير) — اختياري' }, ld: { en: 'LD (load) — optional', ar: 'LD (تحميل) — اختياري' },
+    cd: { en: 'CD (count down) — optional', ar: 'CD (عدّ تنازلي) — اختياري' },
+    op: { en: 'Operator', ar: 'العملية' }, a1: { en: 'IN1', ar: 'IN1' }, b1: { en: 'IN2', ar: 'IN2' },
+    inp: { en: 'IN', ar: 'IN' }, out: { en: 'OUT', ar: 'OUT' }, w: { en: 'Word (Int tag)', ar: 'الـ {{Word}} (Int tag)' }, bit: { en: 'Bit shifted in', ar: 'البت الداخل' },
+    edge: { en: 'Edge memory (own M bit)', ar: 'ذاكرة الـ {{edge}} (بت M خاص)' },
+  };
+
+  function fieldsFor(t) {
+    switch (t) {
+      case 'NO': case 'NC': return [{ k: 'a', kind: 'bit', lab: LAB.a }];
+      case 'OUT': case 'SET': case 'RST': return [{ k: 'a', kind: 'bitw', lab: LAB.a }];
+      case 'POS': case 'NEG': return [{ k: 'a', kind: 'edge', lab: LAB.edge }];
+      case 'TON': case 'TOF': case 'TP': return [{ k: 'i', kind: 'inst', lab: LAB.inst }, { k: 'pt', kind: 'time', lab: LAB.pt }];
+      case 'TONR': return [{ k: 'i', kind: 'inst', lab: LAB.inst }, { k: 'pt', kind: 'time', lab: LAB.pt }, { k: 'rs', kind: 'bit?', lab: LAB.rs }];
+      case 'CTU': return [{ k: 'i', kind: 'inst', lab: LAB.inst }, { k: 'pv', kind: 'intval', lab: LAB.pv }, { k: 'rs', kind: 'bit?', lab: LAB.rs }];
+      case 'CTD': return [{ k: 'i', kind: 'inst', lab: LAB.inst }, { k: 'pv', kind: 'intval', lab: LAB.pv }, { k: 'ld', kind: 'bit?', lab: LAB.ld }];
+      case 'CTUD': return [{ k: 'i', kind: 'inst', lab: LAB.inst }, { k: 'pv', kind: 'intval', lab: LAB.pv }, { k: 'cd', kind: 'bit?', lab: LAB.cd }, { k: 'rs', kind: 'bit?', lab: LAB.rs }, { k: 'ld', kind: 'bit?', lab: LAB.ld }];
+      case 'CMP': return [{ k: 'a', kind: 'intval', lab: LAB.a1 }, { k: 'op', kind: 'op', lab: LAB.op }, { k: 'b', kind: 'intval', lab: LAB.b1 }];
+      case 'MOVE': return [{ k: 'a', kind: 'intval', lab: LAB.inp }, { k: 'o', kind: 'intw', lab: LAB.out }];
+      case 'ADD': case 'SUB': return [{ k: 'a', kind: 'intval', lab: LAB.a1 }, { k: 'b', kind: 'intval', lab: LAB.b1 }, { k: 'o', kind: 'intw', lab: LAB.out }];
+      case 'SHL': case 'SHR': return [{ k: 'w', kind: 'intw', lab: LAB.w }, { k: 'b', kind: 'bit', lab: LAB.bit }];
+    }
+    return [];
+  }
+
+  function suggestInst(t, ctx) {
+    const used = ctx.insts();
+    for (let n = 1; n < 99; n++) { const nm = `DB_${t}_${n}`; if (used.indexOf(nm) < 0) return nm; }
+    return `DB_${t}`;
+  }
+  function suggestEdge(ctx) {
+    const names = allTags(ctx).map((x) => x.name);
+    for (let n = 1; n < 99; n++) if (names.indexOf('Edge_' + n) < 0) return 'Edge_' + n;
+    return 'Edge';
+  }
+
+  // normalise a time typed by the player; returns {value} or {ask:true} / {error}
+  function normTime(txt) {
+    txt = String(txt).trim();
+    if (/^T#/i.test(txt)) return A.parseTime(txt) !== null ? { value: 'T#' + txt.slice(2).toLowerCase() } : { error: { en: 'Not a valid time. Example: T#3s or T#500ms', ar: 'وقت غير صالح. مثال: T#3s أو T#500ms' } };
+    if (/^\d+(\.\d+)?\s*(ms|s|m|h)$/i.test(txt)) return { value: 'T#' + txt.replace(/\s+/g, '').toLowerCase(), fixed: true };
+    if (/^\d+(\.\d+)?$/.test(txt)) return { ask: txt };
+    return { error: { en: 'Not a valid time. Example: T#3s or T#500ms', ar: 'وقت غير صالح. مثال: T#3s أو T#500ms' } };
+  }
+
+  // ---------------------------------------------------------------- parameter dialog
+  // existing: element object or null.  done(el, createdTags[]) is called on OK.
+  function openParams(ctx, type, existing, done) {
+    const meta = U.ELMAP[type];
+    const fields = fieldsFor(type);
+    const inputs = {}, errs = {}, hints = {};
+    const lang = U.lang;
+    const dlBit = 'dl-bit', dlInt = 'dl-int';
+    document.querySelectorAll('#' + dlBit + ',#' + dlInt).forEach((n) => n.remove());
+    const tags = allTags(ctx);
+    const insts = ctx.instDefs();
+    const dl1 = h('datalist', { id: dlBit }), dl2 = h('datalist', { id: dlInt });
+    for (const t of tags) {
+      const k = tagKind(t);
+      (k === 'bit' ? dl1 : dl2).append(h('option', { value: t.name }, t.addr));
+    }
+    for (const nm in insts) { dl1.append(h('option', { value: nm + '.Q' })); dl2.append(h('option', { value: nm + '.ET' }), h('option', { value: nm + '.CV' })); }
+    const body = h('div', { class: 'form' }, dl1, dl2,
+      h('p', { class: 'muted small' }, lang === 'ar' ? U.arEl(meta.tip.ar) : U.enEl(meta.tip.en)));
+    fields.forEach((f) => {
+      let inp;
+      const init = existing && existing[f.k] !== undefined ? String(existing[f.k]) : '';
+      if (f.kind === 'op') {
+        inp = h('select', { id: 'f-' + f.k }, ['>=', '>', '==', '<>', '<', '<='].map((o) => h('option', { value: o, selected: (existing ? existing.op : '>=') === o }, o)));
+      } else {
+        let val = init;
+        if (!existing) {
+          if (f.kind === 'inst') val = suggestInst(type, ctx);
+          else if (f.kind === 'edge') val = suggestEdge(ctx);
+          else if (f.kind === 'time') val = 'T#3s';
+          else if (f.k === 'pv') val = '5';
+        }
+        inp = h('input', { id: 'f-' + f.k, type: 'text', value: val, autocomplete: 'off', spellcheck: 'false', list: f.kind === 'bit' || f.kind === 'bitw' || f.kind === 'bit?' || f.kind === 'edge' ? dlBit : (f.kind === 'intval' || f.kind === 'intw') ? dlInt : null, placeholder: f.kind === 'time' ? 'T#3s' : '' });
+      }
+      inputs[f.k] = inp;
+      errs[f.k] = h('div', { class: 'err small', role: 'alert' });
+      hints[f.k] = h('div', { class: 'muted small' });
+      const upd = () => {
+        if (f.kind === 'op' || f.kind === 'inst' || f.kind === 'time') return;
+        const d = describeTag(inp.value, ctx);
+        hints[f.k].textContent = d ? `${d.addr} · ${d.type}${d.wiring ? ' · wired ' + d.wiring : ''}${d.en ? ' — ' + d.en : ''}` : '';
+      };
+      inp.addEventListener('input', upd); upd();
+      const row = h('label', { class: 'frow', for: 'f-' + f.k },
+        h('span', { class: 'flab' }, lang === 'ar' ? U.arEl(f.lab.ar) : U.enEl(f.lab.en)), inp, hints[f.k], errs[f.k]);
+      if (f.kind === 'time') {
+        const chips = h('div', { class: 'chips' }, ['T#500ms', 'T#1s', 'T#2s', 'T#3s', 'T#5s', 'T#10s'].map((c) => h('button', { type: 'button', class: 'chip', onclick: () => { inp.value = c; } }, c)));
+        row.append(chips);
+      }
+      body.append(row);
+    });
+    const askBox = h('div', { class: 'ask', hidden: true });
+    body.append(askBox);
+
+    let dlg;
+    function submit() {
+      Object.values(errs).forEach((e) => { e.textContent = ''; });
+      const el = { t: type };
+      const created = [];
+      let bad = false;
+      const setErr = (k, e) => { errs[k].textContent = lang === 'ar' ? e.ar : e.en; bad = true; };
+      // work on a ctx that remembers tags created while resolving
+      const tmp = { tags: () => ctx.tags().concat(created), insts: ctx.insts };
+      for (const f of fields) {
+        const raw = inputs[f.k].value;
+        if (f.kind === 'op') { el.op = raw; continue; }
+        if (f.kind === 'inst') {
+          const nm = raw.trim();
+          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(nm)) { setErr(f.k, { en: 'Use letters, digits and _', ar: 'استخدم حروف وأرقام و _' }); continue; }
+          const def = insts[nm];
+          if (def && def.type !== type && !(existing && existing.i === nm)) { setErr(f.k, { en: `${nm} is already a ${def.type}`, ar: `${nm} مستخدم كـ ${def.type}` }); continue; }
+          el.i = nm; continue;
+        }
+        if (f.kind === 'time') {
+          const r = normTime(raw);
+          if (r.error) { setErr(f.k, r.error); continue; }
+          if (r.ask) {
+            askBox.hidden = false; askBox.innerHTML = '';
+            askBox.append(h('p', null, lang === 'ar' ? U.arEl(`"${r.ask}" — ثواني ولا ميلي ثانية؟`) : U.enEl(`"${r.ask}" — seconds or milliseconds?`)),
+              h('button', { type: 'button', class: 'btn', onclick: () => { inputs[f.k].value = `T#${r.ask}s`; askBox.hidden = true; } }, `T#${r.ask}s`),
+              h('button', { type: 'button', class: 'btn', onclick: () => { inputs[f.k].value = `T#${r.ask}ms`; askBox.hidden = true; } }, `T#${r.ask}ms`));
+            bad = true; continue;
+          }
+          el.pt = r.value;
+          if (r.fixed) inputs[f.k].value = r.value;
+          continue;
+        }
+        if (f.kind === 'bit?') {
+          if (!raw.trim()) continue;
+          const r = resolveTag(raw, 'bit', tmp);
+          if (!r.ok) { setErr(f.k, r.error); continue; }
+          if (r.created) created.push(r.created);
+          el[f.k] = r.value; continue;
+        }
+        const r = resolveTag(raw, f.kind === 'intval' ? 'intval' : f.kind, tmp);
+        if (!r.ok && f.kind === 'intval') {
+          const r2 = resolveTag(raw, 'int', tmp);
+          if (!r2.ok) { setErr(f.k, r2.error); continue; }
+          if (r2.created) created.push(r2.created);
+          el[f.k] = r2.value; continue;
+        }
+        if (!r.ok) { setErr(f.k, r.error); continue; }
+        if (r.created) created.push(r.created);
+        el[f.k] = f.kind === 'intval' && /^-?\d+$/.test(r.value) && (f.k === 'pv' || type === 'CMP' || type === 'MOVE' || type === 'ADD' || type === 'SUB') ? parseInt(r.value, 10) : r.value;
+      }
+      if (bad) return;
+      dlg.close('ok');
+      done(el, created);
+    }
+    dlg = modal((existing ? (lang === 'ar' ? 'تعديل ' : 'Edit ') : '') + (lang === 'ar' ? meta.en : meta.en), body,
+      (close) => [h('button', { type: 'button', class: 'btn', onclick: () => close(null) }, lang === 'ar' ? 'إلغاء' : 'Cancel'),
+        h('button', { type: 'button', class: 'btn primary', onclick: submit }, 'OK')],
+      { onEnter: submit });
+    return dlg;
+  }
+
+  // ---------------------------------------------------------------- palette popover
+  const GROUPS = [
+    { id: 'contacts', en: 'Contacts', ar: 'ملامسات' },
+    { id: 'outputs', en: 'Outputs & math', ar: 'مخارج وحساب' },
+    { id: 'blocks', en: 'Timers & counters', ar: 'مؤقتات وعدّادات' },
+  ];
+
+  // actions: {pick(type), edit(), del(), branch(), barLeft(), barRight(), canEdit, hasEl}
+  function openPalette(anchor, ctx, info, actions) {
+    closePalette();
+    const lang = U.lang;
+    const allowed = ctx.palette();
+    const pop = h('div', { class: 'pal', role: 'dialog', 'aria-label': lang === 'ar' ? 'اختر تعليمة' : 'Choose an instruction' });
+    const done = (fn) => (e) => { closePalette(); fn(e); };
+    pop.append(h('div', { class: 'pal-head' }, h('span', { class: 'small muted' }, `Rung ${info.ri + 1} · row ${info.r + 1} · col ${info.c + 1}`),
+      h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Close', onclick: () => closePalette(true) }, '✕')));
+    if (info.hasEl) {
+      pop.append(h('div', { class: 'pal-actions' },
+        h('button', { class: 'btn small', type: 'button', onclick: done(actions.edit) }, '✎ ' + (lang === 'ar' ? 'تعديل' : 'Edit')),
+        h('button', { class: 'btn small', type: 'button', onclick: done(actions.del) }, '🗑 ' + (lang === 'ar' ? 'حذف' : 'Delete'))));
+    }
+    for (const g of GROUPS) {
+      const items = U.EL.filter((e) => e.group === g.id && (!allowed || allowed.indexOf(e.t) >= 0));
+      if (!items.length) continue;
+      pop.append(h('h5', null, lang === 'ar' ? g.ar : g.en),
+        h('div', { class: 'pal-grid' }, items.map((e) => h('button', { type: 'button', class: 'pal-btn', title: (lang === 'ar' ? e.tip.ar.replace(/\{\{|\}\}/g, '') : e.tip.en) + (e.key ? ` [${e.key.toUpperCase()}]` : ''), 'aria-label': e.en,
+          html: U.iconSvg(e.t) + `<span>${U.esc(e.t)}${e.key ? ` <kbd>${U.esc(e.key.toUpperCase())}</kbd>` : ''}</span>`, onclick: done(() => actions.pick(e.t)) }))));
+    }
+    if (!allowed || allowed.indexOf('BRANCH') >= 0) {
+      pop.append(h('h5', null, lang === 'ar' ? 'فروع متوازية' : 'Parallel branch'),
+        h('div', { class: 'pal-actions' },
+          h('button', { class: 'btn small', type: 'button', title: 'Open a branch below this cell (OR)', onclick: done(actions.branch) }, '⎇ ' + (lang === 'ar' ? 'فرع حول الخلية' : 'Branch around cell')),
+          h('button', { class: 'btn small', type: 'button', onclick: done(actions.barLeft) }, '┃← ' + (lang === 'ar' ? 'خط عمودي يسار' : 'Bar left')),
+          h('button', { class: 'btn small', type: 'button', onclick: done(actions.barRight) }, '→┃ ' + (lang === 'ar' ? 'خط عمودي يمين' : 'Bar right'))));
+    }
+    document.body.append(pop);
+    // position
+    const r = anchor.getBoundingClientRect();
+    const narrow = window.innerWidth < 700;
+    if (narrow) { pop.classList.add('sheet'); }
+    else {
+      const w = pop.offsetWidth, hh = pop.offsetHeight;
+      let left = Math.min(Math.max(8, r.left), window.innerWidth - w - 8);
+      let top = r.bottom + 6;
+      if (top + hh > window.innerHeight - 8) top = Math.max(8, r.top - hh - 6);
+      pop.style.left = left + window.scrollX + 'px'; pop.style.top = top + window.scrollY + 'px';
+    }
+    U._pal = { pop, anchor, onClose: info.onClose };
+    const first = pop.querySelector('.pal-btn');
+    if (first) first.focus();
+    setTimeout(() => { document.addEventListener('pointerdown', outside, true); document.addEventListener('keydown', escKey, true); }, 0);
+    function outside(e) { if (!pop.contains(e.target)) closePalette(true); }
+    function escKey(e) { if (e.key === 'Escape') { e.stopPropagation(); closePalette(true); } }
+    pop._cleanup = () => { document.removeEventListener('pointerdown', outside, true); document.removeEventListener('keydown', escKey, true); };
+  }
+
+  function closePalette(refocus) {
+    const p = U._pal;
+    if (!p) return;
+    p.pop._cleanup && p.pop._cleanup();
+    p.pop.remove();
+    U._pal = null;
+    if (refocus && p.anchor && p.anchor.focus) p.anchor.focus();
+  }
+
+  U.openPalette = openPalette;
+  U.closePalette = closePalette;
+  U.openParams = openParams;
+  U.resolveTag = resolveTag;
+  U.normTime = normTime;
+  U.describeTag = describeTag;
+})();
+
+</script>
+<script>
+/* ==== src/ui/grid.js ==== */
+/* Ladder editor: grid of focusable cells, parallel branches, undo/redo, power-flow display in run mode.
+ *
+ * Program JSON (see core/dsl.js):  rung = {rows, cols, els:[{r,c,t,...}], vb:[[boundary,gap],...], note}
+ * A vertical bar [b, g] sits on column boundary b between rows g and g+1.
+ */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const W = 84, H = 68, RAIL = 12, MAXR = 4, MINC = 8, MAXC = 16;
+
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
+
+  U.toast = U.toast || function (msg) {
+    let t = document.getElementById('toast');
+    if (!t) { t = h('div', { id: 'toast', class: 'toast', role: 'status', 'aria-live': 'polite' }); document.body.append(t); }
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(U._toastT); U._toastT = setTimeout(() => t.classList.remove('show'), 2600);
+  };
+
+  function normRung(rg) {
+    let maxR = 0, maxC = 0;
+    for (const e of rg.els) { maxR = Math.max(maxR, e.r); maxC = Math.max(maxC, e.c); }
+    for (const b of rg.vb) maxR = Math.max(maxR, b[1] + 1);
+    rg.rows = Math.max(1, Math.min(MAXR, maxR + 1));
+    rg.cols = Math.max(MINC, Math.min(MAXC, maxC + 2));
+    const seen = new Set();
+    rg.vb = rg.vb.filter((b) => { const k = b[0] + ',' + b[1]; if (seen.has(k) || b[0] > rg.cols || b[1] > rg.rows - 2) return false; seen.add(k); return true; });
+    rg.els.sort((a, b) => a.c - b.c || a.r - b.r);
+    return rg;
+  }
+  const emptyRung = () => normRung({ rows: 1, cols: MINC, els: [], vb: [] });
+  const findEl = (rg, r, c) => rg.els.find((e) => e.r === r && e.c === c) || null;
+
+  function Ladder(container, host) {
+    const ed = { program: SC.util.clone(host.program), userTags: SC.util.clone(host.userTags || []), undo: [], redo: [], sel: { ri: 0, r: 0, c: 0 }, refs: [], drag: null, lastPaint: [] };
+    if (!ed.program.rungs.length) ed.program.rungs.push(emptyRung());
+    ed.program.rungs.forEach(normRung);
+
+    // ------------------------------------------------------------ context for dialogs
+    const ctx = {
+      tags: () => host.baseTags().concat(ed.userTags),
+      instDefs: () => {
+        const o = {};
+        ed.program.rungs.forEach((rg) => rg.els.forEach((e) => { if (e.i && !o[e.i]) o[e.i] = { type: e.t }; }));
+        return o;
+      },
+      insts: () => Object.keys(ctx.instDefs()),
+      palette: () => host.palette(),
+    };
+    ed.ctx = ctx;
+    const addrOf = (name) => {
+      const t = ctx.tags().find((x) => x.name === name);
+      const a = t ? t.addr : name;
+      return U.useCodesys ? SC.addr.toCodesys(a) : a;
+    };
+
+    // ------------------------------------------------------------ history
+    const snap = () => JSON.stringify({ p: ed.program, u: ed.userTags });
+    function commit(prevSnap) {
+      ed.undo.push(prevSnap);
+      if (ed.undo.length > 100) ed.undo.shift();
+      ed.redo = [];
+      ed.program.rungs.forEach(normRung);
+      afterChange();
+    }
+    function restore(s) {
+      const o = JSON.parse(s);
+      ed.program = o.p; ed.userTags = o.u;
+      ed.sel.ri = Math.min(ed.sel.ri, ed.program.rungs.length - 1);
+      afterChange();
+    }
+    ed.doUndo = () => { if (!ed.undo.length) return; ed.redo.push(snap()); restore(ed.undo.pop()); };
+    ed.doRedo = () => { if (!ed.redo.length) return; ed.undo.push(snap()); restore(ed.redo.pop()); };
+    function afterChange() {
+      render();
+      host.setProgram(ed.program, ed.userTags);
+      focusSel();
+    }
+    ed.setProgram = (p, u) => {
+      ed.program = SC.util.clone(p); ed.userTags = SC.util.clone(u || ed.userTags);
+      if (!ed.program.rungs.length) ed.program.rungs.push(emptyRung());
+      ed.program.rungs.forEach(normRung);
+      ed.undo = []; ed.redo = [];
+      render();
+    };
+
+    // ------------------------------------------------------------ mutations
+    function mutate(fn) {
+      const before = snap();
+      const ok = fn();
+      if (ok === false) return;
+      commit(before);
+    }
+    function place(ri, r, c, el, created) {
+      mutate(() => {
+        const rg = ed.program.rungs[ri];
+        rg.els = rg.els.filter((e) => !(e.r === r && e.c === c));
+        rg.els.push(Object.assign({ r, c }, el));
+        for (const t of created || []) if (!ed.userTags.some((u) => u.name === t.name)) ed.userTags.push(t);
+      });
+    }
+    function removeEl(ri, r, c) {
+      mutate(() => {
+        const rg = ed.program.rungs[ri];
+        const n = rg.els.length;
+        rg.els = rg.els.filter((e) => !(e.r === r && e.c === c));
+        if (rg.els.length === n) return false;
+      });
+    }
+    function toggleBar(ri, b, g) {
+      const pal = host.palette();
+      if (pal && pal.indexOf('BRANCH') < 0) { U.toast(tr('Parallel branches are not unlocked in this level yet.', 'الفروع المتوازية غير مفتوحة بهالمستوى بعد.')); return; }
+      mutate(() => {
+        const rg = ed.program.rungs[ri];
+        if (g + 1 >= MAXR) { U.toast(tr('A rung can have at most 4 rows.', 'الـ rung فيه 4 صفوف كحد أقصى.')); return false; }
+        const i = rg.vb.findIndex((x) => x[0] === b && x[1] === g);
+        if (i >= 0) rg.vb.splice(i, 1); else rg.vb.push([b, g]);
+      });
+    }
+    function makeBranch(ri, r, c) {
+      const pal = host.palette();
+      if (pal && pal.indexOf('BRANCH') < 0) { U.toast(tr('Parallel branches are not unlocked in this level yet.', 'الفروع المتوازية غير مفتوحة بهالمستوى بعد.')); return; }
+      mutate(() => {
+        const rg = ed.program.rungs[ri];
+        if (r + 1 >= MAXR) { U.toast(tr('A rung can have at most 4 rows.', 'الـ rung فيه 4 صفوف كحد أقصى.')); return false; }
+        for (const bc of [c, c + 1]) if (!rg.vb.some((x) => x[0] === bc && x[1] === r)) rg.vb.push([bc, r]);
+        ed.sel = { ri, r: r + 1, c };
+      });
+    }
+    function moveEl(ri, from, to) {
+      mutate(() => {
+        const rg = ed.program.rungs[ri];
+        const e = findEl(rg, from.r, from.c);
+        if (!e || findEl(rg, to.r, to.c) || to.r >= MAXR) return false;
+        e.r = to.r; e.c = to.c;
+        ed.sel = { ri, r: to.r, c: to.c };
+      });
+    }
+    function addRung(at) {
+      mutate(() => { ed.program.rungs.splice(at, 0, emptyRung()); ed.sel = { ri: at, r: 0, c: 0 }; });
+    }
+    function delRung(ri) {
+      if (ed.program.rungs.length <= 1) {
+        if (!ed.program.rungs[0].els.length && !ed.program.rungs[0].vb.length) return;
+        mutate(() => { ed.program.rungs[0] = emptyRung(); });
+        return;
+      }
+      mutate(() => { ed.program.rungs.splice(ri, 1); ed.sel = { ri: Math.max(0, ri - 1), r: 0, c: 0 }; });
+    }
+    function moveRung(ri, d) {
+      const j = ri + d;
+      if (j < 0 || j >= ed.program.rungs.length) return;
+      mutate(() => { const a = ed.program.rungs; [a[ri], a[j]] = [a[j], a[ri]]; ed.sel.ri = j; });
+    }
+    function setNote(ri, txt) {
+      if ((ed.program.rungs[ri].note || '') === txt) return;
+      mutate(() => { ed.program.rungs[ri].note = txt; });
+    }
+
+    // ------------------------------------------------------------ dialogs / palette
+    function openFor(ri, r, c, anchor) {
+      const rg = ed.program.rungs[ri];
+      const el = findEl(rg, r, c);
+      const acts = {
+        pick: (t) => U.openParams(ctx, t, null, (e, created) => place(ri, r, c, e, created)),
+        edit: () => U.openParams(ctx, el.t, el, (e, created) => place(ri, r, c, e, created)),
+        del: () => removeEl(ri, r, c),
+        branch: () => makeBranch(ri, r, c),
+        barLeft: () => toggleBar(ri, c, r),
+        barRight: () => toggleBar(ri, c + 1, r),
+      };
+      U.openPalette(anchor, ctx, { ri, r, c, hasEl: !!el }, acts);
+    }
+    ed.openFor = openFor;
+    function quickPlace(ri, r, c, t) {
+      const el = findEl(ed.program.rungs[ri], r, c);
+      U.openParams(ctx, t, el && el.t === t ? el : null, (e, created) => place(ri, r, c, e, created));
+    }
+
+    // ------------------------------------------------------------ rendering
+    let checkCache = null;
+    function check() {
+      const tags = ctx.tags();
+      const compiled = SC.compile(ed.program, { tags, palette: host.palette() });
+      const lint = SC.lint(ed.program, tags);
+      const cellMsg = new Map();
+      const addMsg = (ri, r, c, sev, msg) => {
+        if (r === undefined) return;
+        const k = ri + ':' + r + ':' + c;
+        if (!cellMsg.has(k)) cellMsg.set(k, []);
+        cellMsg.get(k).push({ sev, msg });
+      };
+      for (const e of compiled.errors) addMsg(e.rung, e.r, e.c, 'error', e.msg);
+      for (const l of lint) addMsg(l.rung, l.r, l.c, l.sev, l.msg);
+      checkCache = { compiled, lint, cellMsg };
+      return checkCache;
+    }
+    ed.check = () => checkCache || check();
+
+    function render() {
+      const chk = check();
+      const keep = container.scrollTop;
+      container.innerHTML = '';
+      ed.refs = [];
+      const tb = h('div', { class: 'ld-tb' },
+        h('button', { type: 'button', class: 'btn small', onclick: () => addRung(ed.program.rungs.length) }, '＋ ' + tr('Rung', 'Rung')),
+        h('button', { type: 'button', class: 'btn small', disabled: !ed.undo.length, onclick: ed.doUndo, title: 'Ctrl+Z' }, '↶ ' + tr('Undo', 'تراجع')),
+        h('button', { type: 'button', class: 'btn small', disabled: !ed.redo.length, onclick: ed.doRedo, title: 'Ctrl+Y' }, '↷ ' + tr('Redo', 'إعادة')),
+        h('span', { class: 'grow' }),
+        statusChip(chk),
+        h('button', { type: 'button', class: 'btn small ghost', onclick: () => { U.useCodesys = !U.useCodesys; U.store.set('codesys', U.useCodesys); render(); if (U.refreshTags) U.refreshTags(); } }, U.useCodesys ? 'CODESYS %IX' : 'Siemens I0.0'));
+      container.append(tb);
+      const list = h('div', { class: 'ld-rungs', role: 'group', 'aria-label': tr('Ladder program', 'برنامج الـ ladder') });
+      ed.program.rungs.forEach((rg, ri) => list.append(renderRung(rg, ri, chk)));
+      container.append(list);
+      container.append(renderIssues(chk));
+      container.append(h('details', { class: 'ld-keys' }, h('summary', null, tr('Keyboard shortcuts', 'اختصارات لوحة المفاتيح')),
+        h('p', { class: 'small muted' }, 'Arrows: move · Enter/F2: edit · N: NO · C: NC · O: coil · S: set · R: reset · P: edge · T: timer · U: counter · =: compare · M: move · B: branch bar · Shift+↓: toggle bar · Delete: clear · Ctrl+Z / Ctrl+Y: undo / redo · Esc: close')));
+      container.scrollTop = keep;
+    }
+
+    function statusChip(chk) {
+      const ne = chk.compiled.errors.length, nw = chk.lint.length;
+      if (ne) return h('span', { class: 'chip-st bad', role: 'status' }, '✖ ' + ne + ' ' + tr('errors — fix them to run', 'أخطاء — صلّحها عشان يشتغل'));
+      if (nw) return h('span', { class: 'chip-st warn', role: 'status' }, '⚠ ' + nw + ' ' + tr('warnings', 'تحذيرات'));
+      return h('span', { class: 'chip-st ok', role: 'status' }, '✔ ' + tr('Compiled', 'تم التجميع'));
+    }
+
+    function renderIssues(chk) {
+      const box = h('div', { class: 'ld-issues' });
+      const row = (sev, ri, r, c, msg) => h('button', { type: 'button', class: 'iss ' + sev, onclick: () => { if (ri >= 0) { ed.sel = { ri, r: r || 0, c: c || 0 }; focusSel(); } } },
+        (sev === 'error' ? '✖ ' : '⚠ '), ri >= 0 ? `Rung ${ri + 1}: ` : '', (U.lang === 'ar' ? msg.ar : msg.en));
+      chk.compiled.errors.forEach((e) => box.append(row('error', e.rung, e.r, e.c, e.msg)));
+      chk.lint.forEach((l) => box.append(row(l.sev === 'error' ? 'error' : 'warn', l.rung, l.r, l.c, l.msg)));
+      return box;
+    }
+
+    function renderRung(rg, ri, chk) {
+      const wire = SC.compile.buildWire(rg.rows, rg.cols, new Set(rg.vb.map((b) => b[0] + ',' + b[1]))).wire;
+      const refs = { cells: new Map(), bars: [], el: null, rung: rg };
+      ed.refs[ri] = refs;
+      const grid = h('div', { class: 'rung-grid', role: 'grid', 'aria-label': 'Rung ' + (ri + 1), style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } });
+      grid.append(h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
+      for (let r = 0; r < rg.rows; r++) {
+        const row = h('div', { role: 'row', class: 'rowwrap' });
+        for (let c = 0; c < rg.cols; c++) {
+          const el = findEl(rg, r, c);
+          const cell = makeCell(ri, rg, r, c, el, wire[r][c], chk);
+          refs.cells.set(r + ',' + c, { el: cell, e: el, pin: -1, pout: -1 });
+          row.append(cell);
+        }
+        grid.append(row);
+      }
+      // vertical bars + handles
+      const barSet = new Set(rg.vb.map((b) => b[0] + ',' + b[1]));
+      for (let b = 0; b <= rg.cols; b++) {
+        for (let g = 0; g < Math.min(rg.rows, MAXR - 1); g++) {
+          const on = barSet.has(b + ',' + g);
+          if (!on && rg.rows < 2 && !(g === 0 && rg.rows === 1 && false)) continue;
+          if (!on && g > rg.rows - 2) continue;
+          const x = RAIL + b * W, y1 = g * H + 40, y2 = (g + 1) * H + 40;
+          if (on) {
+            const bar = h('div', { class: 'vbar', style: { left: (x - 2) + 'px', top: y1 + 'px', height: (y2 - y1) + 'px' } });
+            grid.append(bar);
+            refs.bars.push({ el: bar, b, g, on: -1 });
+          }
+          grid.append(h('button', { type: 'button', class: 'bh' + (on ? ' on' : ''), tabindex: '-1', 'aria-label': tr(on ? 'Remove vertical bar' : 'Add vertical bar', on ? 'حذف الخط العمودي' : 'إضافة خط عمودي'),
+            style: { left: (x - 11) + 'px', top: ((y1 + y2) / 2 - 11) + 'px' }, onclick: () => toggleBar(ri, b, g) }, on ? '' : '+'));
+        }
+      }
+      const head = h('div', { class: 'rung-head' },
+        h('span', { class: 'rung-n' }, 'Rung ' + (ri + 1)),
+        h('input', { class: 'rung-note', type: 'text', value: rg.note || '', placeholder: tr('Comment…', 'تعليق…'), 'aria-label': 'Rung ' + (ri + 1) + ' comment', onchange: (e) => setNote(ri, e.target.value) }),
+        h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Move rung up', disabled: ri === 0, onclick: () => moveRung(ri, -1) }, '↑'),
+        h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Move rung down', disabled: ri === ed.program.rungs.length - 1, onclick: () => moveRung(ri, 1) }, '↓'),
+        h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Delete rung', onclick: () => delRung(ri) }, '✕'));
+      const out = h('div', { class: 'rung', dataset: { ri } }, head, h('div', { class: 'rung-scroll' }, grid));
+      refs.el = out;
+      return out;
+    }
+
+    function makeCell(ri, rg, r, c, el, isWire, chk) {
+      const lab = el ? U.cellLabels(el, addrOf) : { top: '', bottom: '' };
+      const msgs = chk.cellMsg.get(ri + ':' + r + ':' + c) || [];
+      const sel = ed.sel.ri === ri && ed.sel.r === r && ed.sel.c === c;
+      const name = el ? (U.ELMAP[el.t] ? U.ELMAP[el.t].en : el.t) : tr('empty', 'فاضي');
+      const svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">`
+        + (lab.top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(lab.top.length > 14 ? lab.top.slice(0, 13) + '…' : lab.top)}</text>` : '')
+        + U.symbolSvg(el, isWire)
+        + (lab.bottom ? `<text class="c-addr" x="42" y="65" text-anchor="middle">${U.esc(lab.bottom)}</text>` : '')
+        + (el ? '<text class="c-state" x="82" y="65" text-anchor="end"></text>' : '')
+        + (msgs.length ? `<text class="c-warn ${msgs.some((m) => m.sev === 'error') ? 'err' : ''}" x="3" y="11">${msgs.some((m) => m.sev === 'error') ? '✖' : '⚠'}</text>` : '')
+        + '</svg>';
+      const label = `Rung ${ri + 1}, row ${r + 1}, column ${c + 1}: ${name}${el && lab.top ? ' ' + lab.top : ''}${msgs.length ? '. ' + msgs.map((m) => (U.lang === 'ar' ? m.msg.ar : m.msg.en)).join(' ') : ''}`;
+      const cell = h('div', { class: 'cell' + (el ? ' filled' : '') + (sel ? ' sel' : '') + (msgs.length ? ' has-msg' : ''), role: 'gridcell', tabindex: sel ? '0' : '-1',
+        'aria-label': label, title: msgs.length ? msgs.map((m) => (U.lang === 'ar' ? m.msg.ar : m.msg.en)).join('\n') : (el ? lab.top : ''),
+        dataset: { ri, r, c }, style: { left: (RAIL + c * W) + 'px', top: (r * H) + 'px', width: W + 'px', height: H + 'px' }, html: svg });
+      cell.addEventListener('focus', () => { ed.sel = { ri, r, c }; });
+      cell.addEventListener('pointerdown', (e) => onPointerDown(e, ri, r, c, cell));
+      cell.addEventListener('keydown', (e) => onKey(e, ri, r, c, cell));
+      return cell;
+    }
+
+    function focusSel() {
+      const refs = ed.refs[ed.sel.ri];
+      if (!refs) return;
+      const k = refs.cells.get(ed.sel.r + ',' + ed.sel.c);
+      if (k) { k.el.tabIndex = 0; if (ed.focusAfter !== false) k.el.focus({ preventScroll: false }); }
+    }
+
+    // ------------------------------------------------------------ pointer: click / drag to move
+    function onPointerDown(e, ri, r, c, cell) {
+      if (e.button !== undefined && e.button !== 0) return;
+      const rg = ed.program.rungs[ri];
+      const el = findEl(rg, r, c);
+      const st = { ri, r, c, x: e.clientX, y: e.clientY, moved: false, el, ghost: null, target: null, id: e.pointerId };
+      ed.drag = st;
+      const move = (ev) => {
+        if (!st.el) return;
+        const dx = ev.clientX - st.x, dy = ev.clientY - st.y;
+        if (!st.moved && Math.hypot(dx, dy) > 8) {
+          st.moved = true;
+          cell.classList.add('dragging');
+          try { cell.setPointerCapture(st.id); } catch (er) { /* ignore */ }
+          st.ghost = h('div', { class: 'drag-ghost', html: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${U.symbolSvg(st.el, false)}</svg>` });
+          document.body.append(st.ghost);
+        }
+        if (st.moved) {
+          st.ghost.style.left = (ev.clientX - W / 2) + 'px'; st.ghost.style.top = (ev.clientY - H / 2) + 'px';
+          const under = document.elementsFromPoint(ev.clientX, ev.clientY).find((n) => n.classList && n.classList.contains('cell'));
+          document.querySelectorAll('.cell.drop').forEach((n) => n.classList.remove('drop'));
+          st.target = under && +under.dataset.ri === ri ? { r: +under.dataset.r, c: +under.dataset.c } : null;
+          if (under && st.target) under.classList.add('drop');
+        }
+      };
+      const up = () => {
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+        cell.classList.remove('dragging');
+        if (st.ghost) st.ghost.remove();
+        document.querySelectorAll('.cell.drop').forEach((n) => n.classList.remove('drop'));
+        ed.drag = null;
+        if (st.moved) {
+          if (st.target && (st.target.r !== r || st.target.c !== c)) moveEl(ri, { r, c }, st.target);
+        } else {
+          ed.sel = { ri, r, c };
+          cell.focus();
+          openFor(ri, r, c, cell);
+        }
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+      document.addEventListener('pointercancel', up);
+    }
+
+    // ------------------------------------------------------------ keyboard
+    function moveFocus(ri, r, c, dr, dc) {
+      const rungs = ed.program.rungs;
+      let nr = r + dr, nc = c + dc, nri = ri;
+      if (nc < 0) nc = 0;
+      if (nc >= rungs[nri].cols) nc = rungs[nri].cols - 1;
+      if (nr < 0) { if (nri > 0) { nri--; nr = rungs[nri].rows - 1; } else nr = 0; }
+      else if (nr >= rungs[nri].rows) { if (nri < rungs.length - 1) { nri++; nr = 0; } else nr = rungs[nri].rows - 1; }
+      nc = Math.min(nc, rungs[nri].cols - 1);
+      ed.sel = { ri: nri, r: nr, c: nc };
+      focusSel();
+    }
+
+    function onKey(e, ri, r, c, cell) {
+      if (e.target !== cell) return;
+      const k = e.key;
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && (k === 'z' || k === 'Z')) { e.preventDefault(); e.shiftKey ? ed.doRedo() : ed.doUndo(); return; }
+      if (mod && (k === 'y' || k === 'Y')) { e.preventDefault(); ed.doRedo(); return; }
+      if (mod || e.altKey) return;
+      if (e.shiftKey && k === 'ArrowDown') { e.preventDefault(); toggleBar(ri, c, r); return; }
+      if (k === 'ArrowUp') { e.preventDefault(); moveFocus(ri, r, c, -1, 0); return; }
+      if (k === 'ArrowDown') { e.preventDefault(); moveFocus(ri, r, c, 1, 0); return; }
+      if (k === 'ArrowLeft') { e.preventDefault(); moveFocus(ri, r, c, 0, -1); return; }
+      if (k === 'ArrowRight') { e.preventDefault(); moveFocus(ri, r, c, 0, 1); return; }
+      if (k === 'Delete' || k === 'Backspace') { e.preventDefault(); removeEl(ri, r, c); return; }
+      const rg = ed.program.rungs[ri];
+      const el = findEl(rg, r, c);
+      if (k === 'Enter' || k === 'F2' || k === ' ') {
+        e.preventDefault();
+        if (el) U.openParams(ctx, el.t, el, (ne, created) => place(ri, r, c, ne, created));
+        else openFor(ri, r, c, cell);
+        return;
+      }
+      if (k === 'b' || k === 'B') { e.preventDefault(); e.shiftKey ? toggleBar(ri, c + 1, r) : makeBranch(ri, r, c); return; }
+      const map = { n: 'NO', c: 'NC', o: 'OUT', s: 'SET', r: 'RST', p: 'POS', t: 'TON', u: 'CTU', '=': 'CMP', m: 'MOVE' };
+      const t = map[k.toLowerCase()];
+      if (t) {
+        e.preventDefault();
+        const allowed = host.palette();
+        if (allowed && allowed.indexOf(t) < 0) { U.toast(tr(`${t} is not unlocked in this level yet.`, `${t} غير مفتوح بهالمستوى بعد.`)); return; }
+        quickPlace(ri, r, c, t);
+      }
+    }
+
+    // ------------------------------------------------------------ run mode: power flow
+    let lastRec = null;
+    ed.paint = function (sim) {
+      if (!sim || !sim.compiled.ok || !sim.rec || sim.compiled.rungs.length !== ed.program.rungs.length) { if (lastRec) { clearPaint(); lastRec = null; } return; }
+      lastRec = sim.rec;
+      sim.rec.forEach((rec, ri) => {
+        const refs = ed.refs[ri];
+        if (!rec || !refs) return;
+        for (const [key, k] of refs.cells) {
+          const [r, c] = key.split(',').map(Number);
+          const pin = rec.pin[c] ? rec.pin[c][r] : 0, pout = rec.pout[c] ? rec.pout[c][r] : 0;
+          if (k.pin !== pin) { k.pin = pin; k.el.dataset.pin = pin; }
+          if (k.pout !== pout) {
+            k.pout = pout; k.el.dataset.pout = pout;
+            const st = k.el.querySelector('.c-state');
+            if (st) st.textContent = pout ? 'ON' : 'OFF';
+          }
+          if (k.e && k.e.i) {
+            const s = sim.st.inst[k.e.i];
+            const live = k.el.querySelector('.blk-live');
+            if (s && live) {
+              const t = /^T/.test(k.e.t) ? (s.ET / 1000).toFixed(2) + ' s' : 'CV ' + s.CV;
+              if (k.live !== t) { k.live = t; live.textContent = t; }
+            }
+          }
+        }
+        for (const b of refs.bars) {
+          const on = (b.b < refs.rung.cols ? ((rec.pin[b.b][b.g] || rec.pin[b.b][b.g + 1]) ? 1 : 0) : ((rec.edge[b.g] || rec.edge[b.g + 1]) ? 1 : 0));
+          if (b.on !== on) { b.on = on; b.el.dataset.on = on; }
+        }
+      });
+    };
+    function clearPaint() {
+      container.querySelectorAll('.cell').forEach((n) => { delete n.dataset.pin; delete n.dataset.pout; const st = n.querySelector('.c-state'); if (st) st.textContent = ''; });
+      container.querySelectorAll('.vbar').forEach((n) => { delete n.dataset.on; });
+      ed.refs.forEach((rf) => { if (rf) { for (const k of rf.cells.values()) { k.pin = -1; k.pout = -1; } rf.bars.forEach((b) => { b.on = -1; }); } });
+    }
+
+    // programmatic API (also used by the self-test and the tag table)
+    ed.ops = { place, removeEl, toggleBar, makeBranch, moveEl, addRung, delRung, moveRung, setNote };
+    const FIELDS = ['a', 'b', 'o', 'w', 'rs', 'ld', 'cd'];
+    ed.renameTag = (from, to) => {
+      mutate(() => {
+        const t = ed.userTags.find((x) => x.name === from);
+        if (!t) return false;
+        t.name = to;
+        ed.program.rungs.forEach((rg) => rg.els.forEach((e) => {
+          for (const k of FIELDS) if (typeof e[k] === 'string' && e[k] === from) e[k] = to;
+        }));
+      });
+    };
+    ed.usedTags = () => {
+      const used = new Set();
+      ed.program.rungs.forEach((rg) => rg.els.forEach((e) => FIELDS.forEach((k) => { if (typeof e[k] === 'string') used.add(e[k]); })));
+      return used;
+    };
+    ed.deleteTag = (name) => {
+      if (ed.usedTags().has(name)) return false;
+      mutate(() => { ed.userTags = ed.userTags.filter((t) => t.name !== name); });
+      return true;
+    };
+    ed.setTagDesc = (name, en, ar) => {
+      const t = ed.userTags.find((x) => x.name === name);
+      if (!t) return;
+      mutate(() => { t.desc = { en, ar }; });
+    };
+    ed.focus = (ri, r, c) => { ed.sel = { ri, r, c }; focusSel(); };
+    ed.close = () => { U.closePalette(); };
+    render();
+    host.setProgram(ed.program, ed.userTags, true);
+    ed.focusAfter = true;
+    return ed;
+  }
+
+  U.Ladder = Ladder;
+  U.ladderNorm = normRung;
+})();
+
+</script>
+<script>
+/* ==== src/ui/tagtable.js ==== */
+/* Tag table, "same program in TIA Portal / CODESYS" transfer panel. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
+
+  // ---- schematic device names (-S1, -B2, -Q1 ...) assigned per role in master order
+  const DEV = Object.create(null);
+  (function () {
+    const cnt = {};
+    const pre = (t) => {
+      switch (t.role) {
+        case 'start': case 'stop': case 'ack': case 'reset': case 'release': case 'key': case 'mode': case 'setpoint': case 'process': return '-S';
+        case 'estop': return '-K'; case 'guard': return '-S';
+        case 'sensor': case 'feedback': case 'encoder': case 'alarm': case 'analog': return '-B';
+        case 'actuator': return /Valve|SOL|Pusher|Pump/.test(t.name) ? '-Y' : '-Q';
+        case 'signal': return '-H';
+      }
+      return '-X';
+    };
+    for (const t of SC.IO) {
+      const p = pre(t);
+      cnt[p] = (cnt[p] || 0) + 1;
+      DEV[t.name] = p + cnt[p];
+    }
+  })();
+  U.deviceName = (name) => DEV[name] || name;
+
+  // ---------------------------------------------------------------- tag table
+  function mountTags(box) {
+    const ST = U.state;
+    box.innerHTML = '';
+    const ed = ST.ladder;
+    const base = SC.levelTags(ST.level).filter((t) => !t.user);
+    const user = ed ? ed.userTags : ST.userTags;
+    const used = ed ? ed.usedTags() : new Set();
+    const only = (t) => /^(I|Q|M)/.test(t.addr);
+    const rows = base.concat(user).filter(only);
+    const head = h('thead', null, h('tr', null, ['Name', 'Address', 'Type', 'Comment (EN)', 'Comment (AR)', ''].map((x) => h('th', null, x))));
+    const body = h('tbody');
+    for (const t of rows) {
+      const isUser = !!t.user;
+      const addr = U.useCodesys ? SC.addr.toCodesys(t.addr) : t.addr;
+      const tr1 = h('tr', { class: isUser ? 'user' : '' });
+      if (isUser && ed) {
+        const nm = h('input', { type: 'text', value: t.name, 'aria-label': 'Tag name', spellcheck: 'false', onchange: (e) => {
+          const v = e.target.value.trim();
+          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(v) || SC.addr.parseAddr(v) || (SC.levelTags(ST.level).concat(ed.userTags)).some((x) => x.name === v && x !== t)) { U.toast(tr('Bad or duplicate name', 'اسم غير صالح أو مكرر')); e.target.value = t.name; return; }
+          ed.renameTag(t.name, v); mountTags(box);
+        } });
+        const en = h('input', { type: 'text', value: (t.desc && t.desc.en) || '', 'aria-label': 'Comment EN', placeholder: '…', onchange: (e) => ed.setTagDesc(t.name, e.target.value, (t.desc && t.desc.ar) || '') });
+        const ar = h('input', { type: 'text', value: (t.desc && t.desc.ar) || '', 'aria-label': 'Comment AR', placeholder: '…', dir: 'rtl', lang: 'ar', onchange: (e) => ed.setTagDesc(t.name, (t.desc && t.desc.en) || '', e.target.value) });
+        const del = h('button', { type: 'button', class: 'btn small ghost', disabled: used.has(t.name), title: used.has(t.name) ? tr('In use', 'مستخدم') : tr('Delete tag', 'احذف'), onclick: () => { ed.deleteTag(t.name); mountTags(box); } }, '✕');
+        tr1.append(h('td', null, nm), h('td', { class: 'mono' }, addr), h('td', null, t.type), h('td', null, en), h('td', null, ar), h('td', null, del));
+      } else {
+        tr1.append(h('td', { class: 'mono' }, t.name, t.wiring === 'NC' ? h('small', { class: 'muted' }, ' NC') : ''), h('td', { class: 'mono' }, addr), h('td', null, t.type),
+          h('td', null, (t.desc && t.desc.en) || ''), h('td', { lang: 'ar', dir: 'rtl' }, (t.desc && t.desc.ar) || ''), h('td'));
+      }
+      body.append(tr1);
+    }
+    box.append(h('div', { class: 'tbl-wrap' }, h('table', { class: 'tags' }, head, body)),
+      h('p', { class: 'muted small' }, tr('New tags you type in a dialog are added here automatically as memory bits (M).', 'أي {{tag}} جديد بتكتبه بالنافذة بينضاف هون لحاله كبت ذاكرة (M).').replace(/\{\{|\}\}/g, '')));
+  }
+  U.mountTags = mountTags;
+  U.refreshTags = () => { const b = document.getElementById('tags-mount'); if (b && U.state.level) mountTags(b); };
+
+  // ---------------------------------------------------------------- transfer panel
+  function staticRung(rg, labelOf, tags) {
+    const wire = SC.compile.buildWire(rg.rows, rg.cols, new Set(rg.vb.map((b) => b[0] + ',' + b[1]))).wire;
+    const W = U.CELL_W, H = U.CELL_H, RAIL = 12;
+    const grid = h('div', { class: 'rung-grid static', style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } }, h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
+    for (let r = 0; r < rg.rows; r++) for (let c = 0; c < rg.cols; c++) {
+      const el = rg.els.find((e) => e.r === r && e.c === c) || null;
+      const lab = el ? U.cellLabels(el, () => '') : { top: '' };
+      const top = el && lab.top ? labelOf(lab.top) : '';
+      grid.append(h('div', { class: 'cell', style: { left: (RAIL + c * W) + 'px', top: (r * H) + 'px', width: W + 'px', height: H + 'px' },
+        html: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(top)}</text>` : ''}${U.symbolSvg(el, wire[r][c])}</svg>` }));
+    }
+    for (const [b, g] of rg.vb) grid.append(h('div', { class: 'vbar', style: { left: (RAIL + b * W - 2) + 'px', top: (g * H + 40) + 'px', height: H + 'px' } }));
+    return h('div', { class: 'rung' }, h('div', { class: 'rung-scroll' }, grid));
+  }
+
+  function codesysDecls(program, tags) {
+    const tm = SC.addr.makeTagMap(tags);
+    const used = new Set(), insts = {};
+    for (const rg of program.rungs) for (const e of rg.els) {
+      for (const k of ['a', 'b', 'o', 'w', 'rs', 'ld', 'cd']) if (typeof e[k] === 'string' && tm.byName[e[k]]) used.add(e[k]);
+      if (e.i) insts[e.i] = e.t;
+    }
+    const lines = ['VAR_GLOBAL'];
+    for (const n of used) {
+      const t = tm.byName[n];
+      lines.push(`  ${n} AT ${SC.addr.toCodesys(t.addr)} : ${t.type === 'Int' ? 'INT' : 'BOOL'};`);
+    }
+    lines.push('END_VAR', '', 'VAR');
+    for (const n in insts) lines.push(`  ${n} : ${insts[n]};`);
+    lines.push('END_VAR');
+    return lines.join('\n');
+  }
+
+  function mountTransfer(box) {
+    const ST = U.state;
+    box.innerHTML = '';
+    const ed = ST.ladder;
+    const program = ed ? ed.program : ST.program;
+    const tags = SC.mergeTags(SC.levelTags(ST.level), ed ? ed.userTags : ST.userTags);
+    let mode = U.store.get('xfer', 'tia');
+    const tabs = h('div', { class: 'tabs', role: 'tablist' });
+    const out = h('div', { class: 'xfer-out' });
+    function draw() {
+      out.innerHTML = '';
+      tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.m === mode)));
+      if (mode === 'tia') {
+        program.rungs.forEach((rg, i) => out.append(h('div', { class: 'small muted' }, 'Network ' + (i + 1) + (rg.note ? ' — ' + rg.note : '')), staticRung(rg, (n) => (DEV[n] ? DEV[n] + ' ' : '') + (DEV[n] ? '' : n), tags)));
+        out.append(h('p', { class: 'small muted' }, tr('In TIA Portal the symbols show the tag name and the device ID from the schematic (-S1 = push button, -B = sensor, -Q/-Y = actuator).', 'بـ {{TIA Portal}} الرموز بتعرض اسم الـ {{tag}} ورقم الجهاز من المخطط (‎-S1 = زر، ‎-B = حساس، ‎-Q/-Y = مشغّل).').replace(/\{\{|\}\}/g, '')));
+      } else {
+        out.append(h('pre', { class: 'mono code' }, codesysDecls(program, tags)),
+          h('p', { class: 'small muted' }, tr('CODESYS: global variables bound to %IX/%QX/%MX addresses, and one function-block instance per timer or counter.', 'بـ {{CODESYS}}: متغيرات عامة مربوطة بعناوين %IX/%QX/%MX، و{{instance}} واحد لكل مؤقت أو عدّاد.').replace(/\{\{|\}\}/g, '')));
+      }
+    }
+    for (const [m, label] of [['tia', 'TIA Portal'], ['codesys', 'CODESYS']]) {
+      tabs.append(h('button', { type: 'button', role: 'tab', class: 'tab', dataset: { m }, onclick: () => { mode = m; U.store.set('xfer', m); draw(); } }, label));
+    }
+    box.append(tabs, out);
+    draw();
+  }
+  U.mountTransfer = mountTransfer;
+  U.refreshTransfer = () => { const b = document.getElementById('xfer-mount'); if (b && b.closest('details') && b.closest('details').open && U.state.level) mountTransfer(b); };
+})();
+
+</script>
+<script>
 /* ==== src/ui/app-ui.js ==== */
 /* Application shell: station map, level screen, game loop, operator panel, I/O strip, forces. */
 (function () {
@@ -2316,7 +3462,7 @@ code, pre { font-family: var(--mono); }
     ST.program = program;
     if (userTags) ST.userTags = userTags;
     if (!ST.sim) return;
-    const tags = SC.levelTags(ST.level).concat(ST.userTags);
+    const tags = SC.mergeTags(SC.levelTags(ST.level), ST.userTags);
     ST.sim.compiled = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
     ST.listeners.forEach((f) => f());
   };
@@ -2329,12 +3475,14 @@ code, pre { font-family: var(--mono); }
     ST.last = ts;
     if (!ST.paused) {
       ST.acc += dt * ST.speed;
-      let n = 0;
-      while (ST.acc >= SC.SCAN_MS && n < 400) { ST.sim.step(); ST.acc -= SC.SCAN_MS; n++; }
+      const n = Math.min(400, Math.floor(ST.acc / SC.SCAN_MS));
+      for (let i = 0; i < n; i++) ST.sim.step(i === n - 1);
+      ST.acc -= n * SC.SCAN_MS;
       if (n >= 400) ST.acc = 0;
     }
     ST.view.draw(ST.paused ? 0 : ST.acc / SC.SCAN_MS);
     updateIO(ts);
+    if (ST.ladder && ts - (ST.lastPaint || 0) > 90) { ST.lastPaint = ts; ST.ladder.paint(ST.sim); }
   }
 
   // ---------------------------------------------------------------- I/O strip + panel
@@ -2468,7 +3616,8 @@ code, pre { font-family: var(--mono); }
   function openLevel(L) {
     cancelAnimationFrame(ST.raf);
     ST.level = L;
-    ST.userTags = [];
+    ST.ladder = null;
+    ST.userTags = (L.tags || []).filter((t) => typeof t === 'object' && t.user).map((t) => SC.util.clone(t));
     ST.program = SC.util.clone(L.starter || { v: 1, rungs: [] });
     ST.fatResult = null;
     ST.paused = false; ST.speed = 1;
@@ -2485,7 +3634,7 @@ code, pre { font-family: var(--mono); }
     const speedBtns = [0.25, 0.5, 1, 2, 4, 8].map((s) => h('button', { type: 'button', class: 'spd' + (s === ST.speed ? ' sel' : ''), 'aria-pressed': String(s === ST.speed),
       onclick: (e) => { ST.speed = s; speedBtns.forEach((b) => { const on = b === e.currentTarget; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', String(on)); }); document.getElementById('fastwarn').hidden = s < 8; } }, '×' + s));
     const runBtn = h('button', { type: 'button', class: 'btn', onclick: () => { ST.paused = !ST.paused; runBtn.textContent = ST.paused ? '▶ ' + U.t('run') : '⏸ ' + U.t('pause'); stepBtn.disabled = !ST.paused; } }, '⏸ ' + U.t('pause'));
-    const stepBtn = h('button', { type: 'button', class: 'btn', disabled: true, onclick: () => { ST.sim.step(); } }, '⏭ ' + U.t('step'));
+    const stepBtn = h('button', { type: 'button', class: 'btn', disabled: true, onclick: () => { ST.sim.step(true); if (ST.ladder) ST.ladder.paint(ST.sim); } }, '⏭ ' + U.t('step'));
     const restartBtn = h('button', { type: 'button', class: 'btn', onclick: () => { newSim(); buildAll(); } }, '↻ ' + U.t('restart'));
     const ioBox = h('div', { class: 'io' });
     const panelBox = h('div', { class: 'panelbox' });
@@ -2510,7 +3659,10 @@ code, pre { font-family: var(--mono); }
         h('p', { id: 'fastwarn', class: 'warn small', hidden: true }, '⚠ ', U.tEl('fastWarn'))),
       h('section', { class: 'card' }, h('h3', null, U.tEl('panel')), panelBox),
       h('section', { class: 'card' }, h('h3', null, 'I/O'), ioBox),
-      h('section', { class: 'card' }, h('h3', null, U.tEl('ladder')), ladderBox));
+      h('section', { class: 'card' }, h('h3', null, U.tEl('ladder')), ladderBox),
+      h('section', { class: 'card' }, h('h3', null, U.tEl('tags')), h('div', { id: 'tags-mount' })),
+      h('details', { class: 'card', ontoggle: (e) => { if (e.target.open) U.mountTransfer(document.getElementById('xfer-mount')); } },
+        h('summary', null, h('b', null, U.tEl('transfer'))), h('div', { id: 'xfer-mount' })));
 
     root.append(header, h('div', { class: 'level-grid' }, wo, stage));
 
@@ -2518,13 +3670,25 @@ code, pre { font-family: var(--mono); }
     function buildAll() {
       ioBox.innerHTML = ''; panelBox.innerHTML = '';
       buildIO(ioBox); buildPanel(panelBox);
-      if (U.mountLadder) U.mountLadder(ladderBox);
-      else ladderBox.append(h('pre', { class: 'prog-text' }, programText()));
+      mountLadder(ladderBox);
+      U.mountTags(document.getElementById('tags-mount'));
     }
     newSim();
     buildAll();
     ST.last = 0;
     ST.raf = requestAnimationFrame(frame);
+  }
+
+  function mountLadder(box) {
+    box.innerHTML = '';
+    const L = ST.level;
+    const host = {
+      program: ST.program, userTags: ST.userTags,
+      baseTags: () => SC.levelTags(L).filter((t) => !t.user),
+      palette: () => (L.palette ? L.palette : null),
+      setProgram: (p, u, initial) => { U.setProgram(p, u); if (!initial && U.onProgramChanged) U.onProgramChanged(p, u); },
+    };
+    ST.ladder = U.Ladder(box, host);
   }
 
   function programText() {
@@ -2572,6 +3736,7 @@ code, pre { font-family: var(--mono); }
     if (location.hash === '#sandbox') openLevel(sandboxLevel());
     else showMap();
   };
+  U.onProgramChanged = () => { clearTimeout(U._refT); U._refT = setTimeout(() => { U.refreshTags(); U.refreshTransfer(); }, 150); };
   U.openLevel = openLevel;
   U.showMap = showMap;
   U.rerender = rerender;
@@ -3159,6 +4324,107 @@ code, pre { font-family: var(--mono); }
     const lv2 = Object.assign({ scenarios: [{ id: 'q', seed: 1, durationMs: 500, events: [], asserts: [] }] }, level);
     const rl = SC.scenario.runLevel(lv2, prog, { forces: { Start_PB: 1 } });
     t.ok(!rl.pass, 'a level cannot pass while forces are active');
+  });
+})();
+
+</script>
+<script>
+/* ==== src/selftest/30-ui-ladder.js ==== */
+/* Headless tests for the ladder editor model (the DOM exists in the test page). */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const T = SC.test;
+
+  function mk(level) {
+    const container = document.createElement('div');
+    const host = { program: { v: 1, rungs: [] }, userTags: [], last: null, baseTags: () => SC.levelTags(level), palette: () => level.palette || null,
+      setProgram(p, u) { host.last = { p, u }; } };
+    const ed = SC.ui.Ladder(container, host);
+    return { ed, host, container };
+  }
+
+  T.suite('ladder editor: build a seal-in with the editor API', (t) => {
+    const level = { tags: ['Start_PB', 'Stop_PB', 'EStop_OK', 'Conveyor_Motor'], palette: ['NO', 'NC', 'OUT', 'BRANCH'], plant: { bottlesPerMin: 20 } };
+    const { ed, host, container } = mk(level);
+    t.eq(ed.program.rungs.length, 1, 'starts with one empty rung');
+    ed.ops.place(0, 0, 0, { t: 'NO', a: 'Start_PB' });
+    ed.ops.makeBranch(0, 0, 0);
+    t.eq([ed.program.rungs[0].rows, ed.program.rungs[0].vb.length], [2, 2], 'branch around a cell adds a row and two bars');
+    const r = SC.ui.resolveTag('Run', 'bitw', ed.ctx);
+    t.ok(r.ok && r.created && r.created.addr === 'M0.0', 'a new name becomes memory bit M0.0', JSON.stringify(r));
+    ed.ops.place(0, 1, 0, { t: 'NO', a: 'Run' }, [r.created]);
+    ed.ops.place(0, 0, 1, { t: 'NO', a: 'Stop_PB' });
+    ed.ops.place(0, 0, 2, { t: 'NO', a: 'EStop_OK' });
+    ed.ops.place(0, 0, 3, { t: 'OUT', a: 'Run' });
+    ed.ops.addRung(1);
+    ed.ops.place(1, 0, 0, { t: 'NO', a: 'Run' });
+    ed.ops.place(1, 0, 1, { t: 'OUT', a: 'Conveyor_Motor' });
+    const chk = ed.check();
+    t.eq(chk.compiled.errors.length, 0, 'compiles without errors');
+    t.eq(chk.lint.map((x) => x.id), [], 'no lint warnings');
+    t.ok(host.last && host.last.u.length === 1, 'host is notified with the user tag table');
+    // run it
+    const res = SC.scenario.runScenario(Object.assign({}, level, { tags: level.tags.concat(ed.userTags) }), ed.program, {
+      id: 'seal', seed: 1, durationMs: 6000,
+      events: [{ t: 500, press: 'Start_PB', ms: 300 }, { t: 3000, press: 'Stop_PB', ms: 300 }],
+      asserts: [
+        { t: 400, expect: { Conveyor_Motor: false } },
+        { t: 1500, expect: { Conveyor_Motor: true } },
+        { t: 2900, expect: { Conveyor_Motor: true } },
+        { t: 3500, expect: { Conveyor_Motor: false } },
+        { t: 5500, expect: { Conveyor_Motor: false } },
+      ],
+    });
+    t.ok(res.pass, 'the editor-built program passes a start/stop scenario', JSON.stringify(res.failures[0] || ''));
+    // DOM sanity
+    t.eq(container.querySelectorAll('.rung').length, 2, 'two rungs rendered');
+    t.ok(container.querySelectorAll('.cell.filled').length === 7, 'seven filled cells rendered', String(container.querySelectorAll('.cell.filled').length));
+    // undo / redo
+    ed.doUndo(); ed.doUndo();
+    t.eq(ed.program.rungs[1] ? ed.program.rungs[1].els.length : 0, 0, 'undo removes the last edits');
+    ed.doRedo();
+    t.eq(ed.program.rungs[1].els.length, 1, 'redo brings one back');
+    // palette enforcement
+    ed.ops.place(0, 0, 4, { t: 'TON', i: 'DB_X', pt: 'T#1s' });
+    t.ok(ed.check().compiled.errors.some((e) => e.code === 'not_allowed'), 'an element outside the level palette is an error');
+  });
+
+  T.suite('ladder editor: moves, limits, tags', (t) => {
+    const level = { tags: ['Start_PB', 'Conveyor_Motor'], palette: null };
+    const { ed } = mk(level);
+    ed.ops.place(0, 0, 0, { t: 'NO', a: 'Start_PB' });
+    ed.ops.moveEl(0, { r: 0, c: 0 }, { r: 0, c: 3 });
+    t.eq(ed.program.rungs[0].els[0].c, 3, 'move an element to another cell');
+    ed.ops.place(0, 0, 4, { t: 'OUT', a: 'Conveyor_Motor' });
+    ed.ops.moveEl(0, { r: 0, c: 3 }, { r: 0, c: 4 });
+    t.eq(ed.program.rungs[0].els.length, 2, 'cannot drop on an occupied cell');
+    ed.ops.removeEl(0, 0, 3);
+    t.eq(ed.program.rungs[0].els.length, 1, 'delete');
+    for (let i = 0; i < 6; i++) ed.ops.toggleBar(0, 1, i);
+    t.ok(ed.program.rungs[0].rows <= 4, 'a rung never grows past 4 rows');
+    // grid grows with the program
+    ed.ops.place(0, 0, 9, { t: 'NO', a: 'Start_PB' });
+    t.ok(ed.program.rungs[0].cols >= 11, 'columns grow on demand');
+    // tag tools
+    let r = SC.ui.resolveTag('2bad', 'bit', ed.ctx);
+    t.ok(!r.ok, 'a name starting with a digit is rejected');
+    r = SC.ui.resolveTag('Start_PB', 'bitw', ed.ctx);
+    t.ok(!r.ok, 'cannot write to an input');
+    r = SC.ui.resolveTag('M0.4', 'edge', ed.ctx);
+    t.ok(r.ok, 'a raw M address is accepted');
+    r = SC.ui.resolveTag('I0.0', 'edge', ed.ctx);
+    t.ok(!r.ok, 'edge memory must be M');
+    t.eq(SC.ui.normTime('3s').value, 'T#3s', 'time typed as 3s becomes T#3s');
+    t.eq(SC.ui.normTime('3').ask, '3', 'a bare 3 asks seconds or milliseconds');
+    t.ok(SC.ui.normTime('abc').error, 'garbage time is an error');
+    t.eq(SC.ui.normTime('t#500MS').value, 'T#500ms', 'literal is normalised');
+    // rename a user tag updates the program
+    const c = SC.ui.resolveTag('Seal', 'bitw', ed.ctx);
+    ed.ops.place(0, 0, 5, { t: 'OUT', a: 'Seal' }, [c.created]);
+    ed.renameTag('Seal', 'Latch');
+    t.ok(ed.program.rungs[0].els.some((e) => e.a === 'Latch') && !ed.program.rungs[0].els.some((e) => e.a === 'Seal'), 'rename tag updates every reference');
+    t.eq(ed.deleteTag('Latch'), false, 'a tag in use cannot be deleted');
   });
 })();
 
