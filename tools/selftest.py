@@ -26,10 +26,18 @@ BROWSERS = [  # Chrome first: Edge prints nothing with --dump-dom on some Window
 
 
 def find_browser():
+    import shutil
     for b in BROWSERS:
         if os.path.exists(b):
             return b
-    sys.exit("No Edge/Chrome/Brave found")
+    for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"):
+        p = shutil.which(name)
+        if p:
+            return p
+    mac = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    if os.path.exists(mac):
+        return mac
+    sys.exit("No Chrome/Chromium/Brave found")
 
 
 def main():
@@ -37,7 +45,8 @@ def main():
     args = sys.argv[1:]
     # build into a private temp dir so parallel runs never overwrite each other (or the repo's index.html)
     work = tempfile.mkdtemp(prefix="sc-build-")
-    subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build.py"), "--out", work], stdout=subprocess.DEVNULL)
+    extra = ["--levels", args[args.index("--levels") + 1]] if "--levels" in args else []
+    subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "build.py"), "--out", work] + extra, stdout=subprocess.DEVNULL)
     only = None
     if "--only" in args:
         only = args[args.index("--only") + 1]
@@ -47,7 +56,7 @@ def main():
     with tempfile.TemporaryDirectory() as prof:
         cmd = [
             find_browser(), "--headless=new", "--disable-gpu", "--no-first-run",
-            "--no-default-browser-check", f"--user-data-dir={prof}",
+            "--no-default-browser-check", "--no-sandbox", f"--user-data-dir={prof}",
             "--virtual-time-budget=120000", "--dump-dom", url,
         ]
         res = subprocess.run(cmd, capture_output=True, timeout=600)

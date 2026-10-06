@@ -69,11 +69,20 @@ def safe_json(obj):
     return text.replace("</", "<\\/")
 
 
+ONLY = None  # set by --levels L01,L02 (release builds while other levels are still being written)
+
+
+def wanted(level_id):
+    return ONLY is None or level_id in ONLY
+
+
 def load_levels():
     levels = []
     for p in sorted(glob.glob(os.path.join(ROOT, "levels", "L*.json"))):
         with open(p, encoding="utf-8") as f:
-            levels.append(json.load(f))
+            lv = json.load(f)
+        if wanted(lv.get("id")):
+            levels.append(lv)
     levels.sort(key=lambda l: l.get("order", 0))
     return levels
 
@@ -81,11 +90,15 @@ def load_levels():
 def load_fixtures():
     fx = {"solutions": {}, "wrong": {}}
     for p in sorted(glob.glob(os.path.join(ROOT, "levels", "solutions", "*.json"))):
-        with open(p, encoding="utf-8") as f:
-            fx["solutions"][os.path.splitext(os.path.basename(p))[0]] = json.load(f)
+        name = os.path.splitext(os.path.basename(p))[0]
+        if wanted(name[:3]):
+            with open(p, encoding="utf-8") as f:
+                fx["solutions"][name] = json.load(f)
     for p in sorted(glob.glob(os.path.join(ROOT, "levels", "wrong", "*.json"))):
-        with open(p, encoding="utf-8") as f:
-            fx["wrong"][os.path.splitext(os.path.basename(p))[0]] = json.load(f)
+        name = os.path.splitext(os.path.basename(p))[0]
+        if wanted(name[:3]):
+            with open(p, encoding="utf-8") as f:
+                fx["wrong"][name] = json.load(f)
     return fx
 
 
@@ -110,7 +123,33 @@ def build(with_fixtures):
     return out
 
 
+def write_glossary():
+    """docs/glossary.md: the Arabic-English PLC glossary, generated from the levels' glossaryDefs."""
+    seen = {}
+    rows = []
+    for L in load_levels():
+        for d in L.get("glossaryDefs", []):
+            if d["id"] in seen:
+                continue
+            seen[d["id"]] = True
+            ar = d["ar"].replace("{{", "").replace("}}", "")
+            ex_en = d.get("ex", {}).get("en", "")
+            ex_ar = d.get("ex", {}).get("ar", "").replace("{{", "").replace("}}", "")
+            rows.append((L["id"], d["en"], ar, ex_en, ex_ar))
+    out = ["# PLC glossary — English / Arabic", "",
+           "Generated from the level files by `python tools/build.py`. Every term is real IDE / FAT vocabulary, introduced in the level shown.", "",
+           f"{len(rows)} terms.", "",
+           "| Term | العربية | Example | Level |", "|---|---|---|---|"]
+    for lid, en, ar, ex_en, ex_ar in rows:
+        out.append(f"| **{en}** | {ar} | {ex_en}<br>{ex_ar} | {lid} |")
+    write("docs/glossary.md", "\n".join(out) + "\n")
+    return len(rows)
+
+
 def main():
+    global ONLY
+    if "--levels" in sys.argv:
+        ONLY = set(sys.argv[sys.argv.index("--levels") + 1].split(","))
     out = None
     if "--out" in sys.argv:
         out = sys.argv[sys.argv.index("--out") + 1]
@@ -124,6 +163,8 @@ def main():
     else:
         write("index.html", idx)
         write("selftest.html", st)
+        n = write_glossary()
+        print(f"docs/glossary.md  {n} terms")
     print(f"index.html     {len(idx.encode('utf-8')) / 1024:.0f} KB")
     print(f"selftest.html  {len(st.encode('utf-8')) / 1024:.0f} KB")
     if len(idx.encode("utf-8")) > 1024 * 1024:

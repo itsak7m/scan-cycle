@@ -96,9 +96,11 @@ details > summary { cursor: pointer; min-height: 32px; display: flex; align-item
 .card-h h3 { margin: 0 0 8px; }
 .share-canvas { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
 .share input[type=text] { width: 100%; min-height: 44px; margin: 6px 0; border: 1.5px solid var(--ink); border-radius: 6px; padding: 0 8px; font-family: var(--mono); background: var(--surface); color: var(--ink); }
+.level-grid .card, .level-grid > *, .col-right > *, .col-left > * { min-width: 0; max-width: 100%; }
+.rung-scroll { max-width: 100%; }
 
 :root {
-  --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #5E7279; --line: #C6D0D2;
+  --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #4A5E64; --line: #C6D0D2;
   --power: #0B6E78; --alarm: #B3461E; --ok: #2F6B4C; --amber: #9A6B12;
   --font: system-ui, "Segoe UI", "SF Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
   --mono: ui-monospace, Consolas, Menlo, monospace;
@@ -207,6 +209,11 @@ code, pre { font-family: var(--mono); }
 .toast.show { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 
+.rung-stage { position: relative; }
+.rung-stage > .rung-grid, .rung-stage > .rung-overlay { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.rung-overlay { pointer-events: none; }
+.rung-overlay .bh { pointer-events: auto; }
+
 /* ---------- level layout (left learning column / right stage) ---------- */
 .col-left, .col-right { min-width: 0; }
 .col-left { position: sticky; top: 64px; max-height: calc(100vh - 76px); overflow: auto; align-self: start; padding-right: 2px; }
@@ -286,6 +293,14 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
 .lvl.done { border-color: var(--ok); }
 .lvl.next { border-color: var(--power); border-width: 2.5px; }
 .nextmark { color: var(--power); font-weight: 700; }
+
+.howto { margin-top: 10px; padding: 10px 12px; border: 1.5px dashed var(--power); border-radius: 8px; background: var(--ground); }
+.howto ol { margin: 6px 0 8px; padding-inline-start: 1.2em; font-size: .9rem; }
+
+/* screenshot helpers: ?focus=report | ladder shows only that card */
+body.focus-report :is(.col-left, .o-plant, .o-panel, .o-io, .o-ladder, .o-tags, .o-xfer),
+body.focus-ladder :is(.col-left, .o-plant, .o-panel, .o-io, .o-report, .o-tags, .o-xfer) { display: none !important; }
+body.focus-report .level-grid, body.focus-ladder .level-grid { grid-template-columns: 1fr; max-width: 1100px; }
 
 </style>
 </head>
@@ -1312,6 +1327,7 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
     stopperTravelMs: 400, pusherTravelMs: 150, pusherReach: 40, pumpTravelMs: 1500,
     capperStrokeMs: 300, capperTol: 35, labelerTol: 40, sealExposureMs: 300, meltMs: 2000,
     encPitch: 50,
+    autoCap: 0, outfeedPull: false, // autoCap = x (mm) of a stand-alone capper machine that caps every bottle (0 = off); outfeedPull = downstream conveyor carries away the bottle waiting at blockX when the outfeed is free, even with our motor OFF
     tankPct: 80, tankPerFillPct: 0.5,
     badIdx: [], badFlow: 0.6, missingCapIdx: [], noFoilIdx: [], challengeIdx: [], missingBottleIdx: [], doubleIdx: [], fallenIdx: [],
     preload: [],
@@ -1517,6 +1533,7 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
     for (const b of P.bottles) {
       b.px = b.x; // previous position, for smooth rendering
       let nx = b.x + dx;
+      if (c.outfeedPull && !dx && !P.flags.outfeedBlocked && b.x >= x.blockX - 1e-9) nx = b.x + (c.v * c.speedPct / 100) * dt / 1000;
       if (ahead) nx = Math.min(nx, ahead.x - c.minGap);
       if (P.stopper.pos > 0.5 && b.x <= holdX + 1e-9) nx = Math.min(nx, holdX);
       if (P.flags.outfeedBlocked) nx = Math.min(nx, x.blockX);
@@ -1528,6 +1545,13 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
       pushOff(P, b);
       P.counts.out++;
       if (isDefective(P, b)) P.counts.badShipped++; else P.counts.good++;
+    }
+
+    // ---- stand-alone capper machine (autoCap): caps every bottle that passes its position, unless the bottle is a miss (noCap) or the feeder is empty
+    if (c.autoCap) {
+      for (const b of P.bottles) {
+        if (!b.capDone && b.x >= c.autoCap) { b.capDone = true; if (!(b.noCap || P.faults.capFeederEmpty)) b.capped = true; }
+      }
     }
 
     // ---- encoder
@@ -1617,6 +1641,7 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
         else if (k === 'bottlesPerMin' || k === 'speedPct' || k === 'jitterMs' || k === 'fillSeconds') P.cfg[k] = v;
         else if (k === 'pumpTravelMs' || k === 'stopperTravelMs') P.cfg[k] = v;
         else if (k === 'spawnBottle') P.bottles.push(newBottle(P, -1, typeof v === 'object' ? v : {}));
+        else if (k === 'clearLine') { if (v) P.bottles = []; } // the operator removes every bottle by hand (line clearance)
       }
     }
   }
@@ -1680,7 +1705,7 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
     return out.map((e, i) => Object.assign({ _i: i }, e)).sort((a, b) => a.t - b.t || a._i - b._i);
   }
 
-  const METRIC_KEYS = ['out', 'good', 'rejected', 'spills', 'wastedCaps', 'goodLost', 'melted', 'badShipped', 'filledCount', 'overflow', 'bottlesPerMin', 'availability', 'performance', 'quality', 'oee', 'wastedLabels', 'spawned', 'estopTrips'];
+  const METRIC_KEYS = ['out', 'good', 'rejected', 'spills', 'wastedCaps', 'goodLost', 'melted', 'badShipped', 'filledCount', 'overflow', 'bottlesPerMin', 'availability', 'performance', 'quality', 'oee', 'wastedLabels', 'spawned', 'estopTrips', 'auditCount', 'auditUnauthorized'];
 
   function create(opts) {
     const level = opts.level || {};
@@ -1761,6 +1786,8 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
         case 'out': case 'good': case 'rejected': case 'spills': case 'wastedCaps': case 'goodLost': case 'melted': case 'badShipped': case 'wastedLabels': case 'spawned': return n[key];
         case 'filledCount': return n.filled;
         case 'overflow': return n.spills > 0 ? 1 : 0;
+        case 'auditCount': return sim.audit.filter((e) => e.tag !== undefined).length;                 // logged changes of watched tags (level.watchLog)
+        case 'auditUnauthorized': return sim.audit.filter((e) => e.tag !== undefined && !e.key).length; // ... made while Supervisor_Key was OFF
         case 'bottlesPerMin': case 'availability': case 'performance': case 'quality': case 'oee': return SC.plant.kpis(P)[key];
       }
       return undefined;
@@ -2273,13 +2300,14 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
   const SC = globalThis.SC;
   SC.demo = {
     lines: [
-      '[Start_PB | Run] Stop_PB EStop_OK (Run)',
-      'Run PE_Fill /Done (Busy)',
-      'Busy TON(DB_Fill,T#3s) (S:Done)',
-      '/PE_Fill (R:Done)',
-      'Run /Busy (Conveyor_Motor)',
-      'Busy (Fill_Valve)',
+      { t: '[Start_PB | Run] Stop_PB EStop_OK (Run)', note: 'Line run latch (seal-in). Stop is wired NC, so it is an NO contact.' },
+      { t: 'Run PE_Fill /Done (Busy)', note: 'A bottle is at the filler and not filled yet.' },
+      { t: 'Busy TON(DB_Fill,T#3s) (S:Done)', note: 'Fill for exactly 3.0 s, then remember "filled".' },
+      { t: '/PE_Fill (R:Done)', note: 'Forget it when the bottle has left the beam.' },
+      { t: 'Run /Busy (Conveyor_Motor)', note: 'The conveyor runs unless a bottle is being filled.' },
+      { t: 'Busy (Fill_Valve)', note: 'Open the valve while filling.' },
     ],
+    // lines may be strings or {t, note}
     tags: ['Start_PB', 'Stop_PB', 'EStop_OK', 'PE_Fill', 'Conveyor_Motor', 'Fill_Valve'].concat([
       { name: 'Run', addr: 'M0.0', type: 'Bool', user: true }, { name: 'Done', addr: 'M0.1', type: 'Bool', user: true }, { name: 'Busy', addr: 'M0.2', type: 'Bool', user: true },
     ]),
@@ -2380,6 +2408,75 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
   D.add('door_not_checked', {
     msg: { en: 'The door switch (Door_Closed) is never used. An open door must stop the line and block the restart until Reset.', ar: 'مفتاح الباب ({{Door_Closed}}) ما انستخدم. الباب المفتوح لازم يوقف الخط ويمنع التشغيل لحد {{Reset}}.'.replace(/\{\{|\}\}/g, '') },
     test: (ctx) => !ctx.usesTag('Door_Closed'),
+  });
+})();
+
+</script>
+<script>
+/* ==== src/core/diag/L04.js ==== */
+/* L04 diagnostics: stop at the filler, release latch cleared by the sensor */
+(function () {
+  'use strict';
+  const D = globalThis.SC.diag;
+
+  // any coil that is a memory bit (not the conveyor itself) or a seal-in on its own contact
+  function hasMemory(ctx) {
+    return ctx.program.rungs.some((rg, ri) => {
+      const els = ctx.rungEls(ri);
+      return els.some((x) => (x.e.t === 'OUT' || x.e.t === 'SET') && ctx.roleOf(x.e.a) !== 'actuator') ||
+        els.some((x) => x.e.t === 'OUT' && els.some((y) => y.e.t === 'NO' && y.e.a === x.e.a));
+    });
+  }
+
+  // bottle at the filler at power-up, Release tapped for 0.1 s: the conveyor must run while the bottle is still in the beam
+  const RESTOP = {
+    id: 'diag-L04-restop', seed: 7, durationMs: 2500, plant: { genOn: false, preload: [{ x: 500 }] },
+    events: [{ t: 1000, press: 'Release_PB', ms: 100 }],
+    asserts: [{ window: [1020, 1350], always: { Conveyor_Motor: true } }],
+  };
+  // two bottles arrive one after the other: after the first Release the second one must stop too
+  const RUNAWAY = {
+    id: 'diag-L04-runaway', seed: 8, durationMs: 7000, plant: { genOn: false, preload: [{ x: 420 }, { x: 300 }] },
+    events: [{ t: 2500, press: 'Release_PB', ms: 500 }],
+    asserts: [{ when: { PE_Fill: true }, within: 0, tol: 10, expect: { Conveyor_Motor: false } }],
+  };
+  // bottle already in the beam at the first scan
+  const POWERUP = {
+    id: 'diag-L04-powerup', seed: 9, durationMs: 700, plant: { genOn: false, preload: [{ x: 500 }] },
+    events: [],
+    asserts: [{ window: [10, 500], always: { Conveyor_Motor: false } }],
+  };
+
+  D.add('release_no_memory', {
+    msg: {
+      en: 'Release goes straight to the conveyor with no memory, so the belt runs only while the button is pressed. Then the bottle is still in the beam and it stops again. Add a memory bit that remembers "this bottle was released".',
+      ar: 'الـ {{Release}} موصول مباشرة بالناقل بدون ذاكرة، فالناقل بيشتغل بس طول ما الزر مضغوط. بعدين القنينة لسا بالشعاع وبتوقف مرة ثانية. زيد بت ذاكرة بيتذكّر إنه هاي القنينة انحرّرت.',
+    },
+    test: (ctx) => ctx.usesTag('Release_PB') && !hasMemory(ctx) && !ctx.probe(RESTOP).pass,
+  });
+
+  D.add('restop_same_bottle', {
+    msg: {
+      en: 'Release clears your stop memory, but PE_Fill sets it again at once, because the same bottle is still in the beam. Remember the release until PE_Fill goes back to 0.',
+      ar: 'الـ {{Release}} بيمسح ذاكرة التوقيف، بس {{PE_Fill}} بيرجّعها فورًا لأنه نفس القنينة لسا بالشعاع. تذكّر التحرير لحد ما {{PE_Fill}} يرجع 0.',
+    },
+    test: (ctx) => ctx.usesTag('Release_PB') && hasMemory(ctx) && !ctx.probe(RESTOP).pass,
+  });
+
+  D.add('release_latch_not_cleared', {
+    msg: {
+      en: 'The "released" memory is never cleared. After the first Release it stays ON, so the next bottles do not stop. Let PE_Fill = 0 clear it: put PE_Fill in series with the memory.',
+      ar: 'ذاكرة "انحرّرت" ما بتنمسح أبدًا. بعد أول {{Release}} بتضل شغّالة، فالقناني الجاية ما بتوقف. خلّي {{PE_Fill}} = 0 يمسحها: حط {{PE_Fill}} على التوالي مع الذاكرة.',
+    },
+    test: (ctx) => ctx.usesTag('Release_PB') && !ctx.probe(RUNAWAY).pass,
+  });
+
+  D.add('powerup_bottle_ignored', {
+    msg: {
+      en: 'A bottle that is already in the beam at power-up is not stopped. Your stop only works for a bottle that arrives after the beam was clear. PE_Fill = 1 must stop the conveyor, whenever it happens.',
+      ar: 'القنينة اللي أصلًا بالشعاع لحظة التشغيل ما بتتوقف. التوقيف تبعك بيشتغل بس لقنينة بتوصل بعد ما كان الشعاع فاضي. {{PE_Fill}} = 1 لازم يوقف الناقل، متى ما صار.',
+    },
+    test: (ctx) => ctx.usesTag('PE_Fill') && !ctx.probe(POWERUP).pass,
   });
 })();
 
@@ -2851,14 +2948,14 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
         return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
           + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
           + `<text class="blk-p" x="10" y="43">IN</text><text class="blk-p" x="74" y="43" text-anchor="end">Q</text>`
-          + `<text class="blk-p blk-pt" x="42" y="57" text-anchor="middle">PT ${X(trunc(el.pt, 9))}</text>`
-          + '<text class="blk-live" x="42" y="12" text-anchor="middle"></text>';
+          + `<text class="blk-p blk-pt" x="10" y="58">${X(trunc(el.pt, 8))}</text>`
+          + '<text class="blk-live" x="74" y="58" text-anchor="end"></text>';
       case 'CTU': case 'CTD': case 'CTUD':
         return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
           + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
           + `<text class="blk-p" x="10" y="43">${el.t === 'CTD' ? 'CD' : 'CU'}</text><text class="blk-p" x="74" y="43" text-anchor="end">Q</text>`
-          + `<text class="blk-p blk-pt" x="42" y="57" text-anchor="middle">PV ${X(trunc(el.pv, 6))}${el.rs ? ' R' : el.ld ? ' LD' : ''}</text>`
-          + '<text class="blk-live" x="42" y="12" text-anchor="middle"></text>';
+          + `<text class="blk-p blk-pt" x="10" y="58">PV ${X(trunc(el.pv, 5))}</text>`
+          + '<text class="blk-live" x="74" y="58" text-anchor="end"></text>';
       case 'CMP':
         return wires(6, 78) + '<rect class="sym blk" x="6" y="20" width="72" height="42" rx="3"/>'
           + `<text class="blk-p" x="42" y="34" text-anchor="middle">${X(trunc(el.a, 10))}</text>`
@@ -3755,8 +3852,10 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
       const wire = SC.compile.buildWire(rg.rows, rg.cols, new Set(rg.vb.map((b) => b[0] + ',' + b[1]))).wire;
       const refs = { cells: new Map(), bars: [], el: null, rung: rg };
       ed.refs[ri] = refs;
-      const grid = h('div', { class: 'rung-grid', role: 'grid', 'aria-label': 'Rung ' + (ri + 1), style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } });
-      grid.append(h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
+      const stage = h('div', { class: 'rung-stage', style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } });
+      const grid = h('div', { class: 'rung-grid', role: 'grid', 'aria-label': 'Rung ' + (ri + 1) });
+      const overlay = h('div', { class: 'rung-overlay', 'aria-hidden': 'true' }, h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
+      stage.append(grid, overlay);
       for (let r = 0; r < rg.rows; r++) {
         const row = h('div', { role: 'row', class: 'rowwrap' });
         for (let c = 0; c < rg.cols; c++) {
@@ -3777,10 +3876,10 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
           const x = RAIL + b * W, y1 = g * H + 40, y2 = (g + 1) * H + 40;
           if (on) {
             const bar = h('div', { class: 'vbar', style: { left: (x - 2) + 'px', top: y1 + 'px', height: (y2 - y1) + 'px' } });
-            grid.append(bar);
+            overlay.append(bar);
             refs.bars.push({ el: bar, b, g, on: -1 });
           }
-          grid.append(h('button', { type: 'button', class: 'bh' + (on ? ' on' : ''), tabindex: '-1', 'aria-label': tr(on ? 'Remove vertical bar' : 'Add vertical bar', on ? 'حذف الخط العمودي' : 'إضافة خط عمودي'),
+          overlay.append(h('button', { type: 'button', class: 'bh' + (on ? ' on' : ''), tabindex: '-1', 'aria-label': tr(on ? 'Remove vertical bar' : 'Add vertical bar', on ? 'حذف الخط العمودي' : 'إضافة خط عمودي'),
             style: { left: (x - 11) + 'px', top: ((y1 + y2) / 2 - 11) + 'px' }, onclick: () => toggleBar(ri, b, g) }, on ? '' : '+'));
         }
       }
@@ -3790,7 +3889,7 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
         h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Move rung up', disabled: ri === 0, onclick: () => moveRung(ri, -1) }, '↑'),
         h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Move rung down', disabled: ri === ed.program.rungs.length - 1, onclick: () => moveRung(ri, 1) }, '↓'),
         h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Delete rung', onclick: () => delRung(ri) }, '✕'));
-      const out = h('div', { class: 'rung', dataset: { ri } }, head, h('div', { class: 'rung-scroll' }, grid));
+      const out = h('div', { class: 'rung', dataset: { ri } }, head, h('div', { class: 'rung-scroll' }, stage));
       refs.el = out;
       return out;
     }
@@ -4338,6 +4437,17 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
     ar.hidden = !first;
     const tog = h('button', { type: 'button', class: 'btn small ghost', 'aria-expanded': String(first), onclick: () => { ar.hidden = !ar.hidden; tog.setAttribute('aria-expanded', String(!ar.hidden)); } }, 'AR · عربي');
     card.append(h('div', { class: 'wo-tools' }, tog, U.glossary.speakBtn(L.workOrder.en)), ar);
+    if (!U.data.settings.howto) {
+      const box = h('div', { class: 'howto', role: 'note' },
+        h('b', null, tr('How to play', 'كيف تلعب')),
+        h('ol', null,
+          h('li', null, tr('Read the work order. Tap a dotted word to see its Arabic meaning.', 'اقرا أمر الشغل. اضغط على أي كلمة منقّطة لتشوف معناها بالعربي.')),
+          h('li', null, tr('In the ladder, tap an empty cell, choose an instruction, then choose a tag.', 'بالـ ladder اضغط على خلية فاضية، اختار تعليمة، وبعدين اختار الـ tag.')),
+          h('li', null, tr('Test it on the line: hold the buttons in the operator panel.', 'جرّبه على الخط: اضغط وثبّت الأزرار بلوحة المشغّل.')),
+          h('li', null, tr('Press Run FAT. If a test fails you get a report that shows where.', 'اضغط Run FAT. إذا فشل فحص بيطلعلك تقرير بيبيّن وين.'))),
+        h('button', { type: 'button', class: 'btn small', onclick: () => { U.data.settings.howto = 1; U.save(); box.remove(); } }, tr('Got it', 'تمام')));
+      card.append(box);
+    }
     return card;
   }
 
@@ -4867,7 +4977,8 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
     if (userTags) ST.userTags = userTags;
     if (!ST.sim) return;
     const tags = SC.mergeTags(SC.levelTags(ST.level), ST.userTags);
-    ST.sim.compiled = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
+    const c = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
+    if (c.ok || !ST.sim.compiled.ok) ST.sim.compiled = c; // a program with errors is not "downloaded": the PLC keeps running the last good one
     for (const t of ST.userTags) if (!ST.sim.tagByName[t.name]) ST.sim.tagByName[t.name] = Object.assign({ _a: SC.addr.parseAddr(t.addr) }, t);
   };
 
@@ -5159,16 +5270,32 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
     const th = U.store.get('theme', null);
     if (th) document.documentElement.setAttribute('data-theme', th);
     const q = new URLSearchParams(location.search);
+    if (q.get('theme') === 'light' || q.get('theme') === 'dark') document.documentElement.setAttribute('data-theme', q.get('theme'));
     const open = q.get('level') || (location.hash.indexOf('#level=') === 0 ? location.hash.slice(7) : '');
     const sh = U.readShareHash();
     if (sh && sh.error) U.toast(tr('Could not read the shared link.', 'ما قدرت أقرا الرابط المشارك.'));
+    let opened = false;
     if (sh && !sh.error) {
       const L = sh.level === 'SBX' ? sandboxLevel() : ST.levels.find((l) => l.id === sh.level);
-      if (L) { openLevel(L, { program: sh.program, userTags: sh.userTags }); U.toast(tr('Shared program loaded.', 'انحمّل البرنامج المشارك.')); history.replaceState(null, '', location.href.split('#')[0]); return; }
+      if (L) { openLevel(L, { program: sh.program, userTags: sh.userTags }); U.toast(tr('Shared program loaded.', 'انحمّل البرنامج المشارك.')); history.replaceState(null, '', location.href.split('#')[0]); opened = true; }
     }
-    if (location.hash === '#sandbox') openLevel(sandboxLevel());
-    else if (open && ST.levels.find((l) => l.id === open)) openLevel(ST.levels.find((l) => l.id === open));
-    else showMap();
+    // ?level=L02&demo=["ladder text", ...]  loads a program written as ladder text (docs, screenshots, support)
+    if (!opened && q.get('demo') && open && ST.levels.find((l) => l.id === open)) {
+      try {
+        const L = ST.levels.find((l) => l.id === open);
+        const program = SC.dsl.parseProgram(JSON.parse(q.get('demo')));
+        openLevel(L, { program, userTags: SC.fixtures.autoTags(program, L) });
+        opened = true;
+      } catch (e) { U.toast('demo: ' + e.message); }
+    }
+    if (!opened) {
+      if (location.hash === '#sandbox') openLevel(sandboxLevel());
+      else if (open && ST.levels.find((l) => l.id === open)) openLevel(ST.levels.find((l) => l.id === open));
+      else showMap();
+    }
+    if (q.has('fat') && ST.env) setTimeout(() => { ST.env.ladder = ST.ladder; U.runFat(ST.env); }, 400);
+    const focus = q.get('focus'); // ?focus=ladder|report|fat|plant scrolls there (docs, screenshots)
+    if (focus) document.body.classList.add('focus-' + focus); // hides the other cards (screenshots)
   };
   U.onProgramChanged = () => { clearTimeout(U._refT); U._refT = setTimeout(() => { U.refreshTags(); U.refreshTransfer(); }, 150); };
   U.openLevel = openLevel;
@@ -5976,6 +6103,58 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
     t.ok(!U.validateImport({ v: 1, levels: { x: {} } }), 'bad level id is rejected');
     t.ok(!U.validateImport({ v: 1, levels: { L01: { program: { rungs: 5 } } } }), 'bad program shape is rejected');
     t.ok(U.validateImport({ v: 1, levels: { L01: { stars: 2, program: { rungs: [] } } } }), 'a valid save is accepted');
+  });
+})();
+
+</script>
+<script>
+/* ==== src/selftest/60-ui-learning.js ==== */
+/* Learning-layer UI: failure report, glossary links, timing diagrams (rendered into detached DOM). */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const T = SC.test;
+
+  T.suite('ui: failure report, glossary, diagrams', (t) => {
+    const levels = SC.levels.loadAll();
+    const L = levels[0];
+    if (!L) { t.ok(true, 'no levels embedded (skipped)'); return; }
+    const U = SC.ui;
+    U.glossary.init(levels);
+    // a wrong program: NC contact on Start
+    const program = SC.dsl.parseProgram(['/Start_PB (Conveyor_Motor)']);
+    const run = SC.scenario.runScenario(L, program, L.scenarios[0], { failFast: true });
+    t.ok(!run.pass && run.firstFailure, 'the wrong program fails the first scenario');
+    const box = document.createElement('div');
+    U.renderReport(box, { level: L, program, userTags: [], scenario: L.scenarios[0], failure: run.firstFailure, hidden: false, replay() {} });
+    t.ok(box.querySelector('.report'), 'report renders');
+    t.ok(box.querySelector('svg.tl'), 'report has an I/O timeline');
+    t.eq(box.querySelectorAll('.rung').length, 1, 'report shows the active rung');
+    t.ok(box.querySelector('.rung .cell[data-pout]'), 'rungs carry power-flow data');
+    t.ok(/NC contact/.test(box.textContent), 'the classic mistake is explained');
+    t.ok(/Which condition in rung 1/.test(box.textContent), 'a self-regulation question is asked');
+    t.ok(box.querySelectorAll('button').length >= 2, 'replay and close buttons exist');
+
+    const p = document.createElement('p');
+    U.glossary.linkText(p, L.workOrder.en, L.glossary);
+    t.ok(true, 'glossary links build without error');
+    // term words that belong to the level glossary become buttons
+    const lvWithTerm = levels.find((x) => /normally closed|seal-in|interlock|timer/i.test(x.workOrder.en) && x.glossary.length);
+    if (lvWithTerm) {
+      const q = document.createElement('p');
+      U.glossary.linkText(q, lvWithTerm.workOrder.en, lvWithTerm.glossary);
+      t.ok(q.querySelector('button.term'), `${lvWithTerm.id}: a glossary term in the work order is tappable`);
+    }
+    const ds = L.datasheets.find((d) => d.timing);
+    if (ds) {
+      const svg = U.timingSvg(ds.timing);
+      t.ok(/<svg/.test(svg) && /<path/.test(svg), 'timing diagram renders SVG');
+    }
+    // glossary map: every listed term of every level is defined
+    const gmap = SC.levels.glossaryMap(levels);
+    const missing = [];
+    levels.forEach((x) => x.glossary.forEach((id) => { if (!gmap[id]) missing.push(id); }));
+    t.eq(missing, [], 'every glossary id used by a level is defined');
   });
 })();
 

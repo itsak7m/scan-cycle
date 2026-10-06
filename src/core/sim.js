@@ -25,7 +25,7 @@
     return out.map((e, i) => Object.assign({ _i: i }, e)).sort((a, b) => a.t - b.t || a._i - b._i);
   }
 
-  const METRIC_KEYS = ['out', 'good', 'rejected', 'spills', 'wastedCaps', 'goodLost', 'melted', 'badShipped', 'filledCount', 'overflow', 'bottlesPerMin', 'availability', 'performance', 'quality', 'oee', 'wastedLabels', 'spawned', 'estopTrips'];
+  const METRIC_KEYS = ['out', 'good', 'rejected', 'spills', 'wastedCaps', 'goodLost', 'melted', 'badShipped', 'filledCount', 'overflow', 'bottlesPerMin', 'availability', 'performance', 'quality', 'oee', 'wastedLabels', 'spawned', 'estopTrips', 'auditCount', 'auditUnauthorized'];
 
   function create(opts) {
     const level = opts.level || {};
@@ -106,6 +106,8 @@
         case 'out': case 'good': case 'rejected': case 'spills': case 'wastedCaps': case 'goodLost': case 'melted': case 'badShipped': case 'wastedLabels': case 'spawned': return n[key];
         case 'filledCount': return n.filled;
         case 'overflow': return n.spills > 0 ? 1 : 0;
+        case 'auditCount': return sim.audit.filter((e) => e.tag !== undefined).length;                 // logged changes of watched tags (level.watchLog)
+        case 'auditUnauthorized': return sim.audit.filter((e) => e.tag !== undefined && !e.key).length; // ... made while Supervisor_Key was OFF
         case 'bottlesPerMin': case 'availability': case 'performance': case 'quality': case 'oee': return SC.plant.kpis(P)[key];
       }
       return undefined;

@@ -61,14 +61,14 @@
         return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
           + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
           + `<text class="blk-p" x="10" y="43">IN</text><text class="blk-p" x="74" y="43" text-anchor="end">Q</text>`
-          + `<text class="blk-p blk-pt" x="42" y="57" text-anchor="middle">PT ${X(trunc(el.pt, 9))}</text>`
-          + '<text class="blk-live" x="42" y="12" text-anchor="middle"></text>';
+          + `<text class="blk-p blk-pt" x="10" y="58">${X(trunc(el.pt, 8))}</text>`
+          + '<text class="blk-live" x="74" y="58" text-anchor="end"></text>';
       case 'CTU': case 'CTD': case 'CTUD':
         return wires(6, 78) + '<rect class="sym blk" x="6" y="15" width="72" height="50" rx="3"/>'
           + `<text class="blk-h" x="42" y="29" text-anchor="middle">${el.t}</text>`
           + `<text class="blk-p" x="10" y="43">${el.t === 'CTD' ? 'CD' : 'CU'}</text><text class="blk-p" x="74" y="43" text-anchor="end">Q</text>`
-          + `<text class="blk-p blk-pt" x="42" y="57" text-anchor="middle">PV ${X(trunc(el.pv, 6))}${el.rs ? ' R' : el.ld ? ' LD' : ''}</text>`
-          + '<text class="blk-live" x="42" y="12" text-anchor="middle"></text>';
+          + `<text class="blk-p blk-pt" x="10" y="58">PV ${X(trunc(el.pv, 5))}</text>`
+          + '<text class="blk-live" x="74" y="58" text-anchor="end"></text>';
       case 'CMP':
         return wires(6, 78) + '<rect class="sym blk" x="6" y="20" width="72" height="42" rx="3"/>'
           + `<text class="blk-p" x="42" y="34" text-anchor="middle">${X(trunc(el.a, 10))}</text>`

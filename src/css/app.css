@@ -88,3 +88,5 @@ details > summary { cursor: pointer; min-height: 32px; display: flex; align-item
 .card-h h3 { margin: 0 0 8px; }
 .share-canvas { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
 .share input[type=text] { width: 100%; min-height: 44px; margin: 6px 0; border: 1.5px solid var(--ink); border-radius: 6px; padding: 0 8px; font-family: var(--mono); background: var(--surface); color: var(--ink); }
+.level-grid .card, .level-grid > *, .col-right > *, .col-left > * { min-width: 0; max-width: 100%; }
+.rung-scroll { max-width: 100%; }

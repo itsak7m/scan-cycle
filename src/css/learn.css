@@ -77,3 +77,11 @@ body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none
 .lvl.done { border-color: var(--ok); }
 .lvl.next { border-color: var(--power); border-width: 2.5px; }
 .nextmark { color: var(--power); font-weight: 700; }
+
+.howto { margin-top: 10px; padding: 10px 12px; border: 1.5px dashed var(--power); border-radius: 8px; background: var(--ground); }
+.howto ol { margin: 6px 0 8px; padding-inline-start: 1.2em; font-size: .9rem; }
+
+/* screenshot helpers: ?focus=report | ladder shows only that card */
+body.focus-report :is(.col-left, .o-plant, .o-panel, .o-io, .o-ladder, .o-tags, .o-xfer),
+body.focus-ladder :is(.col-left, .o-plant, .o-panel, .o-io, .o-report, .o-tags, .o-xfer) { display: none !important; }
+body.focus-report .level-grid, body.focus-ladder .level-grid { grid-template-columns: 1fr; max-width: 1100px; }

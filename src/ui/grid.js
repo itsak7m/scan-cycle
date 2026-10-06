@@ -241,8 +241,10 @@
       const wire = SC.compile.buildWire(rg.rows, rg.cols, new Set(rg.vb.map((b) => b[0] + ',' + b[1]))).wire;
       const refs = { cells: new Map(), bars: [], el: null, rung: rg };
       ed.refs[ri] = refs;
-      const grid = h('div', { class: 'rung-grid', role: 'grid', 'aria-label': 'Rung ' + (ri + 1), style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } });
-      grid.append(h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
+      const stage = h('div', { class: 'rung-stage', style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } });
+      const grid = h('div', { class: 'rung-grid', role: 'grid', 'aria-label': 'Rung ' + (ri + 1) });
+      const overlay = h('div', { class: 'rung-overlay', 'aria-hidden': 'true' }, h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
+      stage.append(grid, overlay);
       for (let r = 0; r < rg.rows; r++) {
         const row = h('div', { role: 'row', class: 'rowwrap' });
         for (let c = 0; c < rg.cols; c++) {
@@ -263,10 +265,10 @@
           const x = RAIL + b * W, y1 = g * H + 40, y2 = (g + 1) * H + 40;
           if (on) {
             const bar = h('div', { class: 'vbar', style: { left: (x - 2) + 'px', top: y1 + 'px', height: (y2 - y1) + 'px' } });
-            grid.append(bar);
+            overlay.append(bar);
             refs.bars.push({ el: bar, b, g, on: -1 });
           }
-          grid.append(h('button', { type: 'button', class: 'bh' + (on ? ' on' : ''), tabindex: '-1', 'aria-label': tr(on ? 'Remove vertical bar' : 'Add vertical bar', on ? 'حذف الخط العمودي' : 'إضافة خط عمودي'),
+          overlay.append(h('button', { type: 'button', class: 'bh' + (on ? ' on' : ''), tabindex: '-1', 'aria-label': tr(on ? 'Remove vertical bar' : 'Add vertical bar', on ? 'حذف الخط العمودي' : 'إضافة خط عمودي'),
             style: { left: (x - 11) + 'px', top: ((y1 + y2) / 2 - 11) + 'px' }, onclick: () => toggleBar(ri, b, g) }, on ? '' : '+'));
         }
       }
@@ -276,7 +278,7 @@
         h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Move rung up', disabled: ri === 0, onclick: () => moveRung(ri, -1) }, '↑'),
         h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Move rung down', disabled: ri === ed.program.rungs.length - 1, onclick: () => moveRung(ri, 1) }, '↓'),
         h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Delete rung', onclick: () => delRung(ri) }, '✕'));
-      const out = h('div', { class: 'rung', dataset: { ri } }, head, h('div', { class: 'rung-scroll' }, grid));
+      const out = h('div', { class: 'rung', dataset: { ri } }, head, h('div', { class: 'rung-scroll' }, stage));
       refs.el = out;
       return out;
     }

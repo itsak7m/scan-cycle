@@ -24,6 +24,17 @@
     ar.hidden = !first;
     const tog = h('button', { type: 'button', class: 'btn small ghost', 'aria-expanded': String(first), onclick: () => { ar.hidden = !ar.hidden; tog.setAttribute('aria-expanded', String(!ar.hidden)); } }, 'AR · عربي');
     card.append(h('div', { class: 'wo-tools' }, tog, U.glossary.speakBtn(L.workOrder.en)), ar);
+    if (!U.data.settings.howto) {
+      const box = h('div', { class: 'howto', role: 'note' },
+        h('b', null, tr('How to play', 'كيف تلعب')),
+        h('ol', null,
+          h('li', null, tr('Read the work order. Tap a dotted word to see its Arabic meaning.', 'اقرا أمر الشغل. اضغط على أي كلمة منقّطة لتشوف معناها بالعربي.')),
+          h('li', null, tr('In the ladder, tap an empty cell, choose an instruction, then choose a tag.', 'بالـ ladder اضغط على خلية فاضية، اختار تعليمة، وبعدين اختار الـ tag.')),
+          h('li', null, tr('Test it on the line: hold the buttons in the operator panel.', 'جرّبه على الخط: اضغط وثبّت الأزرار بلوحة المشغّل.')),
+          h('li', null, tr('Press Run FAT. If a test fails you get a report that shows where.', 'اضغط Run FAT. إذا فشل فحص بيطلعلك تقرير بيبيّن وين.'))),
+        h('button', { type: 'button', class: 'btn small', onclick: () => { U.data.settings.howto = 1; U.save(); box.remove(); } }, tr('Got it', 'تمام')));
+      card.append(box);
+    }
     return card;
   }
 

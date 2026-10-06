@@ -21,6 +21,7 @@
     stopperTravelMs: 400, pusherTravelMs: 150, pusherReach: 40, pumpTravelMs: 1500,
     capperStrokeMs: 300, capperTol: 35, labelerTol: 40, sealExposureMs: 300, meltMs: 2000,
     encPitch: 50,
+    autoCap: 0, outfeedPull: false, // autoCap = x (mm) of a stand-alone capper machine that caps every bottle (0 = off); outfeedPull = downstream conveyor carries away the bottle waiting at blockX when the outfeed is free, even with our motor OFF
     tankPct: 80, tankPerFillPct: 0.5,
     badIdx: [], badFlow: 0.6, missingCapIdx: [], noFoilIdx: [], challengeIdx: [], missingBottleIdx: [], doubleIdx: [], fallenIdx: [],
     preload: [],
@@ -226,6 +227,7 @@
     for (const b of P.bottles) {
       b.px = b.x; // previous position, for smooth rendering
       let nx = b.x + dx;
+      if (c.outfeedPull && !dx && !P.flags.outfeedBlocked && b.x >= x.blockX - 1e-9) nx = b.x + (c.v * c.speedPct / 100) * dt / 1000;
       if (ahead) nx = Math.min(nx, ahead.x - c.minGap);
       if (P.stopper.pos > 0.5 && b.x <= holdX + 1e-9) nx = Math.min(nx, holdX);
       if (P.flags.outfeedBlocked) nx = Math.min(nx, x.blockX);
@@ -237,6 +239,13 @@
       pushOff(P, b);
       P.counts.out++;
       if (isDefective(P, b)) P.counts.badShipped++; else P.counts.good++;
+    }
+
+    // ---- stand-alone capper machine (autoCap): caps every bottle that passes its position, unless the bottle is a miss (noCap) or the feeder is empty
+    if (c.autoCap) {
+      for (const b of P.bottles) {
+        if (!b.capDone && b.x >= c.autoCap) { b.capDone = true; if (!(b.noCap || P.faults.capFeederEmpty)) b.capped = true; }
+      }
     }
 
     // ---- encoder
@@ -326,6 +335,7 @@
         else if (k === 'bottlesPerMin' || k === 'speedPct' || k === 'jitterMs' || k === 'fillSeconds') P.cfg[k] = v;
         else if (k === 'pumpTravelMs' || k === 'stopperTravelMs') P.cfg[k] = v;
         else if (k === 'spawnBottle') P.bottles.push(newBottle(P, -1, typeof v === 'object' ? v : {}));
+        else if (k === 'clearLine') { if (v) P.bottles = []; } // the operator removes every bottle by hand (line clearance)
       }
     }
   }

@@ -47,7 +47,8 @@
     if (userTags) ST.userTags = userTags;
     if (!ST.sim) return;
     const tags = SC.mergeTags(SC.levelTags(ST.level), ST.userTags);
-    ST.sim.compiled = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
+    const c = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
+    if (c.ok || !ST.sim.compiled.ok) ST.sim.compiled = c; // a program with errors is not "downloaded": the PLC keeps running the last good one
     for (const t of ST.userTags) if (!ST.sim.tagByName[t.name]) ST.sim.tagByName[t.name] = Object.assign({ _a: SC.addr.parseAddr(t.addr) }, t);
   };
 
@@ -339,16 +340,32 @@
     const th = U.store.get('theme', null);
     if (th) document.documentElement.setAttribute('data-theme', th);
     const q = new URLSearchParams(location.search);
+    if (q.get('theme') === 'light' || q.get('theme') === 'dark') document.documentElement.setAttribute('data-theme', q.get('theme'));
     const open = q.get('level') || (location.hash.indexOf('#level=') === 0 ? location.hash.slice(7) : '');
     const sh = U.readShareHash();
     if (sh && sh.error) U.toast(tr('Could not read the shared link.', 'ما قدرت أقرا الرابط المشارك.'));
+    let opened = false;
     if (sh && !sh.error) {
       const L = sh.level === 'SBX' ? sandboxLevel() : ST.levels.find((l) => l.id === sh.level);
-      if (L) { openLevel(L, { program: sh.program, userTags: sh.userTags }); U.toast(tr('Shared program loaded.', 'انحمّل البرنامج المشارك.')); history.replaceState(null, '', location.href.split('#')[0]); return; }
+      if (L) { openLevel(L, { program: sh.program, userTags: sh.userTags }); U.toast(tr('Shared program loaded.', 'انحمّل البرنامج المشارك.')); history.replaceState(null, '', location.href.split('#')[0]); opened = true; }
     }
-    if (location.hash === '#sandbox') openLevel(sandboxLevel());
-    else if (open && ST.levels.find((l) => l.id === open)) openLevel(ST.levels.find((l) => l.id === open));
-    else showMap();
+    // ?level=L02&demo=["ladder text", ...]  loads a program written as ladder text (docs, screenshots, support)
+    if (!opened && q.get('demo') && open && ST.levels.find((l) => l.id === open)) {
+      try {
+        const L = ST.levels.find((l) => l.id === open);
+        const program = SC.dsl.parseProgram(JSON.parse(q.get('demo')));
+        openLevel(L, { program, userTags: SC.fixtures.autoTags(program, L) });
+        opened = true;
+      } catch (e) { U.toast('demo: ' + e.message); }
+    }
+    if (!opened) {
+      if (location.hash === '#sandbox') openLevel(sandboxLevel());
+      else if (open && ST.levels.find((l) => l.id === open)) openLevel(ST.levels.find((l) => l.id === open));
+      else showMap();
+    }
+    if (q.has('fat') && ST.env) setTimeout(() => { ST.env.ladder = ST.ladder; U.runFat(ST.env); }, 400);
+    const focus = q.get('focus'); // ?focus=ladder|report|fat|plant scrolls there (docs, screenshots)
+    if (focus) document.body.classList.add('focus-' + focus); // hides the other cards (screenshots)
   };
   U.onProgramChanged = () => { clearTimeout(U._refT); U._refT = setTimeout(() => { U.refreshTags(); U.refreshTransfer(); }, 150); };
   U.openLevel = openLevel;

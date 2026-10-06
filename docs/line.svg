@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 250" width="1000" height="250" font-family="ui-monospace, Consolas, Menlo, monospace" font-size="12">
+  <rect width="1000" height="250" fill="#F7F8F8"/>
+  <title>Oral-syrup bottling line: stations and sensors</title>
+  <!-- belt -->
+  <rect x="20" y="150" width="960" height="14" rx="6" fill="#C6D0D2" stroke="#4A5E64" stroke-width="1.5"/>
+  <g stroke="#4A5E64" stroke-width="1.5" fill="#F7F8F8">
+    <rect x="70" y="62" width="110" height="40" rx="4"/><rect x="230" y="62" width="110" height="40" rx="4"/>
+    <rect x="390" y="62" width="110" height="40" rx="4"/><rect x="550" y="62" width="110" height="40" rx="4"/>
+    <rect x="700" y="62" width="110" height="40" rx="4"/><rect x="845" y="62" width="110" height="40" rx="4"/>
+  </g>
+  <g fill="#14262D" text-anchor="middle" font-weight="700">
+    <text x="125" y="86">INFEED</text><text x="285" y="86">FILLER</text><text x="445" y="86">CAPPER</text>
+    <text x="605" y="86">SEALER</text><text x="755" y="86">LABELER</text><text x="900" y="86">INSPECT / REJECT</text>
+  </g>
+  <!-- sensors -->
+  <g fill="#B3461E" font-size="11" text-anchor="middle">
+    <text x="125" y="125">PE_Infeed I0.4</text><text x="285" y="125">PE_Fill I0.5 · Level_OK I0.6</text>
+    <text x="445" y="125">PE_Cap I1.1 · Cap_Present I1.6</text><text x="605" y="125">Foil_Present I1.7</text>
+    <text x="900" y="125">PE_Reject I1.2</text>
+  </g>
+  <g stroke="#B3461E" stroke-dasharray="4 3"><path d="M125 130V150M285 130V150M445 130V150M605 130V150M900 130V150"/></g>
+  <!-- actuators -->
+  <g fill="#0B6E78" font-size="11" text-anchor="middle">
+    <text x="285" y="48">Fill_Valve Q0.1 · Stopper_SOL Q0.2</text><text x="445" y="48">Capper_Run Q0.3</text>
+    <text x="605" y="48">Sealer_Enable Q0.4</text><text x="755" y="48">Labeler_Trig Q0.5</text><text x="900" y="48">Reject_Pusher Q0.6</text>
+  </g>
+  <g fill="#14262D" font-size="12" text-anchor="middle">
+    <text x="500" y="196">Conveyor_Motor Q0.0  →  bottles move left to right</text>
+    <text x="500" y="220" fill="#B3461E" font-weight="700">Hardwired: E-stop and guard door cut motor / valve / solenoid power. The PLC only reads EStop_OK I0.2 and Door_Closed I0.3.</text>
+  </g>
+  <text x="975" y="190" text-anchor="end" fill="#4A5E64">OUTFEED  PE_Exit I1.3 · PE_Backup I1.5</text>
+</svg>
