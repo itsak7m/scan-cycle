@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Scan Cycle — a game that teaches PLC ladder logic on a bottling line.">
-<title>Scan Cycle</title>
+<title>Scan Cycle — self-test</title>
 <style>
 :root {
   --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #5E7279; --line: #C6D0D2;
@@ -36,10 +36,10 @@ code, pre { font-family: var(--mono); }
 
 </style>
 </head>
-<body>
+<body data-autotest="1">
 <div id="app"></div>
 <script type="application/json" id="levels">[]</script>
-
+<script type="application/json" id="fixtures">{"solutions":{},"wrong":{}}</script>
 <script>
 /* ==== src/core/prng.js ==== */
 /* Namespace + seeded PRNG (mulberry32). No Math.random anywhere in core. */

@@ -8,13 +8,14 @@ When Amir is PLAYING a level and asks for help: NEVER write, dictate, or "fix" a
 Exception: engine work — reference solutions in levels/solutions/ and wrong solutions in levels/wrong/ are test fixtures. Write and update them, keep them hidden from the UI.
 
 ## Engineering rules
-- Single-file runtime: index.html must work by double-click. No frameworks, no build required to play. levels/*.json is the source of truth; run tools/embed-levels.mjs after editing levels.
+- Single-file runtime: index.html must work by double-click. No frameworks, no build required to play. levels/*.json is the source of truth; run `python tools/build.py` after editing src/ or levels/ (it regenerates index.html and selftest.html; no Node on this machine, so the tools are Python).
 - scan() and plantStep() are pure and deterministic. Never call Date.now() or Math.random() inside them.
 - Honour PLC semantics in docs/level-format.md and the README "Semantics" section (scan cycle, last-write-wins, IEC timers/counters, NC stop tested with NO contact).
 - Hardwired E-stop stays hardwired. Never move safety into the ladder.
 - Every UI text has EN and AR. Every English term inside Arabic text is <bdi lang="en">.
 - Never colour alone. Keep touch targets ≥ 44px. Respect prefers-reduced-motion.
-- Run index.html?selftest before every commit. Do not commit if any level fails.
+- Run `python tools/selftest.py` before every commit (headless Chrome runs selftest.html). Do not commit if any level fails.
+- Reference/wrong solutions are embedded only in selftest.html, never in index.html.
 - Conventional commits. Push after each phase. Keep main playable.
 
 ## When Amir authors a new level

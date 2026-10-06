@@ -1,0 +1,27 @@
+:root {
+  --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #5E7279; --line: #C6D0D2;
+  --power: #0B6E78; --alarm: #B3461E; --ok: #2F6B4C; --amber: #9A6B12;
+  --font: system-ui, "Segoe UI", "SF Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  --mono: ui-monospace, Consolas, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #101A1E; --surface: #17252A; --ink: #E3ECEE; --muted: #9DB1B7; --line: #2C4249;
+    --power: #3FC1CE; --alarm: #FF8A5C; --ok: #6FCB98; --amber: #E0B04A;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #101A1E; --surface: #17252A; --ink: #E3ECEE; --muted: #9DB1B7; --line: #2C4249;
+  --power: #3FC1CE; --alarm: #FF8A5C; --ok: #6FCB98; --amber: #E0B04A;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--ground); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+code, pre { font-family: var(--mono); }
+.stub, .selftest { max-width: 1100px; margin: 1rem auto; padding: 1rem 1.25rem; }
+.selftest table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.selftest th, .selftest td { border: 1px solid var(--line); padding: 3px 8px; text-align: left; vertical-align: top; }
+.selftest tr.bad td { background: color-mix(in srgb, var(--alarm) 18%, transparent); }
+.selftest tr.ok td:first-child { color: var(--ok); font-weight: 600; }
+.selftest tr.bad td:first-child { color: var(--alarm); font-weight: 700; }
+.st-good { color: var(--ok); } .st-bad { color: var(--alarm); }
