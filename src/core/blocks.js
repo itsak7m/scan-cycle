@@ -29,6 +29,7 @@
   // Pulse: Q stays high for exactly PT after a rising edge; not retriggerable while running.
   function tp(s, inp, dt, pt) {
     s.PT = pt;
+    if (!inp && !s.run) s.ET = 0;
     const rise = inp && !s.prev;
     s.prev = inp ? 1 : 0;
     if (rise && !s.run) { s.run = 1; s.ET = 0; s.Q = pt > 0 ? 1 : 0; if (pt <= 0) s.run = 0; return s.Q; }

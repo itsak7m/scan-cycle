@@ -1,0 +1,1 @@
+{"level": "L10", "diag": "pusher_pulse_too_short", "note": "an edge contact in front of the pusher coil gives a 10 ms pulse; the pusher needs more than 150 ms, so it never moves", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Cap /Cap_Present (NoCap)", "Conv_Encoder POS(Enc_Edge) SHL(Track,NoCap)", "CMP(<,Track,0) POS(Edge_Hit) (Reject_Pusher)"]}

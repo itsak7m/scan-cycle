@@ -165,6 +165,6 @@
       h('button', { type: 'button', class: 'btn', onclick: () => { box.innerHTML = ''; } }, tr('Close report', 'سكّر التقرير')));
 
     box.append(h('div', { class: 'report' }, head, lines, where, qBox, dBox, tl, rungsBox, btns, h('p', { class: 'small muted' }, tr('Your program was not changed. Fix it and run the FAT again.', 'برنامجك ما تغيّر. صلّحه وشغّل الـ {{FAT}} مرة ثانية.').replace(/\{\{|\}\}/g, ''))));
-    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    box.scrollIntoView({ behavior: U.motion(), block: 'nearest' });
   };
 })();

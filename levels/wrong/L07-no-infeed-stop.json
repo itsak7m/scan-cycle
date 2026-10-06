@@ -1,0 +1,1 @@
+{"level": "L07", "diag": "batch_no_stop", "note": "the lamp turns ON at 12 but nothing stops the conveyor, so the 12th bottle and the next ones keep going", "lines": ["PE_Exit CTU(DB_Batch,12,Reset_PB) (Batch_Lamp)", "[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)"]}

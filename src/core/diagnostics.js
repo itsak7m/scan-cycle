@@ -49,7 +49,8 @@
       const id = CODE_TO_ID[e.code];
       if (id && reg[id]) push(id, typeof reg[id].msg === 'function' ? reg[id].msg(ctx) : reg[id].msg);
     }
-    const ids = (level.diagnostics || []).concat(GENERIC);
+    // level.skipGeneric: generic ids that give wrong advice in this level (e.g. nc_on_start when an NC Release contact is the correct latch-clear)
+    const ids = (level.diagnostics || []).concat(GENERIC.filter((g) => (level.skipGeneric || []).indexOf(g) < 0));
     for (const id of ids) {
       const d = reg[id];
       if (!d || seen.has(id)) continue;
@@ -74,12 +75,12 @@
   });
   add('nc_on_nc_stop', {
     msg: (ctx) => {
-      const x = ctx.find((y) => y.e.t === 'NC' && ['stop', 'estop'].indexOf(ctx.roleOf(y.e.a)) >= 0 && (ctx.tag(y.e.a) || {}).wiring === 'NC');
+      const x = ctx.find((y) => y.e.t === 'NC' && ['stop', 'estop', 'guard'].indexOf(ctx.roleOf(y.e.a)) >= 0 && (ctx.tag(y.e.a) || {}).wiring === 'NC');
       const n = x ? x.e.a : 'Stop_PB';
       return { en: `Your Stop contact is NC (-|/|-) but ${n} is wired normally closed. The contact symbol tests the BIT, not the device: the bit is 1 when the button is idle, so use an NO contact.`,
         ar: `الـ contact تبعك NC (-|/|-) بس ${n} موصول NC. رمز الـ contact بيفحص الـ بت مش الجهاز: البت = 1 لما الزر مش مضغوط، فاستخدم NO contact.` };
     },
-    test: (ctx) => !!ctx.find((y) => y.e.t === 'NC' && ['stop', 'estop'].indexOf(ctx.roleOf(y.e.a)) >= 0 && (ctx.tag(y.e.a) || {}).wiring === 'NC'),
+    test: (ctx) => !!ctx.find((y) => y.e.t === 'NC' && ['stop', 'estop', 'guard'].indexOf(ctx.roleOf(y.e.a)) >= 0 && (ctx.tag(y.e.a) || {}).wiring === 'NC'),
   });
   add('double_coil', {
     msg: { en: 'Double coil: two coils write the same bit. The last one in the scan wins, so the first one is useless. Use ONE coil and put the conditions in parallel.', ar: 'Double coil: ملفين بيكتبوا على نفس البت. الأخير بالـ scan بيغلب، فالأول ما إله فايدة. استخدم ملف واحد وحط الشروط على التوازي.' },

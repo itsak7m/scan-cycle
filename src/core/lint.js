@@ -19,6 +19,7 @@
     };
 
     const coils = new Map();   // canon -> [{ri,e}]
+    const writes = new Set();  // every bit written by a coil / set / reset
     const edges = new Map();
     const insts = new Map();   // name -> [{ri,e}]
     const used = new Set();    // tag names referenced
@@ -29,6 +30,7 @@
       for (const e of els) if (e.t === 'POS' || e.t === 'NEG') hasEdge = true;
       for (const e of els) {
         for (const k of ['a', 'b', 'o', 'w', 'rs', 'ld', 'cd']) if (typeof e[k] === 'string') used.add(e[k]);
+        if (e.t === 'OUT' || e.t === 'SET' || e.t === 'RST') { const wc = canon(e.a); if (wc) writes.add(wc); }
         if (e.t === 'OUT') {
           const c = canon(e.a);
           if (c) { if (!coils.has(c)) coils.set(c, []); coils.get(c).push({ ri, e }); }
@@ -45,7 +47,7 @@
         }
         if (e.t === 'NC') {
           const t = tm.byName[e.a];
-          if (t && t.wiring === 'NC' && (t.role === 'stop' || t.role === 'estop')) {
+          if (t && t.wiring === 'NC' && (t.role === 'stop' || t.role === 'estop' || t.role === 'guard')) {
             add('nc_on_nc_stop', 'warn', ri, e,
               `${e.a} is wired normally closed, so its bit is 1 when idle. An NC contact passes power only when the button is pressed. Use an NO contact.`,
               `${e.a} موصول NC فالبت = 1 وهو مش مضغوط. الـ NC contact بيمرّر فقط لما الزر ينضغط. استخدم NO contact.`);
@@ -82,6 +84,7 @@
       }
     }
     for (const [c, list] of edges) {
+      if (writes.has(c)) add('edge_bit_shared', 'error', list[0].ri, list[0].e, `Edge memory ${c} is also written by a coil — an edge contact writes its own bit every scan`, `ذاكرة الـ edge ${c} مكتوبة كمان من ملف — الـ edge بيكتب بتّه كل scan`);
       if (list.length > 1) {
         for (let k = 1; k < list.length; k++) {
           add('edge_bit_reused', 'error', list[k].ri, list[k].e,

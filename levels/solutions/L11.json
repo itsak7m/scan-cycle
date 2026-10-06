@@ -1,0 +1,1 @@
+{"lines": ["PE_Fill /Tank_LSLL (Fill_Valve)", "PE_Backup TON(DB_Jam,T#5s)", "[Tank_LSL POS(E_LSL) | Tank_LSLL POS(E_LSLL) | DB_Jam.Q POS(E_Jam)] (S:Unack)", "Ack_PB (R:Unack)", "/DB_B.Q TON(DB_A,T#500ms)", "DB_A.Q TON(DB_B,T#500ms)", "Unack (Horn)", "[Unack DB_A.Q | /Unack Tank_LSL | /Unack Tank_LSLL | /Unack DB_Jam.Q] (Alarm_Lamp)"]}

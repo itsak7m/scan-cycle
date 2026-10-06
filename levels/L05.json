@@ -1,0 +1,135 @@
+{
+  "id": "L05", "order": 5,
+  "title": {"en": "Fill Timer", "ar": "مؤقّت التعبئة"},
+  "concept": "TON on-delay timer, T# time literal, fill for an exact time",
+  "workOrder": {
+    "en": "When a bottle reaches the filler, stop the conveyor and open the fill valve for exactly 3.0 seconds. Then close the valve and let the bottle go by itself. Never fill when no bottle is present. The conveyor runs by itself when the filler is empty.",
+    "ar": "لما قنينة توصل الحشّاء، وقّف الناقل وافتح صمام التعبئة {{Fill_Valve}} بالضبط 3.0 ثواني. بعدين سكّر الصمام وخلّي القنينة تمشي لحالها. ممنوع تعبّي وما في قنينة. الناقل بيشتغل لحاله لما الحشّاء فاضية."
+  },
+  "datasheets": [
+    {
+      "id": "ton_timer", "title": {"en": "TON on-delay timer", "ar": "مؤقّت التأخير TON"},
+      "rows": [["Block", "TON(instance, PT)"], ["IN", "the timer counts while IN = 1"], ["PT", "preset time, written T#3s"], ["ET", "elapsed time, counts from 0 up to PT"], ["Q", "output: 1 when ET reaches PT"], ["IN goes to 0", "ET = 0 and Q = 0 (starts again)"]],
+      "note": {"en": "Q turns ON only after IN has been ON for the whole preset time. If IN drops before that, the timer starts again from 0. Each timer needs its own instance name, for example DB_Fill. You can use its output as a contact: DB_Fill.Q.", "ar": "الـ {{Q}} بيشتغل بس بعد ما {{IN}} يضل شغّال طول الزمن المحدد. إذا {{IN}} وقع قبل هيك، المؤقّت بيبدأ من الصفر. كل مؤقّت بده اسم {{instance}} خاص فيه، مثلًا {{DB_Fill}}. وبتقدر تستخدم مخرجه كـ {{contact}}: {{DB_Fill.Q}}."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "IN", "wave": "0011111100"}, {"name": "Q (PT = 1.5 s)", "wave": "0000011100"}]}
+    },
+    {
+      "id": "time_literal", "title": {"en": "Time literals", "ar": "صيغة الوقت"},
+      "rows": [["T#3s", "3 seconds"], ["T#500ms", "500 milliseconds"], ["T#1m30s", "1 minute 30 seconds"], ["3", "not a time: the PLC rejects it"]],
+      "note": {"en": "A preset time must start with T#. A plain number is not a time.", "ar": "الزمن المحدد لازم يبدأ بـ {{T#}}. الرقم العادي مش وقت."}
+    },
+    {
+      "id": "fill_valve", "title": {"en": "Fill valve and fill level", "ar": "صمام التعبئة ومستوى التعبئة"},
+      "rows": [["Tag", "Fill_Valve  (Q0.1)"], ["Bit = 1", "valve open, syrup flows"], ["Bit = 0", "valve closed"], ["Open for 3.0 s", "bottle level = 90 %"], ["Level OK", "88 % or more"], ["Overflow", "more than 100 % (spill)"]],
+      "note": {"en": "Too short = underfill. Too long = overflow and a spill. An open valve with no bottle under it is a spill too.", "ar": "قصير = {{underfill}} (نقص). طويل = {{overflow}} (طفحان) وانسكاب. صمام مفتوح وما في قنينة تحته هو انسكاب كمان."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "PE_Fill", "wave": "0011111110"}, {"name": "Fill_Valve", "wave": "0011111100"}]}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH", "TON"],
+  "tags": ["PE_Fill", "Fill_Valve", "Conveyor_Motor"],
+  "plant": {"stations": ["infeed", "filler"], "bottlesPerMin": 20, "jitterMs": 150, "fillSeconds": 3.0},
+  "starter": null,
+  "example": {
+    "mode": "full",
+    "title": {"en": "Worked example: seal the foil for 2 seconds", "ar": "مثال محلول: ختم الرقاقة لمدة ثانيتين"},
+    "lines": ["PE_Cap TON(DB_Seal,T#2s)", "PE_Cap /DB_Seal.Q (Sealer_Enable)"],
+    "explain": [
+      {"rung": 1,
+       "en": "PE_Cap is ON while a bottle is under the sealer. While IN is ON the timer counts up. When ET reaches PT (T#2s), the output Q of DB_Seal turns ON. If the bottle leaves, IN is OFF and the timer goes back to 0.",
+       "ar": "الـ {{PE_Cap}} شغّال طول ما في قنينة تحت الـ {{sealer}}. طول ما {{IN}} شغّال المؤقّت بيعدّ. لما {{ET}} توصل {{PT}} ({{T#2s}})، المخرج {{Q}} تبع {{DB_Seal}} بيشتغل. إذا القنينة راحت، {{IN}} بينطفي والمؤقّت بيرجع للصفر."},
+      {"rung": 2,
+       "en": "The sealer runs while a bottle is present AND DB_Seal.Q is still OFF. The NC contact passes power while Q = 0. So the sealer works for the first 2 seconds only, then it stops.",
+       "ar": "الـ {{sealer}} بيشتغل لما في قنينة وكمان {{DB_Seal.Q}} لسا مطفي. الـ {{NC contact}} بيمرّر الـ power طول ما {{Q}} = 0. فالـ {{sealer}} بيشتغل أول ثانيتين بس وبعدين بيوقف."}
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "L05-one-bottle", "title": {"en": "One bottle: fill, then release", "ar": "قنينة وحدة: تعبئة وبعدين تحرير"}, "seed": 51, "durationMs": 9000,
+      "events": [],
+      "asserts": [
+        {"when": {"PE_Fill": true}, "within": 0, "tol": 10, "expect": {"Conveyor_Motor": false}, "msg": {"en": "The bottle reached the filler: the conveyor must stop", "ar": "القنينة وصلت الحشّاء: الناقل لازم يوقف"}},
+        {"when": {"PE_Fill": true}, "within": 0, "tol": 20, "expect": {"Fill_Valve": true}, "msg": {"en": "A bottle is at the filler: the fill valve must open", "ar": "في قنينة عند الحشّاء: صمام التعبئة لازم يفتح"}},
+        {"when": {"Fill_Valve": true}, "within": 3020, "tol": 0, "expect": {"Fill_Valve": false}, "msg": {"en": "The valve must close after 3.0 seconds, not later", "ar": "الصمام لازم يسكّر بعد 3.0 ثواني، مش بعدها"}},
+        {"when": {"Fill_Valve": true}, "within": 3400, "tol": 0, "expect": {"Level_OK": true}, "msg": {"en": "The bottle did not reach the fill level (underfill). The valve was open too short", "ar": "القنينة ما وصلت مستوى التعبئة ({{underfill}}). الصمام كان مفتوح وقت قصير"}},
+        {"when": {"Fill_Valve": true}, "within": 3400, "tol": 0, "expect": {"Conveyor_Motor": true}, "msg": {"en": "After the fill the bottle must be released automatically: the conveyor runs", "ar": "بعد التعبئة لازم القنينة تنحرّر لحالها: الناقل بيشتغل"}},
+        {"window": [0, 9000], "never": {"Fill_Valve": true, "PE_Fill": false}, "msg": {"en": "The valve is open but no bottle is present", "ar": "الصمام مفتوح وما في قنينة"}},
+        {"window": [0, 9000], "never": {"overflow": true}, "msg": {"en": "Overflow: a spill happened (too much fill time, or a valve open with no bottle)", "ar": "{{overflow}}: صار انسكاب (وقت تعبئة زيادة، أو صمام مفتوح وما في قنينة)"}},
+        {"t": 8500, "expect": {"filledCount": {"gte": 1}}, "msg": {"en": "The bottle was not filled to the level", "ar": "القنينة ما انعبّت للمستوى"}}
+      ]
+    },
+    {
+      "id": "L05-valve-timing", "title": {"en": "Valve timing: 3.0 s, plus or minus 20 ms", "ar": "توقيت الصمام: 3.0 ثواني، زائد أو ناقص 20 ms"}, "seed": 52, "durationMs": 6000,
+      "plant": {"genOn": false, "preload": [{"x": 500}]},
+      "events": [],
+      "asserts": [
+        {"t": 0, "expect": {"Fill_Valve": true}, "tol": 20, "msg": {"en": "A bottle is already at the filler: the valve must open at once", "ar": "في قنينة أصلًا عند الحشّاء: الصمام لازم يفتح فورًا"}},
+        {"window": [10, 2900], "always": {"Conveyor_Motor": false}, "msg": {"en": "The conveyor must stay OFF while the bottle is being filled", "ar": "الناقل لازم يضل مطفي طول ما القنينة عم تنعبّى"}},
+        {"window": [20, 2950], "always": {"Fill_Valve": true}, "msg": {"en": "The valve must stay open for the whole 3.0 seconds", "ar": "الصمام لازم يضل مفتوح 3.0 ثواني كاملة"}},
+        {"t": 3000, "expect": {"Fill_Valve": false}, "tol": 20, "msg": {"en": "The valve must close after 3.0 seconds", "ar": "الصمام لازم يسكّر بعد 3.0 ثواني"}},
+        {"window": [3030, 6000], "always": {"Fill_Valve": false}, "msg": {"en": "After the fill the valve must stay closed", "ar": "بعد التعبئة الصمام لازم يضل مسكّر"}},
+        {"t": 3050, "expect": {"Conveyor_Motor": true}, "tol": 50, "msg": {"en": "When the fill is done the conveyor must run and release the bottle", "ar": "لما تخلص التعبئة الناقل لازم يشتغل ويحرّر القنينة"}},
+        {"window": [0, 6000], "never": {"overflow": true}, "msg": {"en": "Overflow: the bottle got too much", "ar": "{{overflow}}: القنينة أخدت كثير"}},
+        {"t": 5900, "expect": {"filledCount": {"eq": 1}}, "msg": {"en": "Exactly one bottle must be filled to the level", "ar": "لازم قنينة وحدة بالضبط تنعبّى للمستوى"}}
+      ]
+    },
+    {
+      "id": "L05-two-close", "title": {"en": "Two bottles close together", "ar": "قنينتين قريبين من بعض"}, "seed": 53, "durationMs": 10000,
+      "plant": {"genOn": false, "preload": [{"x": 340}, {"x": 240}]},
+      "events": [],
+      "asserts": [
+        {"when": {"PE_Fill": true}, "within": 0, "tol": 20, "expect": {"Fill_Valve": true}, "msg": {"en": "Every bottle at the filler must get its own fill", "ar": "كل قنينة عند الحشّاء لازم تاخد تعبئة خاصة فيها"}},
+        {"when": {"Fill_Valve": true}, "within": 3020, "tol": 0, "expect": {"Fill_Valve": false}, "msg": {"en": "The valve must close after 3.0 seconds", "ar": "الصمام لازم يسكّر بعد 3.0 ثواني"}},
+        {"when": {"Fill_Valve": true}, "within": 3400, "tol": 0, "expect": {"Level_OK": true}, "msg": {"en": "A bottle did not reach the fill level", "ar": "قنينة ما وصلت مستوى التعبئة"}},
+        {"window": [0, 10000], "never": {"Fill_Valve": true, "PE_Fill": false}, "msg": {"en": "The valve is open but no bottle is present", "ar": "الصمام مفتوح وما في قنينة"}},
+        {"window": [0, 10000], "never": {"overflow": true}, "msg": {"en": "Overflow: a bottle was filled twice, or the valve was open with no bottle", "ar": "{{overflow}}: قنينة انعبّت مرتين، أو الصمام كان مفتوح وما في قنينة"}},
+        {"t": 9500, "expect": {"filledCount": {"eq": 2}}, "msg": {"en": "Both bottles must be filled, once each", "ar": "القنينتين لازم تنعبّوا، مرة لكل وحدة"}}
+      ]
+    },
+    {
+      "id": "L05-eye-stuck", "title": {"en": "Photo-eye stuck ON: only one fill", "ar": "العين الضوئية عالقة ON: تعبئة وحدة بس"}, "seed": 54, "durationMs": 14000,
+      "plant": {"preload": [{"x": 500}]},
+      "events": [{"t": 1500, "fault": "peStuckOn", "arg": "PE_Fill"}],
+      "asserts": [
+        {"t": 20, "expect": {"Fill_Valve": true}, "tol": 20, "msg": {"en": "The first bottle is at the filler: fill it", "ar": "القنينة الأولى عند الحشّاء: عبّيها"}},
+        {"t": 3000, "expect": {"Fill_Valve": false}, "tol": 20, "msg": {"en": "The first bottle must get exactly 3.0 seconds, even if the eye sticks", "ar": "القنينة الأولى لازم تاخد 3.0 ثواني بالضبط، حتى لو العين علقت"}},
+        {"window": [3050, 14000], "always": {"Fill_Valve": false}, "msg": {"en": "The eye is stuck ON. Do not fill again: the timer must not start a second fill", "ar": "العين عالقة ON. لا تعبّي مرة ثانية: المؤقّت ما لازم يبدأ تعبئة ثانية"}},
+        {"window": [0, 14000], "never": {"overflow": true}, "msg": {"en": "Overflow: the line filled again without a bottle or filled one bottle twice", "ar": "{{overflow}}: الخط عبّى مرة ثانية بدون قنينة أو عبّى نفس القنينة مرتين"}},
+        {"t": 13900, "expect": {"filledCount": {"eq": 1}}, "msg": {"en": "Only one bottle must be filled", "ar": "قنينة وحدة بس لازم تنعبّى"}}
+      ]
+    },
+    {
+      "id": "L05-no-bottle", "title": {"en": "No bottle: never fill", "ar": "ما في قنينة: ممنوع التعبئة"}, "seed": 55, "durationMs": 6000,
+      "plant": {"genOn": false},
+      "events": [],
+      "asserts": [
+        {"window": [0, 6000], "always": {"Fill_Valve": false}, "msg": {"en": "There is no bottle at the filler: the valve must stay closed", "ar": "ما في قنينة عند الحشّاء: الصمام لازم يضل مسكّر"}},
+        {"window": [0, 6000], "always": {"Conveyor_Motor": true}, "msg": {"en": "The filler is empty: the conveyor must run by itself", "ar": "الحشّاء فاضية: الناقل لازم يشتغل لحاله"}},
+        {"window": [0, 6000], "never": {"overflow": true}, "msg": {"en": "Overflow: the valve was open with no bottle", "ar": "{{overflow}}: الصمام كان مفتوح وما في قنينة"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 8, "seedBase": 5000, "vary": {"jitterMs": [0, 400], "genDelayMs": [0, 1200], "plant": {"fillSeconds": [-8, 1.5]}}},
+  "diagnostics": ["pt_not_time_literal", "timer_fed_by_own_output", "refill_same_bottle", "fill_without_bottle", "fill_time_wrong", "conveyor_runs_while_filling", "bottle_not_released"],
+  "hints": [
+    {"en": "Open the failed test. Look at Fill_Valve and PE_Fill at that time. Is the valve open too long, too short, or with no bottle? Did the bottle get filled twice?", "ar": "افتح الفحص اللي فشل. شوف {{Fill_Valve}} و{{PE_Fill}} بهداك الوقت. هل الصمام مفتوح وقت طويل، أو قصير، أو وما في قنينة؟ هل القنينة انعبّت مرتين؟"},
+    {"en": "Look at your timer. What turns it ON (IN)? It must count while the bottle is at the filler. How do you know the 3 seconds are over? Use the output Q, and keep the time as T#3s.", "ar": "شوف المؤقّت تبعك. شو اللي بيشغّله ({{IN}})؟ لازم يعدّ طول ما القنينة عند الحشّاء. كيف بتعرف إنه الـ 3 ثواني خلصوا؟ استخدم المخرج {{Q}}، وخلّي الوقت {{T#3s}}."},
+    {"en": "A timer that counts while a bottle is present: PE_Fill, then TON, then a Filled memory. The valve is open while PE_Fill is ON and Filled is OFF. The conveyor runs when the beam is clear OR Filled.", "ar": "مؤقّت بيعدّ طول ما في قنينة: {{PE_Fill}} ثم {{TON}} ثم ذاكرة {{Filled}}. الصمام مفتوح لما {{PE_Fill}} شغّال و{{Filled}} مطفي. الناقل بيشتغل لما الشعاع فاضي أو {{Filled}}.", "lines": ["PE_Fill TON(DB_Fill,T#3s) (Filled)"]}
+  ],
+  "glossary": ["timer", "on_delay", "preset_time", "elapsed_time", "instance", "time_literal", "overflow", "underfill", "present", "release", "latch"],
+  "glossaryDefs": [
+    {"id": "timer", "en": "timer", "ar": "مؤقّت", "ex": {"en": "The timer counts up to 3 seconds.", "ar": "المؤقّت بيعدّ لحد 3 ثواني."}},
+    {"id": "on_delay", "en": "on-delay (TON)", "ar": "تأخير التشغيل", "ex": {"en": "An on-delay timer turns its output ON after a delay.", "ar": "مؤقّت {{on-delay}} بيشغّل مخرجه بعد تأخير."}},
+    {"id": "preset_time", "en": "preset time (PT)", "ar": "الزمن المحدد", "ex": {"en": "The preset time is T#3s.", "ar": "الزمن المحدد هو {{T#3s}}."}},
+    {"id": "elapsed_time", "en": "elapsed time (ET)", "ar": "الزمن المنقضي", "ex": {"en": "The elapsed time grows while IN is ON.", "ar": "الزمن المنقضي بيزيد طول ما {{IN}} شغّال."}},
+    {"id": "instance", "en": "instance", "ar": "نسخة البلوك", "ex": {"en": "Every timer needs its own instance, like DB_Fill.", "ar": "كل مؤقّت بده {{instance}} خاص فيه، مثل {{DB_Fill}}."}},
+    {"id": "time_literal", "en": "time literal", "ar": "صيغة الوقت", "ex": {"en": "T#3s is a time literal for 3 seconds.", "ar": "{{T#3s}} صيغة وقت معناها 3 ثواني."}},
+    {"id": "overflow", "en": "overflow", "ar": "طفحان", "ex": {"en": "Too much fill time causes an overflow and a spill.", "ar": "وقت تعبئة زيادة بيسبّب {{overflow}} وانسكاب."}},
+    {"id": "underfill", "en": "underfill", "ar": "نقص التعبئة", "ex": {"en": "A short fill time gives an underfill.", "ar": "وقت تعبئة قصير بيعطي {{underfill}}."}}
+  ],
+  "explain": {"frames": [
+    {"en": "When {sensor} sees a bottle, the conveyor stops and the timer starts to count {time}.", "ar": "لما {sensor} يشوف قنينة، الناقل بيوقف والمؤقّت بيبدأ يعدّ {time}."},
+    {"en": "While the timer counts, {valve} is open. When the time is up, {valve} closes.", "ar": "طول ما المؤقّت بيعدّ، {valve} مفتوح. لما الوقت يخلص، {valve} بيسكّر."},
+    {"en": "When the time is up, the conveyor runs and the bottle leaves. When {sensor} goes OFF, the timer is ready for the next bottle.", "ar": "لما الوقت يخلص، الناقل بيشتغل والقنينة بتمشي. لما {sensor} ينطفي، المؤقّت جاهز للقنينة الجاية."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 3}, {"id": "clean", "noLint": true}]
+}

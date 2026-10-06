@@ -49,6 +49,24 @@
       need(s.title && s.title.en && s.title.ar, `scenario ${s.id}: needs a title {en,ar} (shown in the FAT list)`);
     });
     need(level.hidden && level.hidden.count >= 3, 'hidden.count must be at least 3');
+    const OPS = ['gte', 'gt', 'lte', 'lt', 'eq', 'ne'];
+    const okInput = (k) => !!(SC.ioByName[k] && SC.ioByName[k].addr[0] === 'I') || !!(SC.addr.parseAddr(k) && /^I/.test(SC.addr.parseAddr(k).arr));
+    scen.forEach((s) => {
+      need(typeof s.durationMs === 'number', `scenario ${s.id}: durationMs must be a number`);
+      for (const ev of s.events || []) {
+        if (ev.press) need(SC.ioByName[ev.press] && SC.ioByName[ev.press].src === 'panel', `scenario ${s.id}: press "${ev.press}" is not an operator input`);
+        if (ev.set) for (const k in ev.set) need(okInput(k), `scenario ${s.id}: set "${k}" is not an input`);
+      }
+      for (const a of s.asserts || []) {
+        for (const cond of [a.expect, a.never, a.always, a.when]) {
+          if (!cond) continue;
+          for (const k in cond) if (cond[k] && typeof cond[k] === 'object') for (const op in cond[k]) need(OPS.indexOf(op) >= 0, `scenario ${s.id}: unknown operator "${op}" on ${k}`);
+        }
+        const last = a.t !== undefined ? a.t : (a.window ? a.window[1] : 0);
+        need(last <= s.durationMs + 1, `scenario ${s.id}: an assert at ${last} ms is after durationMs ${s.durationMs}`);
+      }
+    });
+    if (level.hidden && level.hidden.base) level.hidden.base.forEach((id) => need(scen.some((s) => s.id === id), 'hidden.base unknown scenario ' + id));
     need(Array.isArray(level.hints) && level.hints.length === 3 && level.hints.every((x) => x.en && x.ar), 'needs exactly 3 hints with en and ar');
     need(Array.isArray(level.datasheets) && level.datasheets.length >= 1 && level.datasheets.every((d) => d.id && d.title && d.title.en), 'needs at least one datasheet card');
     need(Array.isArray(level.glossary) && level.glossary.length >= 6 && level.glossary.length <= 14, 'glossary should list 6-14 term ids');

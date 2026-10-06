@@ -1,0 +1,1 @@
+{"level": "L05", "diag": "pt_not_time_literal", "note": "PT is written as the plain number 3 instead of the time literal T#3s: the PLC rejects the program", "lines": ["PE_Fill TON(DB_Fill,3) (Filled)", "PE_Fill /Filled (Fill_Valve)", "[/PE_Fill | Filled] (Conveyor_Motor)"]}

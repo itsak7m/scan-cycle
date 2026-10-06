@@ -8,7 +8,7 @@ button { font: inherit; color: inherit; }
 .btn:hover:not(:disabled) { background: var(--ground); }
 .btn:disabled { opacity: .45; cursor: default; }
 .btn.ghost { border-color: var(--line); font-weight: 500; }
-.btn.small { min-height: 32px; padding: 0 10px; font-size: .85rem; }
+.btn.small { min-height: 44px; padding: 0 12px; font-size: .88rem; }
 .btn.primary { background: var(--power); color: var(--surface); border-color: var(--power); }
 :focus-visible { outline: 3px solid var(--power); outline-offset: 2px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
@@ -28,7 +28,7 @@ button { font: inherit; color: inherit; }
 .ctrls .sp { flex: 1; }
 .spd { min-height: 44px; min-width: 44px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; font-family: var(--mono); }
 .spd.sel { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-.forces { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--alarm); color: #fff; border-radius: 6px; font-weight: 700; }
+.forces { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--alarm); color: var(--surface); border-radius: 6px; font-weight: 700; }
 .forces .btn { color: var(--ink); }
 
 /* ---------- operator panel ---------- */
@@ -73,14 +73,14 @@ button { font: inherit; color: inherit; }
 table.tags { border-collapse: collapse; width: 100%; font-size: .82rem; }
 table.tags th, table.tags td { border-bottom: 1px solid var(--line); padding: 3px 6px; text-align: left; vertical-align: middle; }
 table.tags th { color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; }
-table.tags input { width: 100%; min-height: 34px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); padding: 0 6px; font: inherit; }
+table.tags input { width: 100%; min-height: 44px; border: 1px solid var(--muted); border-radius: 4px; background: var(--surface); color: var(--ink); padding: 0 6px; font: inherit; }
 table.tags tr.user td:first-child input { font-family: var(--mono); font-weight: 700; }
 .mono { font-family: var(--mono); }
 .code { background: var(--ground); padding: 10px; border-radius: 6px; overflow: auto; font-size: .8rem; }
 .tabs { display: flex; gap: 6px; margin: 8px 0; }
-.tab { min-height: 40px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; font-weight: 600; }
+.tab { min-height: 44px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; font-weight: 600; }
 .tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-details > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
+details > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
 .rung-grid.static .cell { cursor: default; }
 .rung-grid.static .cell:hover { background: none; }
 
@@ -90,3 +90,5 @@ details > summary { cursor: pointer; min-height: 32px; display: flex; align-item
 .share input[type=text] { width: 100%; min-height: 44px; margin: 6px 0; border: 1.5px solid var(--ink); border-radius: 6px; padding: 0 8px; font-family: var(--mono); background: var(--surface); color: var(--ink); }
 .level-grid .card, .level-grid > *, .col-right > *, .col-left > * { min-width: 0; max-width: 100%; }
 .rung-scroll { max-width: 100%; }
+
+table.tags tbody th { font-weight: inherit; text-transform: none; font-size: inherit; color: inherit; text-align: left; }

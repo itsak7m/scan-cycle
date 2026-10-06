@@ -1,0 +1,7 @@
+{"level": "L06", "diag": "valve_ignores_air", "note": "Air_OK only guards the conveyor. When the air is lost during the fill, the valve and its timer keep running", "lines": [
+  "/Filled (Stopper_SOL)",
+  "PE_Fill Stopper_Ext /Filled TON(DB_Fill,T#3s)",
+  "[DB_Fill.Q | Filled] PE_Fill (Filled)",
+  "PE_Fill Stopper_Ext /Filled (Fill_Valve)",
+  "Air_OK [/PE_Fill | Filled Stopper_Ret] (Conveyor_Motor)"
+]}

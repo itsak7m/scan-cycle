@@ -1,0 +1,1 @@
+{"level": "L08", "diag": "bad_latch_not_cleared", "note": "Bad is SET for the first bad bottle and never RESET: every bottle after it is pushed off, good ones too", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Reject /Level_OK (S:Bad)", "Bad PE_Reject TP(DB_Push,T#500ms) (Reject_Pusher)"]}

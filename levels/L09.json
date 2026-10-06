@@ -1,0 +1,97 @@
+{
+  "id": "L09",
+  "order": 9,
+  "title": {"en": "Piston Filler Sequencer", "ar": "متتابع الحشّاء المكبسي"},
+  "concept": "Step sequencer with an Int step variable: CMP and MOVE",
+  "workOrder": {"en": "Use the Step number. Step 0: wait. A bottle stopped for 0.3 s and the stopper extended: step 1, draw with Pump_Rev until Pump_Full. Step 2: dispense with Pump_Fwd and Fill_Valve until Pump_Home. Step 3: retract the stopper, release the bottle, then step 0. E-stop: step 0 and every output OFF. Start and Stop work as before.", "ar": "استخدم رقم الخطوة {{Step}}. الخطوة 0: انتظار. قارورة واقفة 0.3 ثانية والمصدّ ممدود: خطوة 1، سحب بـ {{Pump_Rev}} لحد {{Pump_Full}}. الخطوة 2: تعبئة بـ {{Pump_Fwd}} و{{Fill_Valve}} لحد {{Pump_Home}}. الخطوة 3: اسحب المصدّ وحرّر القارورة، وبعدين خطوة 0. طوارئ: خطوة 0 وكل المخارج مطفية. {{Start}} و{{Stop}} زي قبل."},
+  "datasheets": [
+    {"id": "piston_pump", "title": {"en": "Piston pump", "ar": "مضخة المكبس"}, "rows": [["Pump_Rev  (Q1.5)", "Draw: the piston moves back and fills with syrup"], ["Pump_Fwd  (Q1.4)", "Dispense: the piston pushes the syrup out"], ["Pump_Full  (I2.6)", "bit = 1 at the end of the draw"], ["Pump_Home  (I2.5)", "bit = 1 at the start position"], ["One stroke", "about 1.5 s"]], "note": {"en": "Never switch Pump_Fwd and Pump_Rev ON together. The Fill_Valve must be open while the pump dispenses, and only when a bottle is under the nozzle.", "ar": "لا تشغّل {{Pump_Fwd}} و{{Pump_Rev}} مع بعض أبدًا. {{Fill_Valve}} لازم يكون مفتوح وقت التعبئة، وبس لما في قارورة تحت الفوّهة."}, "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Pump_Rev", "wave": "0111000000"}, {"name": "Pump_Full", "wave": "0000100000"}, {"name": "Pump_Fwd", "wave": "0000111000"}, {"name": "Pump_Home", "wave": "1000000111"}]}},
+    {"id": "step_table", "title": {"en": "The filler steps", "ar": "خطوات الحشّاء"}, "rows": [["Step 0  wait", "Stopper out. Go to 1 when the bottle has been there 0.3 s"], ["Step 1  draw", "Pump_Rev ON. Go to 2 when Pump_Full = 1"], ["Step 2  dispense", "Pump_Fwd + Fill_Valve ON. Go to 3 when Pump_Home = 1"], ["Step 3  release", "Stopper back, bottle leaves. Go to 0 when Stopper_Ret = 1 and the beam is free"]], "note": {"en": "Step is a number in memory (MW10). The machine is in ONE step at a time. Each step has its own outputs and its own exit condition.", "ar": "الـ {{Step}} رقم بالذاكرة (MW10). الماكينة بخطوة وحدة بالمرة. كل خطوة إلها مخارجها وشرط خروجها."}},
+    {"id": "cmp", "title": {"en": "CMP compare", "ar": "المقارنة CMP"}, "rows": [["CMP(==,Step,2)", "passes power when Step is equal to 2"], ["Operators", "==  <>  >  <  >=  <="], ["Inputs", "two integers: a tag and a number"]], "note": {"en": "CMP is a contact: it only passes power when the compare is true. Put it first in every step rung.", "ar": "الـ {{CMP}} مثل الـ {{contact}}: بيمرّر الـ power بس لما المقارنة صحيحة. حطه أول شي بكل rung للخطوة."}},
+    {"id": "move", "title": {"en": "MOVE", "ar": "النقل MOVE"}, "rows": [["MOVE(1,Step)", "writes the number 1 into Step"], ["When", "on EVERY scan while it has power"], ["Order", "later rungs in the same scan already see the new value"]], "note": {"en": "After MOVE(2,Step) the step is 2 for the rest of the scan. A later rung that tests Step = 2 can run in the SAME scan: be careful with the order of your rungs.", "ar": "بعد {{MOVE}}(2,Step) الخطوة بتصير 2 لباقي الـ {{scan}}. أي rung بعده بيفحص Step = 2 ممكن يشتغل بنفس الـ {{scan}}: انتبه لترتيب الـ rungs."}}
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH", "TON", "TP", "CTU", "POS", "SET", "RST", "CMP", "MOVE"],
+  "tags": ["Start_PB", "Stop_PB", "EStop_OK", "PE_Fill", "Stopper_Ext", "Stopper_Ret", "Pump_Home", "Pump_Full", "Conveyor_Motor", "Stopper_SOL", "Fill_Valve", "Pump_Fwd", "Pump_Rev", {"name": "Step", "addr": "MW10", "type": "Int", "role": "step", "desc": {"en": "Step number of the filler sequence (0 = wait)", "ar": "رقم خطوة المتتابع (0 = انتظار)"}}],
+  "plant": {"stations": ["infeed", "filler", "stopper", "pump", "exit"], "fillMode": "piston", "target": 0.95, "bottlesPerMin": 9, "jitterMs": 100, "pumpTravelMs": 1500, "convLen": 800},
+  "starter": null,
+  "example": {"mode": "full", "title": {"en": "Worked example: capper sequence", "ar": "مثال محلول: تتابع الكابّر"}, "lines": ["CMP(==,Step,0) PE_Cap MOVE(1,Step)", "CMP(==,Step,1) Cap_Present MOVE(2,Step)", "CMP(==,Step,2) /PE_Cap MOVE(0,Step)", "CMP(==,Step,1) /Cap_Present (Capper_Run)"], "explain": [{"rung": 1, "en": "Step 0 waits. CMP passes power only when Step = 0. When PE_Cap sees a bottle, MOVE writes 1 into Step: the machine goes to step 1.", "ar": "الخطوة 0 بتنتظر. الـ {{CMP}} بيمرّر الـ power بس لما Step = 0. لما {{PE_Cap}} يشوف قارورة، الـ {{MOVE}} بيكتب 1 بالـ Step: الماكينة بتروح للخطوة 1."}, {"rung": 2, "en": "Step 1 ends when Cap_Present is ON (the cap is on). Then MOVE writes 2: step 2.", "ar": "الخطوة 1 بتنتهي لما {{Cap_Present}} يكون ON (الغطاء انحط). وقتها الـ {{MOVE}} بيكتب 2: الخطوة 2."}, {"rung": 3, "en": "Step 2 waits until the bottle has left the beam (NC contact on PE_Cap). Then the machine goes back to step 0.", "ar": "الخطوة 2 بتنتظر لحد ما القارورة تطلع من الشعاع (NC contact على {{PE_Cap}}). وقتها الماكينة بترجع للخطوة 0."}, {"rung": 4, "en": "The output rung is last. Capper_Run is ON only in step 1, and it stops as soon as Cap_Present is ON. The outputs are written AFTER the steps, so they always see the new step.", "ar": "الـ rung تبع المخرج آخر واحد. {{Capper_Run}} شغّال بس بالخطوة 1، وبيوقف أول ما {{Cap_Present}} يصير ON. المخارج بتنكتب بعد الخطوات، فدايمًا بتشوف الخطوة الجديدة."}]},
+  "scenarios": [
+    {
+      "id": "L09-nominal", "title": {"en": "Three bottles: the full cycle", "ar": "ثلاث قوارير: الدورة كاملة"}, "seed": 91, "durationMs": 28000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"id": "pumps-exclusive", "window": [0, 28000], "never": {"Pump_Fwd": true, "Pump_Rev": true}, "msg": {"en": "Pump_Fwd and Pump_Rev must never be ON together", "ar": "{{Pump_Fwd}} و{{Pump_Rev}} ممنوع يشتغلوا مع بعض أبدًا"}},
+        {"window": [0, 28000], "always": {"spills": 0}, "msg": {"en": "Spill: the Fill_Valve was open and the pump moved with no bottle under the nozzle", "ar": "انسكاب: {{Fill_Valve}} كان مفتوح والمضخة تتحرك بدون قارورة تحت الفوّهة"}},
+        {"window": [0, 3000], "always": {"Step": 0}, "msg": {"en": "Step 0 is the wait step: until a bottle has stopped at the filler, Step must stay 0", "ar": "الخطوة 0 هي خطوة الانتظار: لحد ما قارورة توقف عند الحشّاء، {{Step}} لازم يضل 0"}},
+        {"when": {"Pump_Rev": true}, "within": 20, "expect": {"Step": 1}, "msg": {"en": "The draw (Pump_Rev) belongs to step 1", "ar": "السحب ({{Pump_Rev}}) بيصير بالخطوة 1"}},
+        {"when": {"Pump_Fwd": true}, "within": 20, "expect": {"Step": 2, "Fill_Valve": true}, "msg": {"en": "The dispense (Pump_Fwd) belongs to step 2, and the Fill_Valve must be open", "ar": "التعبئة ({{Pump_Fwd}}) بتصير بالخطوة 2، و{{Fill_Valve}} لازم يكون مفتوح"}},
+        {"window": [26500, 28000], "always": {"filledCount": {"gte": 3}, "good": {"gte": 3}}, "msg": {"en": "Every bottle must be filled in one cycle and then released. 3 bottles must be filled and out", "ar": "كل قارورة لازم تتعبّأ بدورة وحدة وبعدين تنحرّر. 3 قوارير لازم تتعبّأ وتطلع"}}
+      ]
+    },
+    {
+      "id": "L09-estop-dispense", "title": {"en": "E-stop during the dispense", "ar": "طوارئ أثناء التعبئة"}, "seed": 92, "durationMs": 10000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}, {"t": 5800, "estop": true}, {"t": 7800, "estop": false}, {"t": 8800, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"t": 5790, "expect": {"Step": {"gte": 1, "lte": 2}}, "tol": 0, "msg": {"en": "The cycle must be running (step 1 or 2) when the E-stop is pressed", "ar": "الدورة لازم تكون شغّالة (خطوة 1 أو 2) لما تنضغط الطوارئ"}},
+        {"t": 5800, "expect": {"Pump_Rev": false, "Pump_Fwd": false, "Fill_Valve": false, "Stopper_SOL": false, "Conveyor_Motor": false, "Step": 0}, "tol": 20, "msg": {"en": "E-stop: Step must go back to 0 and every output must be OFF within two scans", "ar": "طوارئ: {{Step}} لازم يرجع 0 وكل المخارج لازم تنطفي خلال {{scan}}ين"}},
+        {"window": [5830, 7790], "always": {"Pump_Rev": false, "Pump_Fwd": false, "Fill_Valve": false, "Stopper_SOL": false, "Conveyor_Motor": false, "Step": 0}, "msg": {"en": "While the E-stop is pressed Step stays 0 and every output stays OFF", "ar": "طول ما الطوارئ مضغوطة {{Step}} بيضل 0 وكل المخارج مطفية"}},
+        {"window": [7810, 8790], "always": {"Pump_Rev": false, "Pump_Fwd": false, "Fill_Valve": false, "Stopper_SOL": false, "Conveyor_Motor": false, "Step": 0}, "msg": {"en": "E-stop released: the line must NOT restart by itself. It waits for Start", "ar": "فلتّ الطوارئ: الخط ما لازم يرجع يشتغل لحاله. بينتظر {{Start}}"}},
+        {"window": [8900, 9200], "always": {"Conveyor_Motor": true}, "msg": {"en": "Start must run the line again after the E-stop", "ar": "{{Start}} لازم يشغّل الخط من جديد بعد الطوارئ"}}
+      ]
+    },
+    {
+      "id": "L09-estop-draw", "title": {"en": "E-stop during the draw", "ar": "طوارئ أثناء السحب"}, "seed": 93, "durationMs": 9000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}, {"t": 4720, "estop": true}, {"t": 6720, "estop": false}, {"t": 7720, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"t": 4710, "expect": {"Step": {"gte": 1, "lte": 1}}, "tol": 0, "msg": {"en": "The draw (step 1) must be running when the E-stop is pressed", "ar": "السحب (الخطوة 1) لازم يكون شغّال لما تنضغط الطوارئ"}},
+        {"t": 4720, "expect": {"Pump_Rev": false, "Pump_Fwd": false, "Fill_Valve": false, "Stopper_SOL": false, "Conveyor_Motor": false, "Step": 0}, "tol": 20, "msg": {"en": "E-stop: Step must go back to 0 and every output must be OFF within two scans", "ar": "طوارئ: {{Step}} لازم يرجع 0 وكل المخارج لازم تنطفي خلال {{scan}}ين"}},
+        {"window": [4750, 6710], "always": {"Pump_Rev": false, "Pump_Fwd": false, "Fill_Valve": false, "Stopper_SOL": false, "Conveyor_Motor": false, "Step": 0}, "msg": {"en": "While the E-stop is pressed Step stays 0 and every output stays OFF", "ar": "طول ما الطوارئ مضغوطة {{Step}} بيضل 0 وكل المخارج مطفية"}},
+        {"window": [6730, 7710], "always": {"Pump_Rev": false, "Pump_Fwd": false, "Fill_Valve": false, "Stopper_SOL": false, "Conveyor_Motor": false, "Step": 0}, "msg": {"en": "E-stop released: the line must NOT restart by itself. It waits for Start", "ar": "فلتّ الطوارئ: الخط ما لازم يرجع يشتغل لحاله. بينتظر {{Start}}"}},
+        {"window": [7820, 8120], "always": {"Conveyor_Motor": true}, "msg": {"en": "Start must run the line again after the E-stop", "ar": "{{Start}} لازم يشغّل الخط من جديد بعد الطوارئ"}}
+      ]
+    },
+    {
+      "id": "L09-bottle-at-start", "title": {"en": "A bottle is at the filler when Start is pressed", "ar": "في قارورة عند الحشّاء لما تضغط {{Start}}"}, "seed": 94, "durationMs": 16000,
+      "plant": {"preload": [{"x": 500}]},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 16000], "always": {"spills": 0}, "msg": {"en": "Spill! The old bottle was still leaving the filler beam while the stopper extended. A bottle that moves is not a stopped bottle: wait until it has been there for 0.3 s", "ar": "انسكاب! القارورة القديمة كانت لسا بتطلع من شعاع الحشّاء وقت ما المصدّ مدّ. القارورة اللي بتتحرك مش واقفة: استنى لحد ما تضل 0.3 ثانية"}},
+        {"window": [15000, 16000], "always": {"filledCount": {"gte": 2}}, "msg": {"en": "The next bottles must still be filled normally", "ar": "القوارير الجاية لازم تتعبّأ طبيعي"}}
+      ]
+    },
+    {
+      "id": "L09-slow-pump", "title": {"en": "A slow pump (2.4 s per stroke)", "ar": "مضخة بطيئة (2.4 ثانية للشوط)"}, "seed": 95, "durationMs": 16000,
+      "plant": {"pumpTravelMs": 2400, "bottlesPerMin": 6},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"id": "pumps-exclusive", "window": [0, 16000], "never": {"Pump_Fwd": true, "Pump_Rev": true}, "msg": {"en": "Pump_Fwd and Pump_Rev must never be ON together", "ar": "{{Pump_Fwd}} و{{Pump_Rev}} ممنوع يشتغلوا مع بعض أبدًا"}},
+        {"window": [0, 16000], "always": {"spills": 0}, "msg": {"en": "Spill: the Fill_Valve was open and the pump moved with no bottle under the nozzle", "ar": "انسكاب: {{Fill_Valve}} كان مفتوح والمضخة تتحرك بدون قارورة تحت الفوّهة"}},
+        {"window": [14500, 16000], "always": {"filledCount": {"gte": 1}, "good": {"gte": 1}}, "msg": {"en": "The pump is slower than usual. Do not use a time: wait for Pump_Full and Pump_Home. The bottle must be filled and released", "ar": "المضخة أبطأ من العادة. لا تستخدم وقت: استنى {{Pump_Full}} و{{Pump_Home}}. القارورة لازم تتعبّأ وتنحرّر"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 8, "seedBase": 9000, "vary": {"shiftMs": [0, 500], "jitterMs": [0, 200], "plant": {"pumpTravelMs": [-15, 15]}}, "base": ["L09-nominal", "L09-estop-dispense", "L09-estop-draw", "L09-bottle-at-start", "L09-slow-pump"]},
+  "diagnostics": ["step_not_reset_by_estop", "step_fall_through", "pump_outputs_overlap", "pump_time_not_feedback", "start_on_moving_bottle", "output_latched_estop"],
+  "hints": [
+    {"en": "Open the failed test. Which step was the machine in? Look at the pump outputs, the valve and the Step number at that time.", "ar": "افتح الفحص اللي فشل. بأي خطوة كانت الماكينة؟ شوف مخارج المضخة والصمام ورقم {{Step}} بهداك الوقت."},
+    {"en": "Check three things. (1) The transition rungs come first, the output rungs after them. (2) What puts Step back to 0 when the E-stop is pressed? (3) What makes sure the bottle has really stopped before step 1?", "ar": "افحص ثلاثة أشياء. (1) rungs الانتقالات أول وبعدها rungs المخارج. (2) شو اللي بيرجّع {{Step}} إلى 0 لما تنضغط الطوارئ؟ (3) شو اللي بيتأكد إنه القارورة وقفت فعلًا قبل الخطوة 1؟"},
+    {"en": "A transition rung: the step compare, the sensor that ends the step, and MOVE of the next number.", "ar": "rung الانتقال: مقارنة الخطوة، والحساس اللي بينهي الخطوة، و{{MOVE}} للرقم الجاي.", "lines": ["CMP(==,Step,1) Pump_Full MOVE(2,Step)"]}
+  ],
+  "glossary": ["sequence", "step_number", "state_machine", "compare_block", "move_block", "integer", "dispense", "home_position", "fall_through", "emergency_stop"],
+  "glossaryDefs": [
+    {"id": "sequence", "en": "sequence", "ar": "تتابع", "ex": {"en": "The filler runs a sequence of four steps.", "ar": "الحشّاء بتشغّل تتابع من أربع خطوات."}},
+    {"id": "step_number", "en": "step number", "ar": "رقم الخطوة", "ex": {"en": "The step number tells what the machine does now.", "ar": "رقم الخطوة بيقول شو الماكينة بتعمل هلق."}},
+    {"id": "state_machine", "en": "state machine", "ar": "آلة حالات", "ex": {"en": "A state machine is in one state at a time.", "ar": "آلة الحالات بتكون بحالة وحدة بالمرة."}},
+    {"id": "compare_block", "en": "compare (CMP)", "ar": "مقارنة", "ex": {"en": "A compare passes power when the test is true.", "ar": "المقارنة بتمرّر الـ power لما الفحص يكون صحيح."}},
+    {"id": "move_block", "en": "MOVE", "ar": "نقل قيمة", "ex": {"en": "MOVE writes the number 2 into Step.", "ar": "الـ {{MOVE}} بيكتب الرقم 2 بالـ Step."}},
+    {"id": "integer", "en": "integer (Int)", "ar": "عدد صحيح", "ex": {"en": "Step is an integer: 0, 1, 2, 3.", "ar": "الـ {{Step}} عدد صحيح: 0، 1، 2، 3."}},
+    {"id": "dispense", "en": "dispense", "ar": "تعبئة (دفع)", "ex": {"en": "The pump dispenses the syrup into the bottle.", "ar": "المضخة بتدفع الشراب جوّا القارورة."}},
+    {"id": "home_position", "en": "home position", "ar": "وضع البداية", "ex": {"en": "The piston is at home when Pump_Home = 1.", "ar": "المكبس بوضع البداية لما {{Pump_Home}} = 1."}},
+    {"id": "fall_through", "en": "fall-through", "ar": "تجاوز خطوة", "ex": {"en": "Fall-through: two steps run in one scan.", "ar": "الـ {{fall-through}}: خطوتين بينفّذوا بنفس الـ {{scan}}."}}
+  ],
+  "explain": {"frames": [{"en": "The step number {step} says what the machine does now. Step 0 waits for a bottle.", "ar": "رقم الخطوة {step} بيقول شو الماكينة بتعمل هلق. الخطوة 0 بتنتظر قارورة."}, {"en": "A step ends when {sensor} is ON. Then MOVE writes the next number into {step}.", "ar": "الخطوة بتنتهي لما {sensor} يكون ON. وقتها الـ {{MOVE}} بيكتب الرقم الجاي بـ {step}."}, {"en": "{output} is ON only in its own step. When the E-stop is pressed, {step} goes to 0 and every output is OFF.", "ar": "{output} شغّال بس بخطوته. لما تنضغط الطوارئ، {step} بيروح 0 وكل المخارج بتنطفي."}]},
+  "badges": [
+    {"id": "lean", "maxRungs": 11},
+    {"id": "clean", "noLint": true}
+  ]
+}

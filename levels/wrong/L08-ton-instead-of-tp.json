@@ -1,0 +1,1 @@
+{"level": "L08", "diag": "ton_instead_of_tp", "note": "TON waits 500 ms and then switches ON, but the bad bottle is in the beam only about 440 ms: the timer never finishes and the bad bottle is shipped", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Reject /Level_OK TON(DB_Push,T#500ms) (Reject_Pusher)"]}

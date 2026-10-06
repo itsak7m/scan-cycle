@@ -1,0 +1,1 @@
+{"level": "L04", "diag": "powerup_bottle_ignored", "note": "The stop is only armed after the beam was seen clear, so a bottle that is already in the beam at power-up is ignored and the conveyor moves", "lines": ["[/PE_Fill | Armed] /Held (Armed)", "[PE_Fill Armed | Held] /Release_PB (Held)", "/Held (Conveyor_Motor)"]}

@@ -1,0 +1,95 @@
+{
+  "id": "L08",
+  "order": 8,
+  "title": {"en": "Reject Underfilled", "ar": "رفض الناقص"},
+  "concept": "Positive edge, one-shot pulse (TP), SET and RESET",
+  "workOrder": {"en": "The filler is upstream. A bottle with Level_OK = 0 is underfilled. When it is at the reject photo-eye, push it off with a 500 ms pulse of the Reject Pusher. Good bottles must pass untouched.", "ar": "الحشّاء قبل هالمحطة. القارورة اللي {{Level_OK}} = 0 عندها تعبئة ناقصة. لما توصل للعين الضوئية عند الرفض، ادفعها برّا بنبضة 500 ms من دافع الرفض ({{Reject_Pusher}}). القوارير السليمة لازم تمرّ بدون ما نلمسها."},
+  "datasheets": [
+    {"id": "level_ok", "title": {"en": "Level sensor at the reject station", "ar": "حساس المستوى عند محطة الرفض"}, "rows": [["Tag", "Level_OK  (I0.6)"], ["Bottle full enough", "bit = 1"], ["Underfilled bottle in the beam", "bit = 0"], ["No bottle", "bit = 0 too"]], "note": {"en": "Level_OK = 0 does NOT always mean a bad bottle: an empty place gives 0 too. Look at PE_Reject at the same time.", "ar": "{{Level_OK}} = 0 مش دايمًا يعني قارورة سيئة: المكان الفاضي بيعطي 0 كمان. شوف {{PE_Reject}} بنفس الوقت."}, "timing": {"step": 500, "unit": "ms", "signals": [{"name": "PE_Reject", "wave": "00111100111100"}, {"name": "Level_OK", "wave": "00111100000000"}]}},
+    {"id": "reject_pusher", "title": {"en": "Reject pusher", "ar": "دافع الرفض"}, "rows": [["Tag", "Reject_Pusher  (Q0.6)"], ["Bit = 1", "The pusher moves out (about 150 ms)"], ["To push a bottle", "keep the bit ON for 300 to 700 ms"], ["Bit = 0", "The pusher moves back by itself"]], "note": {"en": "A cylinder needs time to move. A pulse of one scan (10 ms) does nothing. The bottle moves on while the pusher moves out.", "ar": "الأسطوانة بدها وقت لتتحرك. نبضة {{scan}} واحد (10 ms) ما بتعمل شي. والقارورة بتضل تتحرك والدافع طالع."}, "timing": {"step": 250, "unit": "ms", "signals": [{"name": "Reject_Pusher", "wave": "0011111100"}]}},
+    {"id": "pos_edge", "title": {"en": "Positive edge contact  -|P|-", "ar": "ملامس الحافة الصاعدة  -|P|-"}, "rows": [["Symbol", "-|P|-"], ["Passes power", "for ONE scan, when its input goes from 0 to 1"], ["Memory bit", "every -|P|- needs its OWN M bit"]], "note": {"en": "It makes a one-scan pulse (10 ms). That is too short to drive a cylinder directly: use it to START something.", "ar": "بيعمل نبضة {{scan}} واحد (10 ms). هاي قصيرة كتير لتشغّل أسطوانة مباشرة: استخدمه عشان تبدأ شي."}, "timing": {"step": 500, "unit": "ms", "signals": [{"name": "input", "wave": "0011110000"}, {"name": "-|P|- (one scan)", "wave": "0010000000"}]}},
+    {"id": "tp", "title": {"en": "TP pulse timer", "ar": "مؤقّت النبضة TP"}, "rows": [["IN", "A rising edge starts the pulse"], ["PT", "Pulse length, e.g. T#500ms"], ["Q", "ON for exactly PT, even if IN goes OFF"], ["During the pulse", "new edges on IN are ignored"]], "note": {"en": "TON waits and then switches ON. TP switches ON at once and stays ON for PT. For a pusher you want TP.", "ar": "الـ {{TON}} بيستنى وبعدين بيشتغل. أما الـ {{TP}} بيشتغل فورًا وبيضل شغّال مدة PT. للدافع بدك {{TP}}."}, "timing": {"step": 250, "unit": "ms", "signals": [{"name": "IN", "wave": "0011000000"}, {"name": "Q (PT = 1 s)", "wave": "0011110000"}]}},
+    {"id": "set_reset", "title": {"en": "SET and RESET coils", "ar": "ملفّات SET و RESET"}, "rows": [["(S) SET", "Turns the bit ON. It stays ON after the power is gone"], ["(R) RESET", "Turns the bit OFF"], ["Rule", "Every SET needs a RESET somewhere"], ["Last one wins", "If both have power, the one lower in the program wins"]], "note": {"en": "SET and RESET remember a state without a holding contact. Forget the RESET and the bit stays ON for ever.", "ar": "الـ {{SET}} والـ {{RESET}} بيتذكّروا حالة بدون {{holding contact}}. إذا نسيت الـ {{RESET}} البت بيضل شغّال للأبد."}}
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH", "TON", "TP", "CTU", "POS", "SET", "RST"],
+  "tags": ["Start_PB", "Stop_PB", "Conveyor_Motor", "PE_Reject", "Level_OK", "Reject_Pusher"],
+  "plant": {"stations": ["infeed", "filler", "reject", "exit"], "genOn": false, "convLen": 1100, "x": {"nozzle": 100, "fillPE": 100, "level": 900, "reject": 900}},
+  "starter": {"lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Reject (Reject_Pusher)"]},
+  "example": {"mode": "completion", "title": {"en": "Complete the reject rung", "ar": "كمّل الـ rung تبع الرفض"}},
+  "scenarios": [
+    {
+      "id": "L08-one-bad", "title": {"en": "One bad bottle among good ones", "ar": "قارورة سيئة بين قوارير سليمة"}, "seed": 81, "durationMs": 10000,
+      "plant": {"preload": [{"x": 720, "level": 0.92}, {"x": 540, "level": 0.92}, {"x": 360, "level": 0.55}, {"x": 180, "level": 0.92}, {"x": 0, "level": 0.92}]},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"when": {"PE_Reject": true, "Level_OK": false}, "within": 40, "expect": {"Reject_Pusher": true}, "msg": {"en": "A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once", "ar": "قارورة سيئة ({{Level_OK}} = 0) عند العين الضوئية للرفض لازم تشغّل الدافع فورًا"}},
+        {"window": [0, 10000], "always": {"goodLost": 0}, "msg": {"en": "A good bottle was pushed off. Good bottles must pass untouched", "ar": "انزاحت قارورة سليمة. القوارير السليمة لازم تمرّ بدون ما نلمسها"}},
+        {"window": [9500, 10000], "always": {"rejected": 1, "badShipped": 0, "good": {"gte": 4}}, "msg": {"en": "Every bad bottle must be pushed off the line. A bad bottle must not be shipped", "ar": "كل قارورة سيئة لازم تنزاح عن الخط. القارورة السيئة ما لازم تنشحن"}}
+      ]
+    },
+    {
+      "id": "L08-two-bad", "title": {"en": "Two bad bottles in a row", "ar": "قارورتين سيئتين ورا بعض"}, "seed": 82, "durationMs": 10000,
+      "plant": {"preload": [{"x": 740, "level": 0.92}, {"x": 600, "level": 0.55}, {"x": 430, "level": 0.55}, {"x": 260, "level": 0.92}, {"x": 90, "level": 0.92}]},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"when": {"PE_Reject": true, "Level_OK": false}, "within": 40, "expect": {"Reject_Pusher": true}, "msg": {"en": "A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once", "ar": "قارورة سيئة ({{Level_OK}} = 0) عند العين الضوئية للرفض لازم تشغّل الدافع فورًا"}},
+        {"window": [0, 10000], "always": {"goodLost": 0}, "msg": {"en": "A good bottle was pushed off. Good bottles must pass untouched", "ar": "انزاحت قارورة سليمة. القوارير السليمة لازم تمرّ بدون ما نلمسها"}},
+        {"window": [9500, 10000], "always": {"rejected": 2, "badShipped": 0, "good": {"gte": 3}}, "msg": {"en": "Every bad bottle must be pushed off the line. A bad bottle must not be shipped", "ar": "كل قارورة سيئة لازم تنزاح عن الخط. القارورة السيئة ما لازم تنشحن"}}
+      ]
+    },
+    {
+      "id": "L08-bad-next-to-good", "title": {"en": "A good bottle right behind a bad one", "ar": "قارورة سليمة مباشرة ورا قارورة سيئة"}, "seed": 83, "durationMs": 9000,
+      "plant": {"preload": [{"x": 800, "level": 0.92}, {"x": 690, "level": 0.55}, {"x": 580, "level": 0.92}, {"x": 440, "level": 0.92}, {"x": 300, "level": 0.92}]},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"when": {"PE_Reject": true, "Level_OK": false}, "within": 40, "expect": {"Reject_Pusher": true}, "msg": {"en": "A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once", "ar": "قارورة سيئة ({{Level_OK}} = 0) عند العين الضوئية للرفض لازم تشغّل الدافع فورًا"}},
+        {"window": [0, 9000], "always": {"goodLost": 0}, "msg": {"en": "A good bottle was pushed off. Good bottles must pass untouched", "ar": "انزاحت قارورة سليمة. القوارير السليمة لازم تمرّ بدون ما نلمسها"}},
+        {"window": [8500, 9000], "always": {"rejected": 1, "badShipped": 0, "good": {"gte": 4}}, "msg": {"en": "Every bad bottle must be pushed off the line. A bad bottle must not be shipped", "ar": "كل قارورة سيئة لازم تنزاح عن الخط. القارورة السيئة ما لازم تنشحن"}}
+      ]
+    },
+    {
+      "id": "L08-all-good", "title": {"en": "Only good bottles: nothing is pushed", "ar": "قوارير سليمة بس: ما في شي بينزاح"}, "seed": 84, "durationMs": 9000,
+      "plant": {"preload": [{"x": 740, "level": 0.92}, {"x": 590, "level": 0.92}, {"x": 440, "level": 0.92}, {"x": 290, "level": 0.92}, {"x": 140, "level": 0.92}]},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 9000], "always": {"goodLost": 0}, "msg": {"en": "A good bottle was pushed off. Good bottles must pass untouched", "ar": "انزاحت قارورة سليمة. القوارير السليمة لازم تمرّ بدون ما نلمسها"}},
+        {"window": [0, 9000], "never": {"Reject_Pusher": true}, "msg": {"en": "With only good bottles the pusher must never move", "ar": "مع قوارير سليمة بس، الدافع ما لازم يتحرك أبدًا"}},
+        {"window": [8500, 9000], "always": {"rejected": 0, "badShipped": 0, "good": {"gte": 5}}, "msg": {"en": "Every bad bottle must be pushed off the line. A bad bottle must not be shipped", "ar": "كل قارورة سيئة لازم تنزاح عن الخط. القارورة السيئة ما لازم تنشحن"}}
+      ]
+    },
+    {
+      "id": "L08-pulse-width", "title": {"en": "Pusher pulse: 300 to 700 ms", "ar": "نبضة الدافع: من 300 إلى 700 ms"}, "seed": 85, "durationMs": 5000,
+      "plant": {"preload": [{"x": 600, "level": 0.55}]},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"when": {"PE_Reject": true, "Level_OK": false}, "within": 40, "expect": {"Reject_Pusher": true}, "msg": {"en": "A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once", "ar": "قارورة سيئة ({{Level_OK}} = 0) عند العين الضوئية للرفض لازم تشغّل الدافع فورًا"}},
+        {"window": [2330, 2570], "always": {"Reject_Pusher": true}, "msg": {"en": "The pusher pulse must stay ON for at least 300 ms. The pusher needs time to move out, and the bottle moves on", "ar": "نبضة الدافع لازم تضل شغّالة 300 ms على الأقل. الدافع بده وقت ليطلع، والقارورة بتضل تتحرك"}},
+        {"window": [3030, 5000], "always": {"Reject_Pusher": false}, "msg": {"en": "The pusher pulse must end within 700 ms", "ar": "نبضة الدافع لازم تنتهي خلال 700 ms"}},
+        {"window": [4500, 5000], "always": {"rejected": 1, "badShipped": 0}, "msg": {"en": "Every bad bottle must be pushed off the line. A bad bottle must not be shipped", "ar": "كل قارورة سيئة لازم تنزاح عن الخط. القارورة السيئة ما لازم تنشحن"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 8, "seedBase": 8000, "base": ["L08-one-bad", "L08-two-bad", "L08-bad-next-to-good", "L08-all-good"], "vary": {"shiftMs": [0, 500], "plant": {"speedPct": [-10, 10], "pusherTravelMs": [-20, 60]}}},
+  "diagnostics": ["level_not_checked", "level_ok_wrong_polarity", "ton_instead_of_tp", "edge_pulse_too_short", "pusher_follows_eye", "bad_latch_not_cleared"],
+  "hints": [
+    {"en": "Open the failed test. Was a bad bottle missed, was a good bottle pushed, or was the pusher pulse too short or too long?", "ar": "افتح الفحص اللي فشل. هل قارورة سيئة فاتت، ولا قارورة سليمة انزاحت، ولا نبضة الدافع كانت قصيرة أو طويلة؟"},
+    {"en": "Two questions. (1) Which two inputs together mean 'a BAD bottle is here'? (2) What gives a pulse of exactly 500 ms that starts at once?", "ar": "سؤالين. (1) أي مدخلين مع بعض بيعنوا 'قارورة سيئة موجودة هون'؟ (2) شو اللي بيعطي نبضة 500 ms بالضبط وبتبدأ فورًا؟"},
+    {"en": "A bad bottle = the photo-eye sees a bottle AND Level_OK is 0. Put that in front of a TP timer. The pusher coil reads the TP output.", "ar": "قارورة سيئة = العين الضوئية شايفة قارورة و {{Level_OK}} = 0. حط هالشرط قبل مؤقّت {{TP}}. وملف الدافع بيقرا مخرج الـ {{TP}}.", "lines": ["PE_Reject /Level_OK TP(DB_Push,T#500ms)"]}
+  ],
+  "glossary": ["reject", "pusher", "one_shot", "set_coil", "reset_coil", "pulse_timer", "inspection", "bad_bottle", "rising_edge", "latch"],
+  "glossaryDefs": [
+    {"id": "reject", "en": "reject", "ar": "رفض", "ex": {"en": "The line rejects the underfilled bottle.", "ar": "الخط بيرفض القارورة الناقصة."}},
+    {"id": "pusher", "en": "pusher", "ar": "دافع", "ex": {"en": "The pusher moves the bottle off the belt.", "ar": "الدافع بيزيح القارورة عن السير."}},
+    {"id": "one_shot", "en": "one-shot", "ar": "نبضة وحدة", "ex": {"en": "A one-shot gives ONE pulse for each edge.", "ar": "الـ {{one-shot}} بيعطي نبضة وحدة لكل edge."}},
+    {"id": "set_coil", "en": "SET coil (S)", "ar": "ملف SET", "ex": {"en": "A SET coil turns a bit ON and keeps it ON.", "ar": "ملف الـ {{SET}} بيشغّل البت وبيخلّيه شغّال."}},
+    {"id": "reset_coil", "en": "RESET coil (R)", "ar": "ملف RESET", "ex": {"en": "A RESET coil turns the bit OFF again.", "ar": "ملف الـ {{RESET}} بيطفي البت من جديد."}},
+    {"id": "pulse_timer", "en": "pulse timer (TP)", "ar": "مؤقّت النبضة", "ex": {"en": "A pulse timer gives an output of exactly 500 ms.", "ar": "مؤقّت النبضة بيعطي مخرج مدته 500 ms بالضبط."}},
+    {"id": "inspection", "en": "inspection", "ar": "فحص", "ex": {"en": "The level sensor is an inspection of every bottle.", "ar": "حساس المستوى هو فحص لكل قارورة."}},
+    {"id": "bad_bottle", "en": "bad bottle", "ar": "قارورة سيئة", "ex": {"en": "A bad bottle has too little syrup.", "ar": "القارورة السيئة فيها شراب قليل."}}
+  ],
+  "explain": {"frames": [{"en": "A bad bottle is at the reject station when {sensor} is ON and {level} is OFF.", "ar": "القارورة السيئة بمحطة الرفض لما {sensor} يكون ON و {level} يكون OFF."}, {"en": "The pulse timer starts at the first moment and keeps {pusher} ON for 500 ms.", "ar": "مؤقّت النبضة بيبدأ باللحظة الأولى وبيخلّي {pusher} ON لمدة 500 ms."}, {"en": "A good bottle does not start the timer, so it passes.", "ar": "القارورة السليمة ما بتشغّل المؤقّت، فبتمرّ."}]},
+  "badges": [
+    {"id": "lean", "maxRungs": 2},
+    {"id": "clean", "noLint": true}
+  ]
+}

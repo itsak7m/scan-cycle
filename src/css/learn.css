@@ -22,8 +22,8 @@ button.term:hover, button.term:focus-visible { background: color-mix(in srgb, va
 .termpop.sheet { position: fixed; left: 0; right: 0; bottom: 0; top: auto !important; width: auto; border-radius: 14px 14px 0 0; }
 .tp-en { font-size: 1.1rem; } .tp-ar { font-size: 1.15rem; margin: 4px 0; }
 .quiz-opts { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
-.quiz-opts .btn.right { background: var(--ok); color: #fff; border-color: var(--ok); }
-.quiz-opts .btn.wrong { background: var(--alarm); color: #fff; border-color: var(--alarm); }
+.quiz-opts .btn.right { background: var(--ok); color: var(--surface); border-color: var(--ok); }
+.quiz-opts .btn.wrong { background: var(--alarm); color: var(--surface); border-color: var(--alarm); }
 .ok { color: var(--ok); } .ok-note { color: var(--ok); }
 
 /* FAT list, hints */
@@ -62,7 +62,7 @@ svg.timing .tm-exp { stroke: var(--alarm); stroke-width: 2; }
 .rp-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
 .explain { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .ex-line { margin: 4px 0; line-height: 2.2; }
-.ex-in { min-height: 36px; border: 1.5px solid var(--ink); border-radius: 4px; background: var(--surface); color: var(--ink); padding: 0 4px; font-family: var(--mono); max-width: 100%; }
+.ex-in { min-height: 44px; border: 1.5px solid var(--ink); border-radius: 4px; background: var(--surface); color: var(--ink); padding: 0 4px; font-family: var(--mono); max-width: 100%; }
 .ex-ta { width: 100%; border: 1.5px solid var(--ink); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 6px; font: inherit; }
 .replay-bar { position: sticky; top: 56px; z-index: 19; display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 6px 14px; background: var(--power); color: var(--surface); font-weight: 700; }
 .replay-bar .btn { color: var(--ink); }

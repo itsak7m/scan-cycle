@@ -1,0 +1,7 @@
+{"level": "L06", "diag": "fill_before_extended", "note": "The fill starts as soon as a bottle is present, without waiting for the Stopper_Ext reed switch", "lines": [
+  "/Filled (Stopper_SOL)",
+  "PE_Fill Air_OK /Filled TON(DB_Fill,T#3s)",
+  "[DB_Fill.Q | Filled] PE_Fill (Filled)",
+  "PE_Fill Air_OK /Filled (Fill_Valve)",
+  "Air_OK [/PE_Fill | Filled Stopper_Ret] (Conveyor_Motor)"
+]}

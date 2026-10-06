@@ -1,0 +1,1 @@
+{"level": "L07", "diag": "reset_on_start", "note": "R is wired to Start: every Start clears the count and Reset does nothing", "lines": ["PE_Exit CTU(DB_Batch,12,Start_PB) (Batch_Lamp)", "[Start_PB | Conveyor_Motor] Stop_PB /Batch_Lamp (Conveyor_Motor)"]}

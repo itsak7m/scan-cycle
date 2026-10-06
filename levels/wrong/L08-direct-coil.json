@@ -1,0 +1,1 @@
+{"level": "L08", "diag": "pusher_follows_eye", "note": "the pusher follows the photo-eye: it is ON only until the pushed bottle leaves the beam (about 140 ms), far shorter than 500 ms", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Reject /Level_OK (Reject_Pusher)"]}

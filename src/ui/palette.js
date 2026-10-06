@@ -11,10 +11,23 @@
     opts = opts || {};
     const back = h('div', { class: 'modal-back' });
     const box = h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': title });
-    const close = (v) => { back.remove(); document.removeEventListener('keydown', onKey, true); if (opts.onClose) opts.onClose(v); };
+    const opener = document.activeElement;
+    const app = document.getElementById('app');
+    if (app) app.inert = true; // nothing behind the dialog can be reached
+    const close = (v) => {
+      back.remove(); document.removeEventListener('keydown', onKey, true);
+      if (app) app.inert = false;
+      if (opener && opener.isConnected && opener.focus) opener.focus();
+      if (opts.onClose) opts.onClose(v);
+    };
     function onKey(e) {
-      if (e.key === 'Escape') { e.stopPropagation(); close(null); }
-      if (e.key === 'Enter' && opts.enterSubmits !== false && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); if (opts.onEnter) opts.onEnter(); }
+      if (e.key === 'Escape') { e.stopPropagation(); close(null); return; }
+      if (e.key === 'Tab') { // keep focus inside the dialog
+        const f = Array.from(box.querySelectorAll('input,select,textarea,button')).filter((x) => !x.disabled && !x.hidden && x.offsetParent !== null);
+        if (f.length) { const i = f.indexOf(document.activeElement); const n = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i === f.length - 1 ? 0 : i + 1); e.preventDefault(); f[n].focus(); }
+        return;
+      }
+      if (e.key === 'Enter' && box.contains(e.target) && opts.enterSubmits !== false && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); if (opts.onEnter) opts.onEnter(); }
     }
     box.append(h('h3', { class: 'modal-t' }, title), body, h('div', { class: 'modal-btns' }, buttons(close)));
     back.append(box);
@@ -60,7 +73,8 @@
     }
     if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) {
       if (A.parseAddr(text)) return { ok: false, error: { en: 'Bad name', ar: 'اسم غير صالح' } };
-      const addr = A.nextFreeAddr(tags, want);
+      if (SC.ioByName[text]) return { ok: false, error: { en: 'This name belongs to a machine I/O point that this level does not use. Pick another name.', ar: 'هالاسم تبع نقطة I/O بالماكينة وهالمستوى ما بيستخدمها. اختار اسم ثاني.' } };
+      const addr = A.nextFreeAddr(tags.concat((ctx.usedAddrs ? ctx.usedAddrs() : []).map((a) => ({ addr: a }))), want);
       if (!addr) return { ok: false, error: { en: 'No free memory addresses left', ar: 'ما ضل عناوين ذاكرة فاضية' } };
       return { ok: true, value: text, created: { name: text, addr, type: want === 'bit' ? 'Bool' : 'Int', user: true, src: 'mem', desc: { en: '', ar: '' } } };
     }

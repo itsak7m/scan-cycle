@@ -1,0 +1,1 @@
+{"level": "L04", "diag": "release_latch_not_cleared", "note": "The released memory is never cleared when PE_Fill goes 0: after the first Release the line runs away and no bottle stops again", "lines": ["[Release_PB | Freed] (Freed)", "[/PE_Fill | Freed] (Conveyor_Motor)"]}

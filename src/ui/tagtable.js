@@ -53,9 +53,9 @@
         const en = h('input', { type: 'text', value: (t.desc && t.desc.en) || '', 'aria-label': 'Comment EN', placeholder: '…', onchange: (e) => ed.setTagDesc(t.name, e.target.value, (t.desc && t.desc.ar) || '') });
         const ar = h('input', { type: 'text', value: (t.desc && t.desc.ar) || '', 'aria-label': 'Comment AR', placeholder: '…', dir: 'rtl', lang: 'ar', onchange: (e) => ed.setTagDesc(t.name, (t.desc && t.desc.en) || '', e.target.value) });
         const del = h('button', { type: 'button', class: 'btn small ghost', disabled: used.has(t.name), title: used.has(t.name) ? tr('In use', 'مستخدم') : tr('Delete tag', 'احذف'), onclick: () => { ed.deleteTag(t.name); mountTags(box); } }, '✕');
-        tr1.append(h('td', null, nm), h('td', { class: 'mono' }, addr), h('td', null, t.type), h('td', null, en), h('td', null, ar), h('td', null, del));
+        tr1.append(h('th', { scope: 'row' }, nm), h('td', { class: 'mono' }, addr), h('td', null, t.type), h('td', null, en), h('td', null, ar), h('td', null, del));
       } else {
-        tr1.append(h('td', { class: 'mono' }, t.name, t.wiring === 'NC' ? h('small', { class: 'muted' }, ' NC') : ''), h('td', { class: 'mono' }, addr), h('td', null, t.type),
+        tr1.append(h('th', { scope: 'row', class: 'mono' }, t.name, t.wiring === 'NC' ? h('small', { class: 'muted' }, ' NC') : ''), h('td', { class: 'mono' }, addr), h('td', null, t.type),
           h('td', null, (t.desc && t.desc.en) || ''), h('td', { lang: 'ar', dir: 'rtl' }, (t.desc && t.desc.ar) || ''), h('td'));
       }
       body.append(tr1);

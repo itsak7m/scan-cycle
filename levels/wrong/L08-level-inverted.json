@@ -1,0 +1,1 @@
+{"level": "L08", "diag": "level_ok_wrong_polarity", "note": "NO contact on Level_OK: the GOOD bottles are pushed off and the bad ones pass", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Reject Level_OK TP(DB_Push,T#500ms) (Reject_Pusher)"]}

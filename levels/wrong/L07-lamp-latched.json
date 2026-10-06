@@ -1,0 +1,1 @@
+{"level": "L07", "diag": "lamp_latched_no_reset", "note": "the lamp holds itself ON with a seal-in: Reset clears the count but the lamp stays ON", "lines": ["PE_Exit CTU(DB_Batch,12,Reset_PB) (Batch_Done)", "[Batch_Done | Batch_Lamp] (Batch_Lamp)", "[Start_PB | Conveyor_Motor] Stop_PB /Batch_Lamp (Conveyor_Motor)"]}

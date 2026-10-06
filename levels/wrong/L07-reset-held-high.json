@@ -1,0 +1,1 @@
+{"level": "L07", "diag": "reset_held_high", "note": "R is wired to Stop_PB, which is 1 whenever the button is not pressed (NC wiring): the counter is held in reset and never counts", "lines": ["PE_Exit CTU(DB_Batch,12,Stop_PB) (Batch_Lamp)", "[Start_PB | Conveyor_Motor] Stop_PB /Batch_Lamp (Conveyor_Motor)"]}

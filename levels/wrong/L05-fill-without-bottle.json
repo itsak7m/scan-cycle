@@ -1,0 +1,1 @@
+{"level": "L05", "diag": "fill_without_bottle", "note": "The valve rung does not test PE_Fill: the valve is open whenever the timer is not finished, even with no bottle at the filler", "lines": ["PE_Fill TON(DB_Fill,T#3s) (Filled)", "/Filled (Fill_Valve)", "[/PE_Fill | Filled] (Conveyor_Motor)"]}

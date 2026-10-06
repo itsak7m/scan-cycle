@@ -45,7 +45,7 @@
   U.setProgram = function (program, userTags) {
     ST.program = program;
     if (userTags) ST.userTags = userTags;
-    if (!ST.sim) return;
+    if (!ST.sim || ST.replay) return;
     const tags = SC.mergeTags(SC.levelTags(ST.level), ST.userTags);
     const c = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
     if (c.ok || !ST.sim.compiled.ok) ST.sim.compiled = c; // a program with errors is not "downloaded": the PLC keeps running the last good one
@@ -72,7 +72,7 @@
     const bar = document.getElementById('replay-bar');
     bar.hidden = false;
     bar.querySelector('.rb-t').textContent = tr('REPLAY: ', 'إعادة: ') + sim.replayInfo.title + ' — ' + tr('failure at', 'الفشل عند') + ' t = ' + (tFail / 1000).toFixed(2) + ' s';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: U.motion() });
   }
 
   function stopReplay() { newSim(); ST.paused = false; }
@@ -102,7 +102,7 @@
     const tags = SC.levelTags(ST.level);
     const ins = tags.filter((t) => /^I/.test(t.addr)), outs = tags.filter((t) => /^Q/.test(t.addr));
     const mk = (t) => {
-      const b = h('button', { class: 'led' + (/^I/.test(t.addr) ? '' : ' led-out'), type: 'button', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}`, 'aria-label': t.name, onclick: () => cycleForce(t) },
+      const b = h('button', { class: 'led' + (/^I/.test(t.addr) ? '' : ' led-out'), type: 'button', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}`, onclick: () => cycleForce(t) },
         h('span', { class: 'led-dot', 'aria-hidden': 'true' }), h('span', { class: 'led-name' }, t.name),
         h('span', { class: 'led-addr' }, U.useCodesys ? SC.addr.toCodesys(t.addr) : t.addr), h('span', { class: 'led-val' }, '0'), h('span', { class: 'led-lock', 'aria-hidden': 'true' }, '🔒'));
       ledEls.push({ tag: t, el: b, val: null, forced: null });
@@ -140,6 +140,7 @@
       if (L.val !== v || L.forced !== f) {
         L.val = v; L.forced = f;
         L.el.classList.toggle('on', !!v); L.el.classList.toggle('forced', f !== undefined);
+        L.el.title = `${L.tag.name} (${L.tag.addr}) = ${v}${f !== undefined ? ' — FORCED' : ''}`;
         L.el.querySelector('.led-val').textContent = a.kind === 'word' ? String(v) : (v ? '1' : '0');
       }
     }
@@ -176,6 +177,7 @@
         btn.addEventListener('pointerup', up); btn.addEventListener('pointercancel', up); btn.addEventListener('lostpointercapture', up);
         btn.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); down(); } });
         btn.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') up(); });
+        btn.addEventListener('click', (e) => { if (e.detail === 0 && !btn.classList.contains('down')) { down(); setTimeout(up, 60); } }); // assistive technology / voice activation
       } else {
         let on = !!idle;
         btn.addEventListener('click', () => { on = !on; setP(on); });
@@ -199,9 +201,20 @@
     if (L.sandbox) { saved = U.data.sandbox && U.data.sandbox.program; savedTags = U.data.sandbox && U.data.sandbox.userTags; }
     else { const lv = U.lv(L.id); saved = lv.program; savedTags = lv.userTags; }
     ST.userTags = savedTags && savedTags.length ? SC.util.clone(savedTags) : (L.tags || []).filter((t) => typeof t === 'object' && t.user).map((t) => SC.util.clone(t));
-    ST.program = saved && saved.rungs ? SC.util.clone(saved) : SC.util.clone(SC.dsl.programFrom(L.starter) || { v: 1, rungs: [] });
-    if (override) { ST.program = override.program; ST.userTags = override.userTags; persistProgram(ST.program, ST.userTags); }
-    renderLevel();
+    const cleanSaved = saved ? SC.sanitizeProgram(saved) : null;
+    ST.program = cleanSaved ? SC.util.clone(cleanSaved) : SC.util.clone(SC.dsl.programFrom(L.starter) || { v: 1, rungs: [] });
+    if (override) {
+      const lvUser = (L.tags || []).filter((t) => typeof t === 'object' && t.user);
+      ST.program = override.program; ST.userTags = SC.mergeTags(lvUser, override.userTags).map((t) => SC.util.clone(t));
+    }
+    try { renderLevel(); } catch (err) {
+      // a broken saved/shared program must never lock the level: fall back to the starter
+      U.toast(tr('That program could not be loaded. Starting fresh.', 'ما قدرت أحمّل هالبرنامج. بلّشنا من جديد.'));
+      ST.program = SC.util.clone(SC.dsl.programFrom(L.starter) || { v: 1, rungs: [] }); ST.userTags = [];
+      if (!L.sandbox) { const lv0 = U.lv(L.id); lv0.program = null; lv0.userTags = []; U.save(); }
+      renderLevel();
+    }
+    if (override) persistProgram(ST.program, ST.userTags);
   }
 
   function renderLevel() {
@@ -250,7 +263,7 @@
       left = [panels.wo, panels.ds, panels.fat.el];
     }
 
-    root.append(header, replayBar, h('div', { class: 'level-grid' },
+    root.append(header, replayBar, h('main', { class: 'level-grid' },
       h('div', { class: 'col-left' }, left),
       h('div', { class: 'col-right' }, plantCard, panelCard, ioCard, ladderCard, reportBox, tagsCard, xferCard)));
 
@@ -318,7 +331,7 @@
       h('main', { class: 'mapwrap' },
         h('h1', null, U.tEl('app')), h('p', { class: 'lead' }, U.tEl('tagline')),
         h('div', { class: 'maptools' },
-          h('button', { class: 'btn', type: 'button', onclick: () => { review.innerHTML = ''; U.glossary.review(review, showMap); review.scrollIntoView({ behavior: 'smooth' }); } }, '🔤 ' + tr('Term review', 'مراجعة المصطلحات') + (due ? ` (${due} ${tr('due', 'مستحق')})` : '')),
+          h('button', { class: 'btn', type: 'button', onclick: () => { review.innerHTML = ''; U.glossary.review(review, showMap); review.scrollIntoView({ behavior: U.motion() }); } }, '🔤 ' + tr('Term review', 'مراجعة المصطلحات') + (due ? ` (${due} ${tr('due', 'مستحق')})` : '')),
           h('span', { class: 'stars' }, '★ ' + U.totalStars() + '/' + (ST.levels.length * 3))),
         review,
         h('div', { class: 'levelmap' }, cards),
@@ -333,7 +346,17 @@
 
   // ---------------------------------------------------------------- boot
   U.start = function () {
+    try { start2(); } catch (err) {
+      document.getElementById('app').innerHTML = '';
+      document.getElementById('app').append(h('main', { class: 'stub' }, h('h1', null, 'Scan Cycle'),
+        h('p', { class: 'warn' }, 'Something went wrong while loading your saved data: ' + (err && err.message)),
+        h('button', { class: 'btn', type: 'button', onclick: () => U.exportData() }, 'Export saved data'), ' ',
+        h('button', { class: 'btn primary', type: 'button', onclick: () => { try { U.resetData(); } catch (e2) { /* ignore */ } location.reload(); } }, 'Reset and reload')));
+    }
+  };
+  function start2() {
     ST.root = document.getElementById('app');
+    if (!document.getElementById('toast')) document.body.append(h('div', { id: 'toast', class: 'toast', role: 'status', 'aria-live': 'polite' }));
     ST.levels = SC.levels.loadAll();
     U.glossary.init(ST.levels);
     U.useCodesys = !!U.store.get('codesys', false);
@@ -347,7 +370,9 @@
     let opened = false;
     if (sh && !sh.error) {
       const L = sh.level === 'SBX' ? sandboxLevel() : ST.levels.find((l) => l.id === sh.level);
-      if (L) { openLevel(L, { program: sh.program, userTags: sh.userTags }); U.toast(tr('Shared program loaded.', 'انحمّل البرنامج المشارك.')); history.replaceState(null, '', location.href.split('#')[0]); opened = true; }
+      const had = L && !L.sandbox && U.lv(L.id).program && U.lv(L.id).program.rungs.some((r) => r.els.length);
+      if (L && (!had || confirm(tr('Replace your saved program for this level with the shared one?', 'تستبدل برنامجك المحفوظ بهالمستوى بالبرنامج المشارك؟')))) { openLevel(L, { program: sh.program, userTags: sh.userTags }); U.toast(tr('Shared program loaded.', 'انحمّل البرنامج المشارك.')); opened = true; }
+      try { history.replaceState(null, '', location.href.split('#')[0]); } catch (er) { /* ignore */ }
     }
     // ?level=L02&demo=["ladder text", ...]  loads a program written as ladder text (docs, screenshots, support)
     if (!opened && q.get('demo') && open && ST.levels.find((l) => l.id === open)) {
@@ -365,8 +390,8 @@
     }
     if (q.has('fat') && ST.env) setTimeout(() => { ST.env.ladder = ST.ladder; U.runFat(ST.env); }, 400);
     const focus = q.get('focus'); // ?focus=ladder|report|fat|plant scrolls there (docs, screenshots)
-    if (focus) document.body.classList.add('focus-' + focus); // hides the other cards (screenshots)
-  };
+    if (focus && /^[a-z]+$/.test(focus)) document.body.classList.add('focus-' + focus); // hides the other cards (screenshots)
+  }
   U.onProgramChanged = () => { clearTimeout(U._refT); U._refT = setTimeout(() => { U.refreshTags(); U.refreshTransfer(); }, 150); };
   U.openLevel = openLevel;
   U.showMap = showMap;

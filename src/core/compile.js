@@ -49,7 +49,7 @@
     return comps;
   }
 
-  function compile(program, opts) {
+  function compileInner(program, opts) {
     opts = opts || {};
     const tags = opts.tags || [];
     const tagMap = A.makeTagMap(tags);
@@ -104,10 +104,17 @@
     }
 
     function intRef(tok, ri, el, write) {
-      if (typeof tok === 'number' && !write) return { k: 'c', v: tok | 0 };
+      if (typeof tok === 'number' && !write) {
+        if (!Number.isFinite(tok) || tok < -32768 || tok > 32767) { E('const_range', ri, el, `${tok} does not fit in an Int (-32768 … 32767)`, `${tok} ما بتساع بالـ Int (-32768 … 32767)`); return null; }
+        return { k: 'c', v: tok | 0 };
+      }
       if (typeof tok !== 'string' || !tok) { E('missing_param', ri, el, 'Missing value', 'القيمة ناقصة'); return null; }
       if (!write) {
-        if (/^-?\d+$/.test(tok)) return { k: 'c', v: parseInt(tok, 10) };
+        if (/^-?\d+$/.test(tok)) {
+          const n = parseInt(tok, 10);
+          if (n < -32768 || n > 32767) { E('const_range', ri, el, `${tok} does not fit in an Int (-32768 … 32767)`, `${tok} ما بتساع بالـ Int (-32768 … 32767)`); return null; }
+          return { k: 'c', v: n };
+        }
         if (/^T#/i.test(tok)) {
           const ms = A.parseTime(tok);
           if (ms === null) { E('bad_time', ri, el, `"${tok}" is not a valid time`, `"${tok}" ليس وقتًا صحيحًا`); return null; }
@@ -212,7 +219,51 @@
     return out;
   }
 
+  // never throws: a malformed program is reported as an error instead of crashing the caller
+  function compile(program, opts) {
+    try { return compileInner(program, opts); } catch (e) {
+      return { ok: false, errors: [{ code: 'bad_program', rung: -1, msg: { en: 'Program is not valid', ar: 'البرنامج غير صالح' } }], rungs: [], insts: Object.create(null), tagMap: A.makeTagMap((opts && opts.tags) || []), scanMs: (opts && opts.scanMs) || SC.SCAN_MS };
+    }
+  }
+
+  // Untrusted programs (share links, imports, old saves) -> a clean program or null.
+  function sanitizeProgram(p) {
+    if (!p || typeof p !== 'object' || !Array.isArray(p.rungs) || p.rungs.length > 40) return null;
+    const rungs = [];
+    for (const rg of p.rungs) {
+      if (!rg || typeof rg !== 'object') return null;
+      const els = [];
+      const srcEls = Array.isArray(rg.els) ? rg.els : [];
+      if (srcEls.length > 80) return null;
+      for (const e of srcEls) {
+        if (!e || typeof e !== 'object' || ALL.indexOf(e.t) < 0 || !Number.isInteger(e.r) || !Number.isInteger(e.c) || e.r < 0 || e.r >= MAX_ROWS || e.c < 0 || e.c >= MAX_COLS) return null;
+        const el = { r: e.r, c: e.c, t: e.t };
+        for (const k of (SC.dsl.PARAMS[e.t] || [])) {
+          const v = e[k];
+          if (v === undefined || v === null || v === '') continue;
+          if (typeof v === 'string' && v.length <= 64) el[k] = v;
+          else if (typeof v === 'number' && Number.isFinite(v)) el[k] = v;
+          else return null;
+        }
+        els.push(el);
+      }
+      const vb = [];
+      for (const b of Array.isArray(rg.vb) ? rg.vb : []) {
+        if (!Array.isArray(b) || !Number.isInteger(b[0]) || !Number.isInteger(b[1]) || b[0] < 0 || b[0] > MAX_COLS || b[1] < 0 || b[1] >= MAX_ROWS - 1) return null;
+        vb.push([b[0], b[1]]);
+      }
+      let maxR = 0, maxC = 0;
+      els.forEach((e) => { maxR = Math.max(maxR, e.r); maxC = Math.max(maxC, e.c); });
+      vb.forEach((b) => { maxR = Math.max(maxR, b[1] + 1); });
+      const out = { rows: Math.min(MAX_ROWS, maxR + 1), cols: Math.max(8, Math.min(MAX_COLS, maxC + 2)), els, vb };
+      if (typeof rg.note === 'string') out.note = rg.note.slice(0, 120);
+      rungs.push(out);
+    }
+    return { v: 1, rungs };
+  }
+
   SC.compile = compile;
+  SC.sanitizeProgram = sanitizeProgram;
   SC.compile.ELEMENTS = ALL;
   SC.compile.limits = { MAX_ROWS, MAX_COLS };
   SC.compile.buildWire = buildWire;

@@ -1,0 +1,1 @@
+{"level": "L05", "diag": "timer_fed_by_own_output", "note": "The timer input is the valve itself: when the timer finishes it closes the valve, which resets the timer, which opens the valve again - the bottle is filled over and over", "lines": ["[PE_Fill | Fill_Valve] /DB_Fill.Q (Fill_Valve)", "Fill_Valve TON(DB_Fill,T#3s)", "[/PE_Fill | DB_Fill.Q] (Conveyor_Motor)"]}

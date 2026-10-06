@@ -1,0 +1,1 @@
+{"level": "L07", "diag": "wrong_preset", "note": "preset 11 instead of 12: the lamp turns ON one bottle too early", "lines": ["PE_Exit CTU(DB_Batch,11,Reset_PB) (Batch_Lamp)", "[Start_PB | Conveyor_Motor] Stop_PB /Batch_Lamp (Conveyor_Motor)"]}

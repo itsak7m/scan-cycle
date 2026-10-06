@@ -1,0 +1,15 @@
+{"lines": [
+  "/CIP_Mode MOVE(0,Step)",
+  "CIP_Mode CMP(==,Step,0) MOVE(1,Step)",
+  "CMP(==,Step,0) (Idle)",
+  "CMP(==,Step,1) CIP_Flow_OK TONR(DB_Pre,T#30s,Idle)",
+  "CMP(==,Step,1) DB_Pre.Q MOVE(2,Step)",
+  "CMP(==,Step,2) CIP_Temp_OK TONR(DB_Caustic,T#60s,Idle)",
+  "CMP(==,Step,2) DB_Caustic.Q MOVE(3,Step)",
+  "CMP(==,Step,3) CIP_Cond_OK TON(DB_Cond,T#10s)",
+  "CMP(==,Step,3) DB_Cond.Q MOVE(4,Step)",
+  "[CMP(==,Step,1) | CMP(==,Step,2) | CMP(==,Step,3)] (CIP_Pump)",
+  "[CMP(==,Step,1) | CMP(==,Step,3)] [(CIP_Rinse_Valve) | (CIP_Drain_Valve)]",
+  "CMP(==,Step,2) (CIP_Caustic_Valve)",
+  "CMP(==,Step,4) (CIP_Done)"
+]}

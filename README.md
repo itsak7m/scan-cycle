@@ -173,8 +173,19 @@ solution and requires each documented *wrong* solution to fail with the right di
 - **L01 Conveyor Jog** — 4 visible + 5 hidden scenarios pass with the reference solution; 3 documented wrong solutions are rejected with the right diagnosis.
 - **L02 Start / Stop with Seal-in** — 5 visible + 6 hidden scenarios pass with the reference solution; 4 documented wrong solutions are rejected with the right diagnosis.
 - **L03 Interlocks** — 6 visible + 6 hidden scenarios pass with the reference solution; 5 documented wrong solutions are rejected with the right diagnosis.
+- **L04 Stop at the Filler** — 5 visible + 8 hidden scenarios pass with the reference solution; 4 documented wrong solutions are rejected with the right diagnosis.
+- **L05 Fill Timer** — 5 visible + 8 hidden scenarios pass with the reference solution; 5 documented wrong solutions are rejected with the right diagnosis.
+- **L06 Pneumatic Stopper** — 5 visible + 8 hidden scenarios pass with the reference solution; 6 documented wrong solutions are rejected with the right diagnosis.
+- **L07 Count the Batch** — 4 visible + 8 hidden scenarios pass with the reference solution; 6 documented wrong solutions are rejected with the right diagnosis.
+- **L08 Reject Underfilled** — 5 visible + 8 hidden scenarios pass with the reference solution; 6 documented wrong solutions are rejected with the right diagnosis.
+- **L09 Piston Filler Sequencer** — 5 visible + 8 hidden scenarios pass with the reference solution; 6 documented wrong solutions are rejected with the right diagnosis.
+- **L10 Track Missing Caps** — 5 visible + 10 hidden scenarios pass with the reference solution; 6 documented wrong solutions are rejected with the right diagnosis.
+- **L11 Alarms with Acknowledge** — 6 visible + 8 hidden scenarios pass with the reference solution; 6 documented wrong solutions are rejected with the right diagnosis.
+- **L12 PackML States & OEE** — 5 visible + 10 hidden scenarios pass with the reference solution; 5 documented wrong solutions are rejected with the right diagnosis.
+- **L13 Line Clearance & Reject Challenge** — 5 visible + 6 hidden scenarios pass with the reference solution; 10 documented wrong solutions are rejected with the right diagnosis.
+- **L14 CIP Sequence** — 5 visible + 6 hidden scenarios pass with the reference solution; 6 documented wrong solutions are rejected with the right diagnosis.
 
-<details><summary>Full test table (15 visible scenarios)</summary>
+<details><summary>Full test table (70 visible scenarios)</summary>
 
 | Test ID | Level | Mode | Inputs | Expected | Result |
 |---|---|---|---|---|---|
@@ -196,10 +207,76 @@ solution and requires each documented *wrong* solution to fail with the right di
 | `L03-door-open` | L03 | E-stop / door | press Reset_PB 0.3 s @ 0.5 s; press Start_PB 0.3 s @ 1.5 s; door open @ 4 s; door closed @ 6 s; press Start_PB 0.3 s @ 6.5 s; press Reset_PB 0.3 s @ 8 s; … | Door open: the conveyor must stop within one scan; After the door is closed again the conveyor still needs Reset, then Start | ✔ pass |
 | `L03-door-during-reset` | L03 | E-stop / door | press Reset_PB 2 s @ 0.5 s; door open @ 1 s; door closed @ 3 s; press Start_PB 0.3 s @ 3.5 s | Reset must not work while the door is open, and the line stays blocked until a new Reset | ✔ pass |
 | *L03 hidden* | L03 | Randomised | 6 variants (seeds 3000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L04-arrive-stop` | L04 | Nominal | — | With no bottle at the filler the conveyor must run by itself; When the bottle reaches PE_Fill the conveyor must stop at once | ✔ pass |
+| `L04-release` | L04 | Nominal | press Release_PB 1 s @ 6 s | Before Release the bottle waits at the filler; Release must start the conveyor | ✔ pass |
+| `L04-short-tap` | L04 | Edge case | press Release_PB 0.1 s @ 6 s | Before Release the bottle waits at the filler; Even a short tap must start the conveyor | ✔ pass |
+| `L04-two-queued` | L04 | Edge case | press Release_PB 0.3 s @ 4 s | Each bottle must stop when it reaches PE_Fill; The first bottle waits at the filler for Release | ✔ pass |
+| `L04-power-up` | L04 | Edge case | press Release_PB 0.3 s @ 3 s | A bottle is already in the beam at power-up: the conveyor must not move; Release must still let this bottle go | ✔ pass |
+| *L04 hidden* | L04 | Randomised | 8 variants (seeds 4000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L05-one-bottle` | L05 | Nominal | — | The bottle reached the filler: the conveyor must stop; A bottle is at the filler: the fill valve must open | ✔ pass |
+| `L05-valve-timing` | L05 | Nominal | — | A bottle is already at the filler: the valve must open at once; The conveyor must stay OFF while the bottle is being filled | ✔ pass |
+| `L05-two-close` | L05 | Edge case | — | Every bottle at the filler must get its own fill; The valve must close after 3.0 seconds | ✔ pass |
+| `L05-eye-stuck` | L05 | Fault injection | fault peStuckOn PE_Fill @ 1.5 s | The first bottle is at the filler: fill it; The first bottle must get exactly 3.0 seconds, even if the eye sticks | ✔ pass |
+| `L05-no-bottle` | L05 | Nominal | — | There is no bottle at the filler: the valve must stay closed; The filler is empty: the conveyor must run by itself | ✔ pass |
+| *L05 hidden* | L05 | Randomised | 8 variants (seeds 5000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L06-nominal` | L06 | Nominal | — | The first bottle is on its way and the stopper is not extended. Extend the stopper before the bottle arrives; A bottle is at the filler: the conveyor must stop | ✔ pass |
+| `L06-power-up` | L06 | Edge case | — | The valve opened before Stopper_Ext said extended. A bottle is already here: extend the stopper first, then fill; The reed switch says extended and a bottle is present: the fill must start | ✔ pass |
+| `L06-low-air` | L06 | Fault injection | fault airLow  @ 0 s | The valve opened before Stopper_Ext said extended. With low air the stopper is slow: do not use a fixed delay, wait for the reed switch; The reed switch says extended and a bottle is present: the fill must start | ✔ pass |
+| `L06-air-lost-fill` | L06 | Fault injection | fault airLost  @ 2 s | The fill must be running before the air is lost; Air is lost: hold everything. Close the fill valve | ✔ pass |
+| `L06-air-lost-idle` | L06 | Fault injection | fault airLost  @ 1 s; clear airLost @ 6 s | Air is lost: hold everything. The conveyor must stop, even if no bottle is at the filler; Air is lost: no filling | ✔ pass |
+| *L06 hidden* | L06 | Randomised | 8 variants (seeds 6000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L07-twelve` | L07 | Nominal | press Start_PB 0.3 s @ 0.5 s | After Start the conveyor must run and the lamp must be OFF while the batch is not complete; The batch lamp must stay OFF until the 12th bottle reaches the exit photo-eye | ✔ pass |
+| `L07-long-pulse` | L07 | Edge case | press Start_PB 0.3 s @ 0.5 s | A bottle can stay almost 2 seconds in the beam on a slow belt. It is ONE bottle. With 2 bottles the lamp must stay OFF; Both bottles must pass the exit: Start must run the conveyor | ✔ pass |
+| `L07-reset` | L07 | Nominal | press Start_PB 0.3 s @ 0.5 s; press Reset_PB 0.3 s @ 21.5 s; press Start_PB 0.3 s @ 22.5 s | The batch lamp must stay OFF until the 12th bottle reaches the exit photo-eye; At 12 bottles the conveyor must stop: the 12th bottle must not go through | ✔ pass |
+| `L07-pause` | L07 | Nominal | press Start_PB 0.3 s @ 0.5 s; press Stop_PB 0.3 s @ 7 s; press Start_PB 0.3 s @ 10 s | Stop must stop the conveyor; The count must not be lost when you press Stop and Start. The lamp must stay OFF until the 12th bottle | ✔ pass |
+| *L07 hidden* | L07 | Randomised | 8 variants (seeds 7000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L08-one-bad` | L08 | Nominal | press Start_PB 0.3 s @ 0.5 s | A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once; A good bottle was pushed off. Good bottles must pass untouched | ✔ pass |
+| `L08-two-bad` | L08 | Edge case | press Start_PB 0.3 s @ 0.5 s | A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once; A good bottle was pushed off. Good bottles must pass untouched | ✔ pass |
+| `L08-bad-next-to-good` | L08 | Nominal | press Start_PB 0.3 s @ 0.5 s | A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once; A good bottle was pushed off. Good bottles must pass untouched | ✔ pass |
+| `L08-all-good` | L08 | Nominal | press Start_PB 0.3 s @ 0.5 s | A good bottle was pushed off. Good bottles must pass untouched; With only good bottles the pusher must never move | ✔ pass |
+| `L08-pulse-width` | L08 | Nominal | press Start_PB 0.3 s @ 0.5 s | A bad bottle (Level_OK = 0) at the reject photo-eye must start the pusher at once; The pusher pulse must stay ON for at least 300 ms. The pusher needs time to move out, and the bottle moves on | ✔ pass |
+| *L08 hidden* | L08 | Randomised | 8 variants (seeds 8000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L09-nominal` | L09 | Nominal | press Start_PB 0.3 s @ 0.5 s | Pump_Fwd and Pump_Rev must never be ON together; Spill: the Fill_Valve was open and the pump moved with no bottle under the nozzle | ✔ pass |
+| `L09-estop-dispense` | L09 | E-stop / door | press Start_PB 0.3 s @ 0.5 s; E-stop pressed @ 5.8 s; E-stop released @ 7.8 s; press Start_PB 0.3 s @ 8.8 s | The cycle must be running (step 1 or 2) when the E-stop is pressed; E-stop: Step must go back to 0 and every output must be OFF within two scans | ✔ pass |
+| `L09-estop-draw` | L09 | E-stop / door | press Start_PB 0.3 s @ 0.5 s; E-stop pressed @ 4.72 s; E-stop released @ 6.72 s; press Start_PB 0.3 s @ 7.72 s | The draw (step 1) must be running when the E-stop is pressed; E-stop: Step must go back to 0 and every output must be OFF within two scans | ✔ pass |
+| `L09-bottle-at-start` | L09 | Nominal | press Start_PB 0.3 s @ 0.5 s | Spill! The old bottle was still leaving the filler beam while the stopper extended. A bottle that moves is not a stopped bottle: wait until it has been there for 0.3 s; The next bottles must still be filled normally | ✔ pass |
+| `L09-slow-pump` | L09 | Nominal | press Start_PB 0.3 s @ 0.5 s | Pump_Fwd and Pump_Rev must never be ON together; Spill: the Fill_Valve was open and the pump moved with no bottle under the nozzle | ✔ pass |
+| *L09 hidden* | L09 | Randomised | 8 variants (seeds 9000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L10-nominal` | L10 | Fault injection | press Start_PB 0.3 s @ 0.5 s | A bottle WITH a cap was pushed off. Mark only a bottle that is present and has no cap, and push at the right place.; A bottle without a cap left the line. The pusher did not push it. | ✔ pass |
+| `L10-gap` | L10 | Fault injection | press Start_PB 0.3 s @ 0.5 s | A good bottle was pushed off. A gap (no bottle) has Cap_Present = 0 too, but it is NOT a missing cap.; A bottle without a cap left the line. Check the bottles next to the gap. | ✔ pass |
+| `L10-feeder-empty` | L10 | Fault injection | press Start_PB 0.3 s @ 0.5 s; fault capFeederEmpty  @ 8 s; clear capFeederEmpty @ 14 s | A good bottle was pushed off.; Bottles without a cap came one after the other and one left the line. Every mark must stay on its own bottle. | ✔ pass |
+| `L10-speed` | L10 | Fault injection | press Start_PB 0.3 s @ 0.5 s; plant speedPct=60 @ 7 s; plant speedPct=130 @ 17 s | A good bottle was pushed off. A fixed delay does not work when the belt speed changes: count encoder pulses.; A bottle without a cap left the line. The belt was slower or faster than normal: a timer cannot follow it, the encoder can. | ✔ pass |
+| `L10-slip` | L10 | Fault injection | fault encoderSlip  @ 0 s; press Start_PB 0.3 s @ 0.5 s | A good bottle was pushed off. A lost pulse moves a mark only 1 pitch (30 mm): good bottles are much farther away than that.; Known limit: a lost pulse can make the pusher miss ONE bottle, but not more. Check that your marks do not drift. | ✔ pass |
+| *L10 hidden* | L10 | Randomised | 10 variants (seeds 10000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L11-ack-before-clear` | L11 | Process disturbance | plant tankPct=4 @ 1 s; press Ack_PB 0.3 s @ 4 s; plant tankPct=50 @ 7 s | No alarm: horn and lamp must be OFF; Without an alarm the filler works: keep the starter rung | ✔ pass |
+| `L11-ack-after-clear` | L11 | Process disturbance | plant tankPct=12 @ 1 s; plant tankPct=50 @ 3 s; press Ack_PB 0.3 s @ 6 s | A new alarm: the horn must sound at once; The alarm is gone but nobody saw it: the horn must sound until Ack | ✔ pass |
+| `L11-intermittent` | L11 | Process disturbance | plant tankPct=4 @ 1 s; plant tankPct=50 @ 1.4 s; plant tankPct=4 @ 2 s; plant tankPct=50 @ 2.4 s; plant tankPct=4 @ 3 s; plant tankPct=50 @ 3.3 s; … | The alarm comes and goes, but the horn must keep sounding until Ack: the alarm must stay latched; The lamp must FLASH while the alarm is not acknowledged: here it was never ON | ✔ pass |
+| `L11-lsl-lsll` | L11 | Process disturbance | plant tankPct=12 @ 1 s; press Ack_PB 0.3 s @ 3 s; plant tankPct=4 @ 6 s; press Ack_PB 0.3 s @ 9 s; plant tankPct=50 @ 12 s | LSL is only a warning: filling must go on; A new alarm (LSL): the horn must sound | ✔ pass |
+| `L11-jam` | L11 | Fault injection | fault peStuckOn PE_Backup @ 1 s; clear peStuckOn @ 4 s; fault peStuckOn PE_Backup @ 6 s; press Ack_PB 0.3 s @ 13 s; clear peStuckOn @ 18 s | The back-up eye was ON for less than 5 s (or not yet 5 s): that is not a jam, no alarm yet; Back-up eye ON for 5 s: jam alarm, the horn must sound | ✔ pass |
+| `L11-chatter` | L11 | Fault injection | fault peChatter PE_Backup @ 1 s; clear peChatter @ 12 s | A chattering sensor is NOT a jam: it never stays ON for 5 s. Use a timer that restarts every time the signal drops | ✔ pass |
+| *L11 hidden* | L11 | Randomised | 8 variants (seeds 11000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L12-run-stop` | L12 | E-stop / door | press Start_PB 0.3 s @ 1 s; press Stop_PB 0.3 s @ 6 s; press Start_PB 0.3 s @ 8 s; E-stop pressed @ 12 s; E-stop released @ 14 s; press Start_PB 0.3 s @ 16 s; … | Before Start the line is Stopped: red light, conveyor OFF; Start: the line goes to Execute (green, conveyor runs) | ✔ pass |
+| `L12-blocked` | L12 | Process disturbance | press Start_PB 0.3 s @ 1 s; plant outfeedBlocked=True @ 1.5 s; plant outfeedBlocked=False @ 3 s; plant outfeedBlocked=True @ 5 s; plant outfeedBlocked=False @ 26 s | A bottle that waits only about 1 s at the end is NOT a blockage. Pause the conveyor only after the back-up eye was ON for 2 s; Back-up for 2 s: Suspended-Blocked. The conveyor must pause (not red, not green) | ✔ pass |
+| `L12-starved` | L12 | Process disturbance | press Start_PB 0.3 s @ 1 s; plant genOn=False @ 5 s; plant genOn=True @ 22 s | Bottles arrive normally: Execute (green). A gap between two bottles is NOT starved: wait 3 s; Starved: the conveyor keeps running (only the amber light changes) | ✔ pass |
+| `L12-held` | L12 | Fault injection | press Start_PB 0.3 s @ 1 s; fault airLost  @ 8 s; press Start_PB 0.3 s @ 11 s; clear airLost @ 14 s; press Start_PB 0.3 s @ 18 s | Execute: green steady, conveyor runs; Air lost (an internal fault): the line is Held. Steady amber, conveyor stopped | ✔ pass |
+| `L12-slow` | L12 | Nominal | press Start_PB 0.3 s @ 1 s | The line is slow but nothing is wrong: it is still Execute (green). The stack light does not show the loss - OEE does; Performance should be about 85 %: the belt runs at 85 % speed. (0 % means the conveyor never ran) | ✔ pass |
+| *L12 hidden* | L12 | Randomised | 10 variants (seeds 12000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L13-nominal` | L13 | Fault injection | press Clear_Sign1 0.4 s @ 1 s; press Clear_Sign2 0.4 s @ 2 s; press Start_PB 0.3 s @ 3 s | The two sign-offs alone must not start the conveyor. Start is still needed.; After two different sign-offs, Start must run the conveyor. | ✔ pass |
+| `L13-one-key` | L13 | Nominal | press Clear_Sign1 0.4 s @ 1 s; press Clear_Sign1 0.4 s @ 2 s; press Start_PB 0.3 s @ 3 s; press Start_PB 0.3 s @ 4.5 s; press Clear_Sign2 0.4 s @ 6 s; press Start_PB 0.3 s @ 7 s | One sign-off is not enough, even if the same key is pressed twice. Two different signs are needed.; Now Sign 1 and Sign 2 are both done: Start must run the conveyor. | ✔ pass |
+| `L13-keys-together` | L13 | Nominal | press Clear_Sign1 0.5 s @ 1 s; press Clear_Sign2 0.5 s @ 1 s; press Start_PB 0.3 s @ 3 s; press Clear_Sign1 0.4 s @ 4 s; press Clear_Sign2 0.4 s @ 5 s; press Start_PB 0.3 s @ 6 s; … | Both keys at the same moment look like one person with two keys. Ignore them: Start must not work.; Sign 1, then Sign 2 later: Start must run the conveyor. | ✔ pass |
+| `L13-challenge-fails` | L13 | Fault injection | press Clear_Sign1 0.4 s @ 1 s; press Clear_Sign2 0.4 s @ 2 s; press Start_PB 0.3 s @ 3 s; fault airLost  @ 5 s; plant clearLine=True @ 12 s; press Start_PB 0.3 s @ 15 s; … | The marked bottle is at the reject station: the conveyor must stop.; The marked bottle is still there after 2 s: lock the batch and turn on Alarm_Lamp. | ✔ pass |
+| `L13-setpoint` | L13 | Nominal | set SP_Entry=3500 @ 0.5 s; press SP_Request 0.3 s @ 1 s; set Supervisor_Key=1 @ 2 s; press SP_Request 0.3 s @ 2.5 s; set Supervisor_Key=0 @ 4 s; set SP_Entry=2000 @ 4.2 s; … | Without the key, or without a request, the fill time must not change (3000).; The audit trail shows a change made WITHOUT the supervisor key. | ✔ pass |
+| *L13 hidden* | L13 | Randomised | 6 variants (seeds 13000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
+| `L14-full-cycle` | L14 | Nominal | set CIP_Mode=1 @ 0.5 s; set CIP_Flow_OK=1 @ 1 s; set CIP_Temp_OK=1 @ 36 s; set CIP_Cond_OK=1 @ 101 s; set CIP_Mode=0 @ 114 s | CIP mode is OFF: everything must be OFF.; Step 1, pre-rinse: pump, rinse valve and drain valve ON, caustic valve OFF. | ✔ pass |
+| `L14-temp-drop` | L14 | Edge case | set CIP_Mode=1, CIP_Temp_OK=1 @ 0.5 s; set CIP_Flow_OK=1 @ 1 s; set CIP_Temp_OK=0 @ 51 s; set CIP_Temp_OK=1 @ 66 s | After 30 s of flow: step 2, caustic circulation.; The temperature dropped at 51 s (20 s counted) and came back at 66 s. HOLD: keep the 20 s and count 40 s more. The step must end at 106 s, not later. | ✔ pass |
+| `L14-cond-flicker` | L14 | Edge case | set CIP_Mode=1, CIP_Temp_OK=1 @ 0.5 s; set CIP_Flow_OK=1 @ 1 s; set CIP_Cond_OK=1 @ 95 s; set CIP_Cond_OK=0 @ 98 s; set CIP_Cond_OK=1 @ 100 s | Step 3, final rinse, starts at 91 s.; Conductivity must be OK for 10 s WITHOUT a break. It dropped at 98 s, so the 10 s start again at 100 s. Done must not come before 110 s. | ✔ pass |
+| `L14-flow-lost` | L14 | Nominal | set CIP_Mode=1, CIP_Temp_OK=1 @ 0.5 s; set CIP_Flow_OK=1 @ 1 s; set CIP_Flow_OK=0 @ 11 s; set CIP_Flow_OK=1 @ 21 s | Flow was lost from 11 s to 21 s. HOLD: the pump and the rinse valve stay ON, and the time waits. 10 s were counted, 20 s more are needed, so the step ends at 41 s.; 30 s of flow in total: step 2, caustic circulation, starts at 41 s. | ✔ pass |
+| `L14-abort-restart` | L14 | Nominal | set CIP_Mode=1, CIP_Temp_OK=1 @ 0.5 s; set CIP_Flow_OK=1 @ 1 s; set CIP_Mode=0 @ 20 s; set CIP_Mode=1 @ 25 s | CIP mode OFF: everything OFF at once.; With CIP mode OFF everything stays OFF. | ✔ pass |
+| *L14 hidden* | L14 | Randomised | 6 variants (seeds 14000+, shifted timing, jitter) | same assertions as the visible tests | ✔ pass |
 
 </details>
 
-Self-test total: **283/283 passed** (engine unit tests, plant model, editor, share links, every level).
+Self-test total: **500/500 passed** (engine unit tests, plant model, editor, share links, every level).
 <!--TESTLOG:END-->
 
 ## What broke and what I changed
@@ -212,6 +289,10 @@ A short engineering log of real problems found while building and testing:
 * **TP pulse length.** The textbook formula gave a 490 ms pulse for `PT = 500 ms`; the block now outputs exactly PT so a "500 ms ± 20 ms" assertion is meaningful.
 * **A quick tap on a simulated push button was never seen by the PLC** (button released before the next scan). The panel now holds a tap for at least four scans — a small real lesson about scan time.
 * **Headless Edge printed nothing with `--dump-dom`;** the self-test runner now uses Chrome.
+* **A test could pass without testing.** A review found that an assertion placed at or after the end of a run was silently skipped, and that a typo like `{ge: 1}` was always true.
+  Assertions past the end now fail, unknown operators never match, and the level validator rejects both.
+* **Untrusted programs.** A share link or an old save with a malformed rung used to crash the editor *and* get saved, locking the level. Programs are now sanitized on every way in
+  (share link, import, saved data), `compile()` never throws, and a program that cannot be rendered falls back to the starter.
 
 ## Limitations
 

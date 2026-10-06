@@ -1,0 +1,9 @@
+{"level": "L06", "diag": "delay_instead_of_feedback", "note": "Two 500 ms timers replace the reed switches. They are fine at normal pressure but too short when the cylinder is slow (low air or a longer travel time)", "lines": [
+  "/Filled (Stopper_SOL)",
+  "Stopper_SOL TON(DB_Ext,T#500ms)",
+  "PE_Fill DB_Ext.Q Air_OK /Filled TON(DB_Fill,T#3s)",
+  "[DB_Fill.Q | Filled] PE_Fill (Filled)",
+  "PE_Fill DB_Ext.Q Air_OK /Filled (Fill_Valve)",
+  "Filled TON(DB_Ret,T#500ms)",
+  "Air_OK [/PE_Fill | DB_Ret.Q] (Conveyor_Motor)"
+]}

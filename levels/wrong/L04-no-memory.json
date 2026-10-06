@@ -1,0 +1,1 @@
+{"level": "L04", "diag": "release_no_memory", "note": "Release is wired straight to the conveyor with no memory: the belt runs only while the button is held, then the bottle is still in the beam and stops again", "lines": ["[/PE_Fill | Release_PB] (Conveyor_Motor)"]}

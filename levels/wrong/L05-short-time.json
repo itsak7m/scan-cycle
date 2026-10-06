@@ -1,0 +1,1 @@
+{"level": "L05", "diag": "fill_time_wrong", "note": "The preset is T#2s: the bottle only gets 2 seconds of syrup (about 60 %), an underfill", "lines": ["PE_Fill TON(DB_Fill,T#2s) (Filled)", "PE_Fill /Filled (Fill_Valve)", "[/PE_Fill | Filled] (Conveyor_Motor)"]}

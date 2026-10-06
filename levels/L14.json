@@ -1,0 +1,125 @@
+{
+  "id": "L14", "order": 14,
+  "title": {"en": "CIP Sequence", "ar": "دورة التنظيف CIP"},
+  "concept": "Retentive timer (TONR), sequencer that holds and resumes, continuous-condition timer",
+  "workOrder": {
+    "en": "CIP mode. Step 1: pre-rinse for 30 s, counted only while flow is OK. Step 2: caustic for 60 s, counted only while temperature is OK. If a signal drops, hold and continue where you stopped. Step 3: final rinse until conductivity is OK for 10 s without a break. Then Done. Mode OFF stops everything.",
+    "ar": "وضع {{CIP}}. الخطوة 1: شطف أولي 30 ثانية، بتنعدّ بس لما التدفق سليم. الخطوة 2: قلوي 60 ثانية، بتنعدّ بس لما الحرارة سليمة. إذا إشارة سقطت، وقّف الوقت وكمّل من وين وقفت ({{hold}}). الخطوة 3: شطف أخير لحد ما الموصلية تكون سليمة 10 ثواني بدون انقطاع. بعدين {{Done}}. إطفاء وضع {{CIP}} بيوقف كل شي."
+  },
+  "datasheets": [
+    {
+      "id": "cip_recipe", "title": {"en": "CIP recipe", "ar": "وصفة التنظيف CIP"},
+      "rows": [["Step 0", "Idle: CIP_Mode OFF, everything OFF"], ["Step 1  Pre-rinse", "Pump + Rinse + Drain ON. 30 s, counted while CIP_Flow_OK = 1"], ["Step 2  Caustic", "Pump + Caustic ON (Rinse and Drain OFF). 60 s, counted while CIP_Temp_OK = 1"], ["Step 3  Final rinse", "Pump + Rinse + Drain ON. Until CIP_Cond_OK = 1 for 10 s without a break"], ["Step 4  Done", "CIP_Done ON. Pump and valves OFF"], ["CIP_Mode OFF", "Abort: everything OFF, back to step 0, all timers reset"]],
+      "note": {"en": "A step ends only when its timer is done. While a signal is lost the step holds: the pump and the valves stay as they are and only the timer waits.", "ar": "الخطوة بتخلص بس لما مؤقّتها يخلص. لما إشارة تروح الخطوة بتنتظر ({{hold}}): المضخة والصمامات بتضل متل ما هي، والمؤقّت بس بيستنى."}
+    },
+    {
+      "id": "tonr_timer", "title": {"en": "TONR: retentive on-delay timer", "ar": "TONR: مؤقّت يحتفظ بالزمن"},
+      "rows": [["IN", "Time counts while IN = 1. When IN = 0 the time is kept."], ["PT", "Preset time, e.g. T#60s"], ["R (3rd parameter)", "A bit that sets the time back to 0"], ["Q", "1 when the time has reached PT"], ["ET", "Elapsed time: read it as DB_Name.ET"], ["TON, for comparison", "Sets the time to 0 every time IN drops"]],
+      "note": {"en": "Use TONR when the time may pause (temperature, flow). Use TON when the signal must stay ON without a break (conductivity). With T#60s a TONR needs 6000 scans of IN = 1.", "ar": "استخدم {{TONR}} لما الوقت ممكن يتوقف (حرارة، تدفق). واستخدم {{TON}} لما الإشارة لازم تضل شغّالة بدون انقطاع (موصلية). مع T#60s الـ {{TONR}} بده 6000 {{scan}} فيهم IN = 1."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "IN", "wave": "1100110111"}, {"name": "Q  (TONR, PT = 2 s)", "wave": "0000011111"}, {"name": "Q  (TON, PT = 2 s)", "wave": "0000000000"}]}
+    },
+    {
+      "id": "cip_signals", "title": {"en": "CIP process signals", "ar": "إشارات عملية التنظيف"},
+      "rows": [["CIP_Mode  (I3.4)", "Selector: 1 = CIP mode"], ["CIP_Flow_OK  (I3.7)", "1 = water flows"], ["CIP_Temp_OK  (I3.5)", "1 = the caustic is hot enough"], ["CIP_Cond_OK  (I3.6)", "1 = the rinse water is clean (conductivity is low)"], ["Outputs", "CIP_Pump Q2.0, CIP_Caustic_Valve Q2.1, CIP_Rinse_Valve Q2.2, CIP_Drain_Valve Q2.3, CIP_Done Q2.4"]],
+      "note": {"en": "These signals come from the process. The game changes them in the tests, and they can drop at any time.", "ar": "هاي الإشارات جاية من العملية. اللعبة بتغيّرها بالفحوصات، وممكن تسقط بأي وقت."}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT", "SET", "RST", "TON", "TONR", "CMP", "MOVE", "BRANCH"],
+  "tags": ["CIP_Mode", "CIP_Temp_OK", "CIP_Cond_OK", "CIP_Flow_OK", "CIP_Pump", "CIP_Caustic_Valve", "CIP_Rinse_Valve", "CIP_Drain_Valve", "CIP_Done"],
+  "plant": {"stations": ["tank", "filler"], "genOn": false},
+  "starter": null,
+  "example": {
+    "mode": "full",
+    "title": {"en": "Worked example: horn after 5 s of low level, counted only in Auto mode", "ar": "مثال محلول: البوق بعد 5 ثواني من المستوى المنخفض، بتنعدّ بس بالوضع الأوتوماتيكي"},
+    "lines": ["Tank_LSL Mode_Auto TONR(DB_Low,T#5s,Ack_PB)", "DB_Low.Q (Horn)"],
+    "explain": [
+      {"rung": 1,
+       "en": "The TONR gets power only when Tank_LSL and Mode_Auto are both ON. It adds up the time. When Mode_Auto goes OFF the time is kept, it does not go back to 0. Ack_PB is the reset bit (3rd parameter): pressing it sets the time to 0.",
+       "ar": "الـ {{TONR}} بيجيه {{power}} بس لما {{Tank_LSL}} و{{Mode_Auto}} الاثنين شغّالين. بيجمع الوقت. لما {{Mode_Auto}} ينطفي الوقت بيضل محفوظ، ما بيرجع 0. و{{Ack_PB}} هو بت الـ {{reset}} (البارامتر التالت): ضغطه بيرجّع الوقت 0."},
+      {"rung": 2,
+       "en": "When the collected time reaches 5 s, DB_Low.Q becomes 1 and the horn sounds. Q stays 1 until Ack_PB resets the timer.",
+       "ar": "لما الوقت المجموع يوصل 5 ثواني، {{DB_Low.Q}} بيصير 1 والبوق بيصفّر. {{Q}} بيضل 1 لحد ما {{Ack_PB}} يرجّع المؤقّت 0."}
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "L14-full-cycle", "title": {"en": "Full CIP cycle", "ar": "دورة CIP كاملة"}, "seed": 141, "durationMs": 116000,
+      "events": [{"t": 500, "set": {"CIP_Mode": true}}, {"t": 1000, "set": {"CIP_Flow_OK": true}}, {"t": 36000, "set": {"CIP_Temp_OK": true}}, {"t": 101000, "set": {"CIP_Cond_OK": true}}, {"t": 114000, "set": {"CIP_Mode": false}}],
+      "asserts": [
+        {"window": [0, 490], "always": {"CIP_Pump": false, "CIP_Rinse_Valve": false, "CIP_Caustic_Valve": false, "CIP_Drain_Valve": false, "CIP_Done": false}, "msg": {"en": "CIP mode is OFF: everything must be OFF.", "ar": "وضع {{CIP}} مطفي: كل شي لازم يكون مطفي."}},
+        {"t": 600, "expect": {"CIP_Pump": true, "CIP_Rinse_Valve": true, "CIP_Drain_Valve": true, "CIP_Caustic_Valve": false, "CIP_Done": false}, "tol": 60, "msg": {"en": "Step 1, pre-rinse: pump, rinse valve and drain valve ON, caustic valve OFF.", "ar": "الخطوة 1، شطف أولي: المضخة وصمام الشطف وصمام التصريف شغّالين، وصمام القلوي مطفي."}},
+        {"window": [700, 30890], "always": {"CIP_Rinse_Valve": true, "CIP_Caustic_Valve": false}, "msg": {"en": "The pre-rinse lasts 30 s of flow (flow came at 1 s, so it ends at 31 s). Stay in step 1 until then.", "ar": "الشطف الأولي 30 ثانية من التدفق (التدفق إجا عند 1 ثانية، فبينتهي عند 31). ضل بالخطوة 1 لحد هداك الوقت."}},
+        {"t": 31000, "expect": {"CIP_Caustic_Valve": true, "CIP_Pump": true, "CIP_Rinse_Valve": false, "CIP_Drain_Valve": false}, "tol": 100, "msg": {"en": "After 30 s of flow: step 2, caustic circulation (pump and caustic valve ON, rinse and drain OFF).", "ar": "بعد 30 ثانية تدفق: الخطوة 2، دوران القلوي (المضخة وصمام القلوي شغّالين، والشطف والتصريف مطفيين)."}},
+        {"window": [31200, 95890], "always": {"CIP_Caustic_Valve": true, "CIP_Pump": true}, "msg": {"en": "Caustic: 60 s counted only while the temperature is OK. The temperature came at 36 s, so the step ends at 96 s.", "ar": "القلوي: 60 ثانية بتنعدّ بس لما الحرارة سليمة. الحرارة إجت عند 36 ثانية، فالخطوة بتنتهي عند 96."}},
+        {"t": 96000, "expect": {"CIP_Caustic_Valve": false, "CIP_Rinse_Valve": true, "CIP_Drain_Valve": true, "CIP_Pump": true}, "tol": 100, "msg": {"en": "Step 3, final rinse: pump, rinse valve and drain valve ON, caustic valve OFF.", "ar": "الخطوة 3، شطف أخير: المضخة وصمام الشطف وصمام التصريف شغّالين، وصمام القلوي مطفي."}},
+        {"window": [96200, 110890], "always": {"CIP_Done": false, "CIP_Rinse_Valve": true}, "msg": {"en": "Final rinse: wait until conductivity has been OK for 10 s without a break (it came at 101 s, so Done at 111 s).", "ar": "شطف أخير: استنى لحد ما الموصلية تكون سليمة 10 ثواني بدون انقطاع (إجت عند 101، فـ {{Done}} عند 111)."}},
+        {"t": 111000, "expect": {"CIP_Done": true, "CIP_Pump": false, "CIP_Rinse_Valve": false, "CIP_Drain_Valve": false, "CIP_Caustic_Valve": false}, "tol": 100, "msg": {"en": "Done: CIP_Done ON, pump and valves OFF.", "ar": "{{Done}}: {{CIP_Done}} شغّال، والمضخة والصمامات مطفيين."}},
+        {"window": [111200, 113990], "always": {"CIP_Done": true}, "msg": {"en": "CIP_Done must stay ON while CIP mode is ON.", "ar": "{{CIP_Done}} لازم يضل شغّال طول ما وضع {{CIP}} شغّال."}},
+        {"t": 114000, "expect": {"CIP_Done": false, "CIP_Pump": false}, "tol": 30, "msg": {"en": "CIP mode OFF: everything OFF, also CIP_Done.", "ar": "وضع {{CIP}} انطفى: كل شي مطفي، حتى {{CIP_Done}}."}}
+      ]
+    },
+    {
+      "id": "L14-temp-drop", "title": {"en": "Temperature drops in the caustic step", "ar": "الحرارة بتنزل بخطوة القلوي"}, "seed": 142, "durationMs": 109000,
+      "events": [{"t": 500, "set": {"CIP_Mode": true, "CIP_Temp_OK": true}}, {"t": 1000, "set": {"CIP_Flow_OK": true}}, {"t": 51000, "set": {"CIP_Temp_OK": false}}, {"t": 66000, "set": {"CIP_Temp_OK": true}}],
+      "asserts": [
+        {"t": 31000, "expect": {"CIP_Caustic_Valve": true, "CIP_Rinse_Valve": false}, "tol": 100, "msg": {"en": "After 30 s of flow: step 2, caustic circulation.", "ar": "بعد 30 ثانية تدفق: الخطوة 2، دوران القلوي."}},
+        {"id": "temp-hold", "window": [31200, 105850], "always": {"CIP_Caustic_Valve": true, "CIP_Pump": true}, "msg": {"en": "The temperature dropped at 51 s (20 s counted) and came back at 66 s. HOLD: keep the 20 s and count 40 s more. The step must end at 106 s, not later.", "ar": "الحرارة نزلت عند 51 ثانية (انعدّ 20 ثانية) ورجعت عند 66. {{HOLD}}: احتفظ بالـ 20 ثانية وعُدّ 40 ثانية كمان. الخطوة لازم تنتهي عند 106، مش بعدين."}},
+        {"t": 106000, "expect": {"CIP_Caustic_Valve": false, "CIP_Rinse_Valve": true, "CIP_Drain_Valve": true}, "tol": 100, "msg": {"en": "40 s of good temperature after the drop make 60 s in total: step 3, final rinse, must start at 106 s.", "ar": "40 ثانية حرارة سليمة بعد النزول بتعمل 60 ثانية مجموع: الخطوة 3، شطف أخير، لازم تبدأ عند 106."}}
+      ]
+    },
+    {
+      "id": "L14-cond-flicker", "title": {"en": "Conductivity flickers in the final rinse", "ar": "الموصلية بتتقطّع بالشطف الأخير"}, "seed": 143, "durationMs": 112000,
+      "events": [{"t": 500, "set": {"CIP_Mode": true, "CIP_Temp_OK": true}}, {"t": 1000, "set": {"CIP_Flow_OK": true}}, {"t": 95000, "set": {"CIP_Cond_OK": true}}, {"t": 98000, "set": {"CIP_Cond_OK": false}}, {"t": 100000, "set": {"CIP_Cond_OK": true}}],
+      "asserts": [
+        {"t": 91000, "expect": {"CIP_Caustic_Valve": false, "CIP_Rinse_Valve": true, "CIP_Drain_Valve": true}, "tol": 100, "msg": {"en": "Step 3, final rinse, starts at 91 s.", "ar": "الخطوة 3، شطف أخير، بتبدأ عند 91 ثانية."}},
+        {"id": "cond-restart", "window": [95000, 109850], "never": {"CIP_Done": true}, "msg": {"en": "Conductivity must be OK for 10 s WITHOUT a break. It dropped at 98 s, so the 10 s start again at 100 s. Done must not come before 110 s.", "ar": "الموصلية لازم تكون سليمة 10 ثواني بدون انقطاع. نزلت عند 98، فالـ 10 ثواني بتبدأ من جديد عند 100. {{Done}} ما لازم يجي قبل 110 ثانية."}},
+        {"window": [95000, 109850], "always": {"CIP_Rinse_Valve": true, "CIP_Pump": true}, "msg": {"en": "The final rinse continues until the 10 s are complete.", "ar": "الشطف الأخير بيكمّل لحد ما الـ 10 ثواني تخلص."}},
+        {"t": 110000, "expect": {"CIP_Done": true, "CIP_Pump": false}, "tol": 100, "msg": {"en": "10 s of continuous conductivity (100 s to 110 s): CIP_Done ON.", "ar": "10 ثواني موصلية متواصلة (من 100 لـ 110): {{CIP_Done}} شغّال."}}
+      ]
+    },
+    {
+      "id": "L14-flow-lost", "title": {"en": "Flow lost in the pre-rinse", "ar": "التدفق بينقطع بالشطف الأولي"}, "seed": 144, "durationMs": 43000,
+      "events": [{"t": 500, "set": {"CIP_Mode": true, "CIP_Temp_OK": true}}, {"t": 1000, "set": {"CIP_Flow_OK": true}}, {"t": 11000, "set": {"CIP_Flow_OK": false}}, {"t": 21000, "set": {"CIP_Flow_OK": true}}],
+      "asserts": [
+        {"id": "flow-hold", "window": [11100, 40890], "always": {"CIP_Rinse_Valve": true, "CIP_Pump": true, "CIP_Caustic_Valve": false}, "msg": {"en": "Flow was lost from 11 s to 21 s. HOLD: the pump and the rinse valve stay ON, and the time waits. 10 s were counted, 20 s more are needed, so the step ends at 41 s.", "ar": "التدفق انقطع من 11 لـ 21 ثانية. {{HOLD}}: المضخة وصمام الشطف بيضلوا شغّالين، والوقت بيستنى. انعدّ 10 ثواني، ولسا بده 20، فالخطوة بتنتهي عند 41."}},
+        {"t": 41000, "expect": {"CIP_Caustic_Valve": true, "CIP_Rinse_Valve": false}, "tol": 100, "msg": {"en": "30 s of flow in total: step 2, caustic circulation, starts at 41 s.", "ar": "30 ثانية تدفق بالمجموع: الخطوة 2، دوران القلوي، بتبدأ عند 41."}}
+      ]
+    },
+    {
+      "id": "L14-abort-restart", "title": {"en": "Mode OFF stops it, a new run starts from zero", "ar": "إطفاء الوضع بيوقفها، والتشغيل الجديد من الصفر"}, "seed": 145, "durationMs": 57000,
+      "events": [{"t": 500, "set": {"CIP_Mode": true, "CIP_Temp_OK": true}}, {"t": 1000, "set": {"CIP_Flow_OK": true}}, {"t": 20000, "set": {"CIP_Mode": false}}, {"t": 25000, "set": {"CIP_Mode": true}}],
+      "asserts": [
+        {"t": 20000, "expect": {"CIP_Pump": false, "CIP_Rinse_Valve": false, "CIP_Drain_Valve": false}, "tol": 30, "msg": {"en": "CIP mode OFF: everything OFF at once.", "ar": "وضع {{CIP}} انطفى: كل شي بينطفي فورًا."}},
+        {"window": [20050, 24990], "always": {"CIP_Pump": false, "CIP_Rinse_Valve": false, "CIP_Drain_Valve": false, "CIP_Caustic_Valve": false, "CIP_Done": false}, "msg": {"en": "With CIP mode OFF everything stays OFF.", "ar": "ووضع {{CIP}} مطفي كل شي بيضل مطفي."}},
+        {"t": 25100, "expect": {"CIP_Pump": true, "CIP_Rinse_Valve": true}, "tol": 100, "msg": {"en": "CIP mode ON again: a new run starts with step 1.", "ar": "وضع {{CIP}} اشتغل من جديد: تشغيل جديد بيبدأ بالخطوة 1."}},
+        {"id": "timer-reset", "window": [26000, 54890], "always": {"CIP_Rinse_Valve": true, "CIP_Caustic_Valve": false}, "msg": {"en": "A new run needs the full 30 s of pre-rinse again. Reset the timer when the line is idle, or the old time is still inside.", "ar": "التشغيل الجديد بده 30 ثانية شطف أولي كاملة من جديد. صفّر المؤقّت لما الخط يكون واقف، وإلا الوقت القديم بيضل جواته."}},
+        {"t": 55000, "expect": {"CIP_Caustic_Valve": true, "CIP_Rinse_Valve": false}, "tol": 100, "msg": {"en": "30 s after the new start: step 2, caustic, begins.", "ar": "بعد 30 ثانية من التشغيل الجديد: بتبدأ الخطوة 2، القلوي."}}
+      ]
+    }
+  ],
+  "hidden": {"count": 6, "seedBase": 14000, "vary": {"shiftMs": [0, 900]}},
+  "diagnostics": ["ton_instead_of_tonr", "cond_momentary", "cond_timer_retentive", "phase_skipped", "flow_not_checked", "tonr_never_reset"],
+  "hints": [
+    {"en": "Open the failed test. Which phase is it: pre-rinse, caustic or final rinse? Compare the pump and the valves with the recipe table at that time.", "ar": "افتح الفحص اللي فشل. أي مرحلة هي: شطف أولي، قلوي ولا شطف أخير؟ قارن المضخة والصمامات مع جدول الوصفة بهداك الوقت."},
+    {"en": "Which timer must keep its time when its signal drops (TONR)? Which one must start again from 0 (TON)? Look at the reset bit of each TONR: when must it set the time back to 0?", "ar": "أي مؤقّت لازم يحتفظ بوقته لما إشارته تسقط ({{TONR}})؟ وأي واحد لازم يبدأ من 0 من جديد ({{TON}})؟ شوف بت الـ {{reset}} تبع كل {{TONR}}: متى لازم يرجّع الوقت 0؟"},
+    {"en": "The caustic timer: it counts while the step is 2 and the temperature is OK, and it keeps its time. Its reset bit (here Idle) is ON only while the line is idle.", "ar": "مؤقّت القلوي: بيعدّ لما الخطوة 2 والحرارة سليمة، وبيحتفظ بوقته. بت الـ {{reset}} تبعه (هون {{Idle}}) شغّال بس لما الخط يكون واقف.", "lines": ["CMP(==,Step,2) CIP_Temp_OK TONR(DB_Caustic,T#60s,Idle)"]}
+  ],
+  "glossary": ["cip", "caustic", "rinse", "conductivity", "hold_step", "retentive_timer", "recipe", "phase", "reset", "latch"],
+  "glossaryDefs": [
+    {"id": "cip", "en": "CIP (clean in place)", "ar": "التنظيف الموضعي (CIP)", "ex": {"en": "CIP cleans the tank and the pipes without opening them.", "ar": "{{CIP}} بينظّف الخزان والأنابيب بدون ما نفتحهم."}},
+    {"id": "caustic", "en": "caustic", "ar": "قلوي (صودا كاوية)", "ex": {"en": "Hot caustic removes the syrup from the pipes.", "ar": "القلوي الساخن بيشيل الشراب من الأنابيب."}},
+    {"id": "rinse", "en": "rinse", "ar": "شطف", "ex": {"en": "The final rinse washes the caustic out.", "ar": "الشطف الأخير بيغسل القلوي."}},
+    {"id": "conductivity", "en": "conductivity", "ar": "الموصلية", "ex": {"en": "High conductivity means caustic is still in the water.", "ar": "الموصلية العالية يعني لسا في قلوي بالمي."}},
+    {"id": "hold_step", "en": "hold", "ar": "تثبيت (انتظار)", "ex": {"en": "On hold, the timer waits and keeps its time.", "ar": "أثناء {{hold}} المؤقّت بيستنى وبيحتفظ بوقته."}},
+    {"id": "retentive_timer", "en": "retentive timer", "ar": "مؤقّت يحتفظ بالزمن", "ex": {"en": "A retentive timer keeps its time when IN drops.", "ar": "{{retentive timer}} بيحتفظ بوقته لما IN يسقط."}},
+    {"id": "recipe", "en": "recipe", "ar": "وصفة (تسلسل الخطوات)", "ex": {"en": "The CIP recipe lists the steps and the times.", "ar": "وصفة {{CIP}} فيها الخطوات والأوقات."}},
+    {"id": "phase", "en": "phase", "ar": "مرحلة", "ex": {"en": "The pre-rinse is the first phase of the recipe.", "ar": "الشطف الأولي هو المرحلة الأولى من الوصفة."}}
+  ],
+  "explain": {"frames": [
+    {"en": "In step {step}, the pump and the valves are set as in the recipe. The timer counts only while {condition} is ON.", "ar": "بالخطوة {step}، المضخة والصمامات حسب الوصفة. المؤقّت بيعدّ بس لما {condition} شغّال."},
+    {"en": "When {condition} drops, the timer holds its time. When it comes back, the timer continues from the same time.", "ar": "لما {condition} يسقط، المؤقّت بيحتفظ بوقته. ولما يرجع، المؤقّت بيكمّل من نفس الوقت."},
+    {"en": "{input} must be ON for 10 s without a break. If it drops, the 10 s start again from 0.", "ar": "{input} لازم يكون شغّال 10 ثواني بدون انقطاع. إذا سقط، الـ 10 ثواني بتبدأ من 0."},
+    {"en": "When CIP mode is OFF, everything stops, the step goes back to 0 and the timers are reset.", "ar": "لما وضع {{CIP}} يكون مطفي، كل شي بيوقف، والخطوة بترجع 0، والمؤقّتات بتتصفّر."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 14}, {"id": "clean", "noLint": true}]
+}

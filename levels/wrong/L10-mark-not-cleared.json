@@ -1,0 +1,1 @@
+{"level": "L10", "diag": "mark_not_cleared", "note": "the mark is SET by the first bad bottle and never reset, so every following pulse shifts a 1 in and good bottles are pushed off", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Cap POS(Edge_Cap) /Cap_Present (S:NoCap)", "Conv_Encoder POS(Enc_Edge) SHL(Track,NoCap)", "CMP(<,Track,0) (Reject_Pusher)"]}

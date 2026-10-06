@@ -1,0 +1,13 @@
+{"level": "L13", "diag": "same_key_twice", "note": "Sign 1 is used for both sign latches, so one key (even pressed twice) is enough.", "lines": [
+  "Clear_Sign1 (S:Signed1)",
+  "Signed1 Clear_Sign1 (S:Signed2)",
+  "[Start_PB | Run] Stop_PB Signed2 /Alarm_Lamp (Run)",
+  "Run /Challenge_Bottle (Conveyor_Motor)",
+  "Challenge_Bottle (Reject_Pusher)",
+  "Challenge_Bottle TON(DB_Chal,T#2s) (S:Alarm_Lamp)",
+  "Challenge_Bottle NEG(Edge1) /Alarm_Lamp (S:Chal_OK)",
+  "Chal_OK PE_Exit CTU(DB_Batch,3,Reset_PB)",
+  "DB_Batch.Q (Batch_Lamp)",
+  "Reset_PB [(R:Alarm_Lamp) | (R:Chal_OK) | (R:Signed1) | (R:Signed2)]",
+  "Supervisor_Key SP_Request MOVE(SP_Entry,Fill_Time_SP)"
+]}

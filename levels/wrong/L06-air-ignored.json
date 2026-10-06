@@ -1,0 +1,7 @@
+{"level": "L06", "diag": "air_not_checked", "note": "Air_OK is never used: when the air is lost the conveyor and the valve keep working", "lines": [
+  "/Filled (Stopper_SOL)",
+  "PE_Fill Stopper_Ext /Filled TON(DB_Fill,T#3s)",
+  "[DB_Fill.Q | Filled] PE_Fill (Filled)",
+  "PE_Fill Stopper_Ext /Filled (Fill_Valve)",
+  "[/PE_Fill | Filled Stopper_Ret] (Conveyor_Motor)"
+]}

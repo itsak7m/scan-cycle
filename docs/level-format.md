@@ -80,7 +80,7 @@ Edge memory bits can be any name too (`POS(Edge1)`).
               {"t":5000, "set":{"Reset_PB":true}},                        // set any panel/process input by tag name or address
               {"t":9000, "estop":true}, {"t":12000, "estop":false}, {"t":3000,"door":"open"},
               {"t":15000, "fault":"peStuckOn", "arg":"PE_Fill"}, {"t":20000, "clear":"peStuckOn", "arg":"PE_Fill"},
-              {"t":8000, "plantSet":{"tankPct":4, "speedPct":85, "outfeedBlocked":true, "genOn":false, "spawnBottle":{"x":0}}} ],
+              {"t":8000, "plantSet":{"tankPct":4, "speedPct":85, "outfeedBlocked":true, "genOn":false, "spawnBottle":{"x":0}, "clearLine":true}} ],
   "asserts": [
     {"t":2000, "expect":{"Conveyor_Motor":true}, "tol":20, "msg":{"en":"…","ar":"…"}},   // true at some sample in [t-tol, t+tol]
     {"window":[0,60000], "never":{"overflow":true}},                                      // never / always inside a time window
@@ -95,7 +95,7 @@ Edge memory bits can be any name too (`POS(Edge1)`).
   becomes true at the scan at `t0` turns Q on at `t0 + 2990 ms`; a TP of PT is high for exactly PT.
 * **Keys** in `expect/never/always/when`: tag names, addresses (`Q0.0`), instance fields (`DB_T.ET`, `DB_C.CV`) and plant metrics:
   `out good rejected spills wastedCaps wastedLabels goodLost melted badShipped filledCount spawned overflow
-  bottlesPerMin availability performance quality oee`. Values: `true/false/number` or `{gte,gt,lte,lt,eq,ne}`.
+  bottlesPerMin availability performance quality oee auditCount auditUnauthorized` (the two audit metrics count changes of the tags in `level.watchLog`; `auditUnauthorized` only those made while `Supervisor_Key` was 0). Values: `true/false/number` or `{gte,gt,lte,lt,eq,ne}`.
   Tags not exposed in the level's `tags` can still be asserted (all master tags are known).
 * Always write the `msg` for assertions players will see; if omitted a generic message is generated.
 * **Hidden variants** are made from `hidden.base` scenarios (default: all visible ones), cycling, with seed `seedBase+k` and:
@@ -144,7 +144,8 @@ Hardwired safety: `estop` / `door` events cut motor, valve and solenoid power in
 `ctx`: `program`, `tags`, `failure` (first failing assertion), `els` (`[{ri,r,c,e}]`), `ofType(...types)`, `writers(tag)`, `readers(tag)`, `usesTag(tag)`,
 `rungEls(ri)`, `tag(name)`, `roleOf(name)`, `compiled`, `probe(scenario)` (run an extra scenario against the player's program).
 Generic ids always available: `nc_on_start nc_on_nc_stop double_coil edge_bit_reused shared_instance pt_not_time_literal add_without_edge`.
-List the ids a level wants checked in `level.diagnostics` (generic ones are checked anyway).
+List the ids a level wants checked in `level.diagnostics` (generic ones are checked anyway). `level.skipGeneric: ["nc_on_start"]` switches a generic id off for a level where its advice would be wrong
+(L04: an NC `/Release_PB` contact is a correct latch-clear, not a mistaken start button). `probe(scenario)` is the way to test behaviour (a tiny extra FAT run) instead of guessing from the ladder shape.
 
 ## Fixtures
 

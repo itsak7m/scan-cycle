@@ -28,6 +28,7 @@
         if (op === 'lt' && !(v < e)) return false;
         if (op === 'eq' && !(v === e)) return false;
         if (op === 'ne' && !(v !== e)) return false;
+        if (['gte', 'gt', 'lte', 'lt', 'eq', 'ne'].indexOf(op) < 0) return false; // unknown operator: never vacuously true
       }
       return true;
     }
@@ -59,7 +60,6 @@
   // opts: {seed, failFast, trace, forces, userTags, upTo (ms, stop early), rec}
   function runScenario(level, program, scenario, opts) {
     opts = opts || {};
-    const t0 = Date.now();
     const sim = SC.sim.create({ level, program, scenario, seed: opts.seed !== undefined ? opts.seed : scenario.seed, trace: !!opts.trace, userTags: opts.userTags });
     if (opts.forces) for (const k in opts.forces) sim.force(k, opts.forces[k]);
     const dur = scenario.durationMs || 10000;
@@ -84,7 +84,8 @@
       const a = o.a;
       for (const c of [a.expect, a.never, a.always, a.when]) if (c) for (const k in c) if (!sim.isKnownKey(k)) unknownKeys.push(k);
     }
-    if (unknownKeys.length) failures.push({ idx: -1, kind: 'bad_scenario', t: 0, at: 0, msg: { en: 'Scenario uses unknown key ' + unknownKeys[0], ar: 'السيناريو فيه مفتاح غير معروف' }, expected: {}, actual: {}, assertId: 'scenario' });
+    for (const o of asserts) if (o.kind === 'at' && o.a.t > dur + 1) unknownKeys.push('(assert at ' + o.a.t + ' ms is after the end of the run)');
+    if (unknownKeys.length) failures.push({ idx: -1, kind: 'bad_scenario', t: 0, at: 0, msg: { en: 'Scenario problem: ' + unknownKeys[0], ar: 'مشكلة بالسيناريو: ' + unknownKeys[0] }, expected: {}, actual: {}, assertId: 'scenario' });
 
     const stopAt = opts.upTo !== undefined ? opts.upTo : dur;
     while (sim.t < stopAt) {
@@ -127,14 +128,14 @@
     if (stopAt >= dur) {
       for (const o of asserts) {
         if (o.done) continue;
-        if (o.kind === 'at' && !o.ok && o.to <= dur) fail(o, dur);
+        if (o.kind === 'at' && !o.ok && o.from <= dur) fail(o, dur);
         if (o.kind === 'within') for (const ob of o.obligations) if (ob.deadline <= dur) { fail(o, dur, { at: ob.t0 }); break; }
       }
     }
     failures.sort((x, y) => x.t - y.t || x.idx - y.idx);
     return {
       id: scenario.id, pass: failures.length === 0, failures, firstFailure: failures[0] || null,
-      metrics: SC.plant.kpis(sim.P), audit: sim.audit, sim: opts.keepSim ? sim : null, ms: Date.now() - t0, forcesActive: sim.forcesActive(),
+      metrics: SC.plant.kpis(sim.P), audit: sim.audit, sim: opts.keepSim ? sim : null, forcesActive: sim.forcesActive(),
     };
   }
 
@@ -171,7 +172,7 @@
         if (a.t !== undefined) a.t += sh;
         if (a.window) a.window = [a.window[0] + sh, a.window[1] + sh];
       }
-      sc.durationMs += sh;
+      sc.durationMs = (sc.durationMs || 0) + sh;
     }
     return sc;
   }

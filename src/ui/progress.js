@@ -6,10 +6,30 @@
   const U = SC.ui;
 
   const fresh = () => ({ v: 1, savedAt: 0, levels: {}, gloss: {}, session: 0, seenWO: {}, settings: {} });
-  let data = U.store.get('data', null);
-  if (!data || data.v !== 1 || typeof data.levels !== 'object') data = fresh();
+  // fill in any missing / wrongly-typed key so an old save never bricks the app
+  function normalise(d) {
+    const f = fresh();
+    if (!d || typeof d !== 'object' || d.v !== 1) return f;
+    const out = Object.assign(f, d);
+    for (const k of ['levels', 'gloss', 'seenWO', 'settings']) if (!out[k] || typeof out[k] !== 'object' || Array.isArray(out[k])) out[k] = {};
+    delete out.levels.__proto__;
+    for (const id of Object.keys(out.levels)) {
+      const l = out.levels[id];
+      if (!/^L\d\d$/.test(id) || !l || typeof l !== 'object') { delete out.levels[id]; continue; }
+      if (l.program) { const sp = SC.sanitizeProgram(l.program); if (sp) l.program = sp; else l.program = null; }
+      if (!Array.isArray(l.userTags)) l.userTags = [];
+    }
+    if (out.sandbox && out.sandbox.program) { const sp = SC.sanitizeProgram(out.sandbox.program); out.sandbox = sp ? { program: sp, userTags: Array.isArray(out.sandbox.userTags) ? out.sandbox.userTags : [] } : undefined; }
+    out.session = Number.isFinite(out.session) ? out.session : 0;
+    return out;
+  }
+  let data = normalise(U.store.get('data', null));
   data.session = (data.session || 0) + 1;
   U.data = data;
+  // never lose the last edit when the tab is closed
+  const flush = () => U.save(true);
+  globalThis.addEventListener('pagehide', flush);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
 
   let timer = 0;
   U.save = function (now) {
@@ -46,7 +66,7 @@
       if (!/^L\d\d$/.test(id)) return false;
       const l = o.levels[id];
       if (typeof l !== 'object' || l === null) return false;
-      if (l.program && !Array.isArray(l.program.rungs)) return false;
+      if (l.program && !SC.sanitizeProgram(l.program)) return false;
     }
     return true;
   };
@@ -56,7 +76,7 @@
     if (!U.validateImport(o)) return false;
     const keepSession = data.session;
     for (const k of Object.keys(data)) delete data[k];
-    Object.assign(data, fresh(), o);
+    Object.assign(data, normalise(o));
     data.session = keepSession;
     U.save(true);
     return true;

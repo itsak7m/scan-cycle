@@ -1,0 +1,13 @@
+{"level": "L13", "diag": "reset_incomplete", "note": "Reset clears the alarm but not the sign-offs, so Start works again without two new signs.", "lines": [
+  "Clear_Sign1 /Clear_Sign2 (S:Signed1)",
+  "Signed1 Clear_Sign2 /Clear_Sign1 (S:Signed2)",
+  "[Start_PB | Run] Stop_PB Signed2 /Alarm_Lamp (Run)",
+  "Run /Challenge_Bottle (Conveyor_Motor)",
+  "Challenge_Bottle (Reject_Pusher)",
+  "Challenge_Bottle TON(DB_Chal,T#2s) (S:Alarm_Lamp)",
+  "Challenge_Bottle NEG(Edge1) /Alarm_Lamp (S:Chal_OK)",
+  "Chal_OK PE_Exit CTU(DB_Batch,3,Reset_PB)",
+  "DB_Batch.Q (Batch_Lamp)",
+  "Reset_PB [(R:Alarm_Lamp) | (R:Chal_OK)]",
+  "Supervisor_Key SP_Request MOVE(SP_Entry,Fill_Time_SP)"
+]}

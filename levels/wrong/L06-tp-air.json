@@ -1,0 +1,7 @@
+{"level": "L06", "diag": "tp_ignores_air_loss", "note": "The valve is driven straight from a TP pulse. The pulse keeps running when Air_OK drops, so the valve stays open after the air is lost", "lines": [
+  "/Filled (Stopper_SOL)",
+  "PE_Fill Stopper_Ext Air_OK /Started TP(DB_Fill,T#3s) (Fill_Valve)",
+  "[Fill_Valve | Started] PE_Fill (Started)",
+  "Started /Fill_Valve (Filled)",
+  "Air_OK [/PE_Fill | Filled Stopper_Ret] (Conveyor_Motor)"
+]}

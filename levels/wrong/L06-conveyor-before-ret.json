@@ -1,0 +1,7 @@
+{"level": "L06", "diag": "conveyor_before_retracted", "note": "The conveyor starts as soon as the fill is done, without waiting for the Stopper_Ret reed switch", "lines": [
+  "/Filled (Stopper_SOL)",
+  "PE_Fill Stopper_Ext Air_OK /Filled TON(DB_Fill,T#3s)",
+  "[DB_Fill.Q | Filled] PE_Fill (Filled)",
+  "PE_Fill Stopper_Ext Air_OK /Filled (Fill_Valve)",
+  "Air_OK [/PE_Fill | Filled] (Conveyor_Motor)"
+]}

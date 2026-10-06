@@ -20,6 +20,8 @@
   };
 
   function normRung(rg) {
+    if (!Array.isArray(rg.els)) rg.els = [];
+    if (!Array.isArray(rg.vb)) rg.vb = [];
     let maxR = 0, maxC = 0;
     for (const e of rg.els) { maxR = Math.max(maxR, e.r); maxC = Math.max(maxC, e.c); }
     for (const b of rg.vb) maxR = Math.max(maxR, b[1] + 1);
@@ -47,6 +49,7 @@
         return o;
       },
       insts: () => Object.keys(ctx.instDefs()),
+      usedAddrs: () => { const out = []; ed.program.rungs.forEach((rg) => rg.els.forEach((e) => ['a', 'b', 'o', 'w', 'rs', 'ld', 'cd'].forEach((k) => { if (typeof e[k] === 'string' && SC.addr.parseAddr(e[k])) out.push(e[k]); }))); return out; },
       palette: () => host.palette(),
     };
     ed.ctx = ctx;
@@ -76,7 +79,8 @@
     function afterChange() {
       render();
       host.setProgram(ed.program, ed.userTags);
-      focusSel();
+      if (!ed.skipFocus) focusSel();
+      ed.skipFocus = false;
     }
     ed.setProgram = (p, u) => {
       ed.program = SC.util.clone(p); ed.userTags = SC.util.clone(u || ed.userTags);
@@ -154,9 +158,12 @@
       if (j < 0 || j >= ed.program.rungs.length) return;
       mutate(() => { const a = ed.program.rungs; [a[ri], a[j]] = [a[j], a[ri]]; ed.sel.ri = j; });
     }
-    function setNote(ri, txt) {
+    function setNote(ri, txt) { // no re-render: the note input keeps focus and value
       if ((ed.program.rungs[ri].note || '') === txt) return;
-      mutate(() => { ed.program.rungs[ri].note = txt; });
+      const before = snap();
+      ed.program.rungs[ri].note = txt;
+      ed.undo.push(before); ed.redo = [];
+      host.setProgram(ed.program, ed.userTags);
     }
 
     // ------------------------------------------------------------ dialogs / palette
@@ -200,6 +207,10 @@
     ed.check = () => checkCache || check();
 
     function render() {
+      const nr = ed.program.rungs.length;
+      ed.sel.ri = Math.max(0, Math.min(nr - 1, ed.sel.ri));
+      const rg0 = ed.program.rungs[ed.sel.ri];
+      ed.sel.r = Math.max(0, Math.min(rg0.rows - 1, ed.sel.r)); ed.sel.c = Math.max(0, Math.min(rg0.cols - 1, ed.sel.c));
       const chk = check();
       const keep = container.scrollTop;
       container.innerHTML = '';
@@ -289,7 +300,7 @@
       const sel = ed.sel.ri === ri && ed.sel.r === r && ed.sel.c === c;
       const name = el ? (U.ELMAP[el.t] ? U.ELMAP[el.t].en : el.t) : tr('empty', 'فاضي');
       const svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">`
-        + (lab.top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(lab.top.length > 14 ? lab.top.slice(0, 13) + '…' : lab.top)}</text>` : '')
+        + (lab.top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(lab.top.length > 12 ? lab.top.slice(0, 11) + '…' : lab.top)}</text>` : '')
         + U.symbolSvg(el, isWire)
         + (lab.bottom ? `<text class="c-addr" x="42" y="65" text-anchor="middle">${U.esc(lab.bottom)}</text>` : '')
         + (el ? '<text class="c-state" x="82" y="65" text-anchor="end"></text>' : '')
@@ -299,7 +310,11 @@
       const cell = h('div', { class: 'cell' + (el ? ' filled' : '') + (sel ? ' sel' : '') + (msgs.length ? ' has-msg' : ''), role: 'gridcell', tabindex: sel ? '0' : '-1',
         'aria-label': label, title: msgs.length ? msgs.map((m) => (U.lang === 'ar' ? m.msg.ar : m.msg.en)).join('\n') : (el ? lab.top : ''),
         dataset: { ri, r, c }, style: { left: (RAIL + c * W) + 'px', top: (r * H) + 'px', width: W + 'px', height: H + 'px' }, html: svg });
-      cell.addEventListener('focus', () => { ed.sel = { ri, r, c }; });
+      cell.addEventListener('focus', () => {
+        ed.sel = { ri, r, c };
+        container.querySelectorAll('.cell[tabindex="0"]').forEach((n) => { n.tabIndex = -1; });
+        cell.tabIndex = 0;
+      });
       cell.addEventListener('pointerdown', (e) => onPointerDown(e, ri, r, c, cell));
       cell.addEventListener('keydown', (e) => onKey(e, ri, r, c, cell));
       return cell;
@@ -317,10 +332,11 @@
       if (e.button !== undefined && e.button !== 0) return;
       const rg = ed.program.rungs[ri];
       const el = findEl(rg, r, c);
+      const canDrag = e.pointerType !== 'touch'; // on touch a swipe must scroll the rung, never drag an element
       const st = { ri, r, c, x: e.clientX, y: e.clientY, moved: false, el, ghost: null, target: null, id: e.pointerId };
       ed.drag = st;
       const move = (ev) => {
-        if (!st.el) return;
+        if (!st.el || !canDrag) return;
         const dx = ev.clientX - st.x, dy = ev.clientY - st.y;
         if (!st.moved && Math.hypot(dx, dy) > 8) {
           st.moved = true;
@@ -337,8 +353,14 @@
           if (under && st.target) under.classList.add('drop');
         }
       };
+      const cancel = () => {
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', cancel);
+        cell.classList.remove('dragging'); if (st.ghost) st.ghost.remove();
+        document.querySelectorAll('.cell.drop').forEach((n) => n.classList.remove('drop'));
+        ed.drag = null;
+      };
       const up = () => {
-        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', cancel);
         cell.classList.remove('dragging');
         if (st.ghost) st.ghost.remove();
         document.querySelectorAll('.cell.drop').forEach((n) => n.classList.remove('drop'));
@@ -353,7 +375,7 @@
       };
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', up);
-      document.addEventListener('pointercancel', up);
+      document.addEventListener('pointercancel', cancel);
     }
 
     // ------------------------------------------------------------ keyboard
@@ -408,7 +430,7 @@
       lastRec = sim.rec;
       sim.rec.forEach((rec, ri) => {
         const refs = ed.refs[ri];
-        if (!rec || !refs) return;
+        if (!rec || !refs || !rec.pin || rec.pin.length !== refs.rung.cols) return; // rec from a program version that is no longer on screen
         for (const [key, k] of refs.cells) {
           const [r, c] = key.split(',').map(Number);
           const pin = rec.pin[c] ? rec.pin[c][r] : 0, pout = rec.pout[c] ? rec.pout[c][r] : 0;
@@ -443,6 +465,7 @@
     ed.ops = { place, removeEl, toggleBar, makeBranch, moveEl, addRung, delRung, moveRung, setNote };
     const FIELDS = ['a', 'b', 'o', 'w', 'rs', 'ld', 'cd'];
     ed.renameTag = (from, to) => {
+      ed.skipFocus = true;
       mutate(() => {
         const t = ed.userTags.find((x) => x.name === from);
         if (!t) return false;
@@ -459,12 +482,14 @@
     };
     ed.deleteTag = (name) => {
       if (ed.usedTags().has(name)) return false;
+      ed.skipFocus = true;
       mutate(() => { ed.userTags = ed.userTags.filter((t) => t.name !== name); });
       return true;
     };
     ed.setTagDesc = (name, en, ar) => {
       const t = ed.userTags.find((x) => x.name === name);
       if (!t) return;
+      ed.skipFocus = true;
       mutate(() => { t.desc = { en, ar }; });
     };
     ed.focus = (ri, r, c) => { ed.sel = { ri, r, c }; focusSel(); };

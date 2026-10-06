@@ -1,0 +1,128 @@
+{
+  "id": "L13", "order": 13,
+  "title": {"en": "Line Clearance & Reject Challenge", "ar": "تنظيف الخط واختبار الرفض"},
+  "concept": "Permissive logic (two different sign-offs), reject challenge test, key-protected setpoint with an audit trail",
+  "workOrder": {
+    "en": "Start works only after two different sign-offs: Sign 1, then Sign 2. If both are pressed together, ignore them. Before counting, run the reject challenge: stop the conveyor at the marked bottle and push it off. Still there after 2 s? Lock the batch and latch the alarm. Reset unlocks. Only the supervisor key may change the fill time.",
+    "ar": "{{Start}} بيشتغل بس بعد توقيعين مختلفين: {{Sign 1}} وبعدين {{Sign 2}}. إذا انضغطوا مع بعض، تجاهلهم. قبل العدّ، اعمل اختبار الرفض ({{reject challenge}}): وقّف الناقل عند القنينة المعلّمة وادفعها برّا. لسا موجودة بعد ثانيتين؟ اقفل الدفعة وثبّت الإنذار ({{latch}}). {{Reset}} بيفتح القفل. بس مفتاح المشرف بيقدر يغيّر زمن التعبئة."
+  },
+  "datasheets": [
+    {
+      "id": "sign_offs", "title": {"en": "Line-clearance sign-offs", "ar": "توقيعات تنظيف الخط"},
+      "rows": [["Tags", "Clear_Sign1 (I3.0), Clear_Sign2 (I3.1)"], ["Device", "Two key switches, one for each person (NO)"], ["Rule 1", "Sign 1 first, then Sign 2"], ["Rule 2", "Both pressed together = one person: ignore both"], ["Then", "Start runs the conveyor. Stop (NC) always stops it"], ["Reset_PB", "New batch: clears the signs, the lock, the alarm and the count"]],
+      "note": {"en": "A real line has two people: the operator and the quality person. One person pressing both keys is not a second check, so the program must not accept it.", "ar": "الخط الحقيقي فيه شخصين: المشغّل وشخص الجودة. شخص واحد بيضغط المفتاحين مش فحص تاني، فالبرنامج ما لازم يقبله."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Clear_Sign1", "wave": "0110000000"}, {"name": "Clear_Sign2", "wave": "0000110000"}, {"name": "Both signs done", "wave": "0000111111"}]}
+    },
+    {
+      "id": "reject_challenge", "title": {"en": "Reject challenge test", "ar": "اختبار الرفض"},
+      "rows": [["Tag", "Challenge_Bottle (I3.3)"], ["Meaning", "bit = 1 while the marked test bottle is at the reject station"], ["1. Stop", "Stop the conveyor while the marked bottle is there"], ["2. Push", "Reject_Pusher (Q0.6) pushes it off the belt"], ["3. Check", "Bottle gone = PASSED: conveyor runs, counting starts"], ["Still there after 2 s", "FAILED: lock the batch, latch Alarm_Lamp (Q0.7)"], ["Batch", "3 bottles counted at PE_Exit after the pass: Batch_Lamp (Q1.6)"]],
+      "note": {"en": "The marked bottle is always bad. It must never reach the packing area. Bottles at the exit are NOT counted until the challenge has passed. Example below: the pusher is broken, so the test fails.", "ar": "القنينة المعلّمة دايمًا سيئة. ما لازم توصل لمنطقة التعبئة. القناني عند المخرج ما بتنعدّ لحد ما ينجح الاختبار. المثال تحت: الدافع خربان، فالاختبار بيفشل."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Challenge_Bottle", "wave": "0111111111"}, {"name": "Conveyor_Motor", "wave": "1000000000"}, {"name": "Alarm_Lamp", "wave": "0000011111"}]}
+    },
+    {
+      "id": "supervisor_setpoint", "title": {"en": "Supervisor key and fill-time setpoint", "ar": "مفتاح المشرف وقيمة زمن التعبئة"},
+      "rows": [["Supervisor_Key", "I3.2, key switch: 1 = supervisor present"], ["SP_Request", "I4.1, the operator asks for a change"], ["SP_Entry", "IW66, the new value in ms (Int)"], ["Fill_Time_SP", "MW20, the fill time in ms (starts at 3000)"], ["Rule", "Copy SP_Entry to Fill_Time_SP only when SP_Request is pressed AND the key is ON"], ["Audit trail", "The game logs every change of Fill_Time_SP and the key state"]],
+      "note": {"en": "Without the key the value must not change, not even for one scan. The audit trail records every change, so a change made without the key is easy to find.", "ar": "بدون المفتاح القيمة ما لازم تتغيّر، ولا حتى {{scan}} واحد. سجل التدقيق بيسجّل كل تغيير، فالتغيير بدون المفتاح سهل نلاقيه."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Supervisor_Key", "wave": "0001111000"}, {"name": "SP_Request", "wave": "0100110000"}, {"name": "Fill_Time_SP changed", "wave": "0000111111"}]}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT", "SET", "RST", "POS", "NEG", "TON", "TP", "CTU", "MOVE", "BRANCH"],
+  "tags": [
+    "Start_PB", "Stop_PB", "Reset_PB", "Clear_Sign1", "Clear_Sign2", "Challenge_Bottle", "PE_Exit", "Supervisor_Key", "SP_Request", "SP_Entry",
+    "Conveyor_Motor", "Reject_Pusher", "Alarm_Lamp", "Batch_Lamp",
+    {"name": "Fill_Time_SP", "addr": "MW20", "type": "Int", "role": "setpoint", "desc": {"en": "Fill time setpoint in ms (starts at 3000)", "ar": "قيمة ضبط زمن التعبئة بالـ ms (تبدأ 3000)"}}
+  ],
+  "init": {"MW20": 3000},
+  "watchLog": ["MW20"],
+  "plant": {"stations": ["infeed", "reject", "exit"], "bottlesPerMin": 24, "jitterMs": 0, "genDelayMs": 3500, "convLen": 1000, "x": {"reject": 600, "exit": 760}},
+  "starter": null,
+  "example": {"mode": "none"},
+  "scenarios": [
+    {
+      "id": "L13-nominal", "title": {"en": "Two sign-offs, challenge passes, batch counted", "ar": "توقيعين، الاختبار ينجح، الدفعة بتنعدّ"}, "seed": 131, "durationMs": 36000,
+      "plant": {"challengeIdx": [3]},
+      "events": [{"t": 1000, "press": "Clear_Sign1", "ms": 400}, {"t": 2000, "press": "Clear_Sign2", "ms": 400}, {"t": 3000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 2990], "always": {"Conveyor_Motor": false}, "msg": {"en": "The two sign-offs alone must not start the conveyor. Start is still needed.", "ar": "التوقيعين لحالهم ما لازم يشغّلوا الناقل. لسا لازم {{Start}}."}},
+        {"t": 3000, "expect": {"Conveyor_Motor": true}, "tol": 30, "msg": {"en": "After two different sign-offs, Start must run the conveyor.", "ar": "بعد توقيعين مختلفين، {{Start}} لازم يشغّل الناقل."}},
+        {"id": "chal-stop", "when": {"Challenge_Bottle": true}, "within": 30, "expect": {"Conveyor_Motor": false}, "msg": {"en": "The marked bottle is at the reject station: the conveyor must stop.", "ar": "القنينة المعلّمة وصلت لمحطة الرفض: لازم الناقل يوقف."}},
+        {"id": "chal-push", "when": {"Challenge_Bottle": true}, "within": 300, "expect": {"Reject_Pusher": true}, "msg": {"en": "Push the marked bottle off with Reject_Pusher.", "ar": "ادفع القنينة المعلّمة برّا بـ {{Reject_Pusher}}."}},
+        {"id": "chal-restart", "when": {"rejected": {"gte": 1}}, "within": 300, "expect": {"Conveyor_Motor": true}, "msg": {"en": "The marked bottle is gone, so the challenge passed: the conveyor must run again.", "ar": "القنينة المعلّمة انرفضت، يعني الاختبار نجح: لازم الناقل يرجع يشتغل."}},
+        {"id": "count-early", "window": [0, 36000], "never": {"Batch_Lamp": true, "rejected": {"eq": 0}}, "msg": {"en": "Bottles must not be counted before the challenge has passed.", "ar": "القناني ما لازم تنعدّ قبل ما ينجح اختبار الرفض."}},
+        {"window": [0, 36000], "always": {"Alarm_Lamp": false}, "msg": {"en": "The challenge passed, so there must be no alarm.", "ar": "الاختبار نجح، فما لازم يكون في إنذار."}},
+        {"t": 35000, "expect": {"Batch_Lamp": true}, "msg": {"en": "After the challenge, 3 counted bottles must turn on Batch_Lamp.", "ar": "بعد الاختبار، 3 قناني معدودة لازم تشغّل {{Batch_Lamp}}."}},
+        {"t": 35000, "expect": {"rejected": {"eq": 1}, "goodLost": {"eq": 0}}, "msg": {"en": "Only the marked bottle may be pushed off. Good bottles stay on the belt.", "ar": "بس القنينة المعلّمة بتنرفض. القناني الزينة بتضل على السير."}}
+      ]
+    },
+    {
+      "id": "L13-one-key", "title": {"en": "One key used twice", "ar": "نفس المفتاح مرتين"}, "seed": 132, "durationMs": 9000,
+      "plant": {"genOn": false},
+      "events": [{"t": 1000, "press": "Clear_Sign1", "ms": 400}, {"t": 2000, "press": "Clear_Sign1", "ms": 400}, {"t": 3000, "press": "Start_PB", "ms": 300}, {"t": 4500, "press": "Start_PB", "ms": 300}, {"t": 6000, "press": "Clear_Sign2", "ms": 400}, {"t": 7000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 5990], "always": {"Conveyor_Motor": false}, "msg": {"en": "One sign-off is not enough, even if the same key is pressed twice. Two different signs are needed.", "ar": "توقيع واحد مش كفاية، حتى لو انضغط نفس المفتاح مرتين. لازم توقيعين مختلفين."}},
+        {"t": 7000, "expect": {"Conveyor_Motor": true}, "tol": 30, "msg": {"en": "Now Sign 1 and Sign 2 are both done: Start must run the conveyor.", "ar": "هسا {{Sign 1}} و{{Sign 2}} الاثنين تمّوا: {{Start}} لازم يشغّل الناقل."}}
+      ]
+    },
+    {
+      "id": "L13-keys-together", "title": {"en": "Both keys pressed together", "ar": "المفتاحين مضغوطين مع بعض"}, "seed": 133, "durationMs": 8500,
+      "plant": {"genOn": false},
+      "events": [{"t": 1000, "press": "Clear_Sign1", "ms": 500}, {"t": 1000, "press": "Clear_Sign2", "ms": 500}, {"t": 3000, "press": "Start_PB", "ms": 300}, {"t": 4000, "press": "Clear_Sign1", "ms": 400}, {"t": 5000, "press": "Clear_Sign2", "ms": 400}, {"t": 6000, "press": "Start_PB", "ms": 300}, {"t": 7000, "press": "Stop_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 5990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Both keys at the same moment look like one person with two keys. Ignore them: Start must not work.", "ar": "المفتاحين بنفس اللحظة شكلهم شخص واحد معه مفتاحين. تجاهلهم: {{Start}} ما لازم يشتغل."}},
+        {"t": 6000, "expect": {"Conveyor_Motor": true}, "tol": 30, "msg": {"en": "Sign 1, then Sign 2 later: Start must run the conveyor.", "ar": "{{Sign 1}} وبعدين {{Sign 2}}: {{Start}} لازم يشغّل الناقل."}},
+        {"t": 7000, "expect": {"Conveyor_Motor": false}, "tol": 20, "msg": {"en": "Stop must stop the conveyor.", "ar": "{{Stop}} لازم يوقف الناقل."}},
+        {"window": [7030, 8490], "always": {"Conveyor_Motor": false}, "msg": {"en": "After Stop the conveyor stays OFF until the next Start.", "ar": "بعد {{Stop}} الناقل بيضل مطفي لحد {{Start}} الجاي."}}
+      ]
+    },
+    {
+      "id": "L13-challenge-fails", "title": {"en": "Broken pusher: challenge fails, batch locked", "ar": "الدافع خربان: الاختبار يفشل والدفعة تنقفل"}, "seed": 134, "durationMs": 18000,
+      "plant": {"challengeIdx": [0]},
+      "events": [{"t": 1000, "press": "Clear_Sign1", "ms": 400}, {"t": 2000, "press": "Clear_Sign2", "ms": 400}, {"t": 3000, "press": "Start_PB", "ms": 300}, {"t": 5000, "fault": "airLost"}, {"t": 12000, "plantSet": {"clearLine": true}}, {"t": 15000, "press": "Start_PB", "ms": 300}, {"t": 16000, "press": "Reset_PB", "ms": 300}, {"t": 17000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"id": "chal-stop", "when": {"Challenge_Bottle": true}, "within": 30, "expect": {"Conveyor_Motor": false}, "msg": {"en": "The marked bottle is at the reject station: the conveyor must stop.", "ar": "القنينة المعلّمة وصلت لمحطة الرفض: لازم الناقل يوقف."}},
+        {"id": "chal-alarm", "when": {"Challenge_Bottle": true}, "within": 2300, "expect": {"Alarm_Lamp": true}, "msg": {"en": "The marked bottle is still there after 2 s: lock the batch and turn on Alarm_Lamp.", "ar": "القنينة المعلّمة لسا موجودة بعد ثانيتين: اقفل الدفعة وشغّل {{Alarm_Lamp}}."}},
+        {"id": "alarm-latched", "window": [9500, 15990], "always": {"Alarm_Lamp": true}, "msg": {"en": "The alarm must stay ON (latched) even after the operator removes the bottle. Only Reset clears it.", "ar": "الإنذار لازم يضل شغّال ({{latched}}) حتى بعد ما المشغّل يشيل القنينة. بس {{Reset}} بيمسحه."}},
+        {"id": "batch-locked", "window": [7300, 15990], "always": {"Conveyor_Motor": false}, "msg": {"en": "A locked batch must not run. Start is ignored until Reset.", "ar": "الدفعة المقفولة ما لازم تشتغل. {{Start}} بينتجاهل لحد {{Reset}}."}},
+        {"id": "reset-alarm", "t": 16100, "expect": {"Alarm_Lamp": false}, "tol": 100, "msg": {"en": "Reset must clear the lock and the alarm.", "ar": "{{Reset}} لازم يمسح القفل والإنذار."}},
+        {"id": "new-batch-signs", "window": [17000, 17990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Reset starts a new batch: the sign-offs are cleared, so Start needs two new sign-offs.", "ar": "{{Reset}} بيبدأ دفعة جديدة: التواقيع انمسحت، فـ {{Start}} بده توقيعين جداد."}}
+      ]
+    },
+    {
+      "id": "L13-setpoint", "title": {"en": "Fill time: only with the supervisor key", "ar": "زمن التعبئة: بس بمفتاح المشرف"}, "seed": 135, "durationMs": 6500,
+      "plant": {"genOn": false},
+      "events": [{"t": 500, "set": {"SP_Entry": 3500}}, {"t": 1000, "press": "SP_Request", "ms": 300}, {"t": 2000, "set": {"Supervisor_Key": true}}, {"t": 2500, "press": "SP_Request", "ms": 300}, {"t": 4000, "set": {"Supervisor_Key": false}}, {"t": 4200, "set": {"SP_Entry": 2000}}, {"t": 4500, "press": "SP_Request", "ms": 300}],
+      "asserts": [
+        {"window": [0, 2490], "always": {"Fill_Time_SP": 3000}, "msg": {"en": "Without the key, or without a request, the fill time must not change (3000).", "ar": "بدون المفتاح، أو بدون طلب، زمن التعبئة ما لازم يتغيّر (3000)."}},
+        {"window": [0, 6500], "always": {"auditUnauthorized": 0}, "msg": {"en": "The audit trail shows a change made WITHOUT the supervisor key.", "ar": "سجل التدقيق بيبيّن تغيير صار بدون مفتاح المشرف."}},
+        {"t": 2600, "expect": {"Fill_Time_SP": 3500}, "tol": 50, "msg": {"en": "Key ON and request pressed: the fill time must become the entered value (3500).", "ar": "المفتاح شغّال والطلب انضغط: زمن التعبئة لازم يصير القيمة المدخلة (3500)."}},
+        {"t": 3000, "expect": {"auditCount": 1}, "msg": {"en": "The audit trail must show exactly one change.", "ar": "سجل التدقيق لازم يبيّن تغيير واحد بالضبط."}},
+        {"window": [4000, 6500], "always": {"Fill_Time_SP": 3500}, "msg": {"en": "Key OFF again: the fill time must stay at 3500.", "ar": "المفتاح انطفى: زمن التعبئة لازم يضل 3500."}}
+      ]
+    }
+  ],
+  "hidden": {"count": 6, "seedBase": 13000, "vary": {"jitterMs": [0, 300], "bottlesPerMinPct": [-10, 10]}},
+  "diagnostics": ["same_key_twice", "signs_not_separate", "challenge_ignored", "conveyor_not_stopped", "conveyor_no_restart", "count_before_challenge", "batch_alarm_not_latched", "reset_incomplete", "setpoint_without_key", "setpoint_without_request"],
+  "hints": [
+    {"en": "Open the failed test. Which part is it: the sign-offs, the challenge, the count or the fill time? Compare Conveyor_Motor, Alarm_Lamp and Batch_Lamp with the marked bottle at that time.", "ar": "افتح الفحص اللي فشل. أي جزء هو: التواقيع، الاختبار، العدّ ولا زمن التعبئة؟ قارن {{Conveyor_Motor}} و{{Alarm_Lamp}} و{{Batch_Lamp}} مع القنينة المعلّمة بهداك الوقت."},
+    {"en": "Four places to check. Signs: each latch needs its own key while the other key is NOT pressed. Alarm: it must be a latch. Count: what must be true before the counter may count? Fill time: the MOVE needs two contacts in front of it.", "ar": "أربع أماكن للفحص. التواقيع: كل {{latch}} بده مفتاحه هو والمفتاح التاني مش مضغوط. الإنذار: لازم يكون {{latch}}. العدّ: شو لازم يتحقق قبل ما العدّاد يعدّ؟ زمن التعبئة: الـ {{MOVE}} بده اثنين {{contact}} قبله."},
+    {"en": "The first sign-off: a latch that Sign 1 sets, but only while Sign 2 is not pressed. Build the second latch the same way. It also needs the first latch.", "ar": "التوقيع الأول: {{latch}} بيشغّله {{Sign 1}} بس لما {{Sign 2}} مش مضغوط. اعمل الـ {{latch}} التاني بنفس الطريقة. وهو كمان بده الـ {{latch}} الأول.", "lines": ["Clear_Sign1 /Clear_Sign2 (S:Signed1)"]}
+  ],
+  "glossary": ["gmp", "line_clearance", "sign_off", "challenge_test", "batch_record", "audit_trail", "setpoint", "supervisor_key", "permissive", "latch", "reset"],
+  "glossaryDefs": [
+    {"id": "gmp", "en": "GMP (good manufacturing practice)", "ar": "الممارسة الصناعية الجيدة (GMP)", "ex": {"en": "GMP rules say who must check the line.", "ar": "قواعد {{GMP}} بتحكي مين لازم يفحص الخط."}},
+    {"id": "line_clearance", "en": "line clearance", "ar": "تفريغ وتنظيف الخط", "ex": {"en": "Line clearance: remove old bottles and labels before a new batch.", "ar": "{{line clearance}}: شيل القناني والملصقات القديمة قبل دفعة جديدة."}},
+    {"id": "sign_off", "en": "sign-off", "ar": "توقيع اعتماد", "ex": {"en": "Two people give a sign-off before the start.", "ar": "شخصين بيعطوا {{sign-off}} قبل التشغيل."}},
+    {"id": "challenge_test", "en": "challenge test", "ar": "اختبار التحدّي", "ex": {"en": "The challenge test uses a bottle that must be rejected.", "ar": "{{challenge test}} بيستخدم قنينة لازم تنرفض."}},
+    {"id": "batch_record", "en": "batch record", "ar": "سجل الدفعة", "ex": {"en": "The batch record lists the signs, the tests and the count.", "ar": "{{batch record}} فيه التواقيع والاختبارات والعدد."}},
+    {"id": "audit_trail", "en": "audit trail", "ar": "سجل التدقيق", "ex": {"en": "The audit trail shows who changed a value, and when.", "ar": "{{audit trail}} بيبيّن مين غيّر القيمة ومتى."}},
+    {"id": "setpoint", "en": "setpoint", "ar": "قيمة الضبط", "ex": {"en": "The fill time is a setpoint.", "ar": "زمن التعبئة هو {{setpoint}}."}},
+    {"id": "supervisor_key", "en": "supervisor key", "ar": "مفتاح المشرف", "ex": {"en": "Only the supervisor key can change a setpoint.", "ar": "بس {{supervisor key}} بيقدر يغيّر {{setpoint}}."}}
+  ],
+  "explain": {"frames": [
+    {"en": "Start works only after {sign1} and {sign2} were pressed one after the other, never together.", "ar": "{{Start}} بيشتغل بس بعد ما {sign1} و{sign2} انضغطوا واحد بعد التاني، مش مع بعض."},
+    {"en": "When {sensor} sees the marked bottle, the conveyor stops and {pusher} pushes it off. If the bottle is still there after 2 s, the batch is locked and {alarm} stays ON.", "ar": "لما {sensor} يشوف القنينة المعلّمة، الناقل بيوقف و{pusher} بيدفعها برّا. إذا القنينة لسا موجودة بعد ثانيتين، الدفعة بتنقفل و{alarm} بيضل شغّال."},
+    {"en": "Bottles at {exit} are counted only after the challenge passed.", "ar": "القناني عند {exit} بتنعدّ بس بعد ما ينجح الاختبار."},
+    {"en": "The fill time changes only when {key} is ON and {request} is pressed.", "ar": "زمن التعبئة بيتغيّر بس لما {key} شغّال و{request} مضغوط."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 12}, {"id": "clean", "noLint": true}]
+}

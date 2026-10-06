@@ -34,8 +34,10 @@
       if (rg.n) rung.note = rg.n;
       return U.ladderNorm(rung);
     });
-    const userTags = (o.u || []).map((x) => ({ name: x[0], addr: x[1], type: /^MW|^QW|^IW/.test(x[1]) ? 'Int' : 'Bool', user: true, src: 'mem', desc: { en: '', ar: '' } }));
-    return { level: o.l, program: { v: 1, rungs }, userTags };
+    const clean = SC.sanitizeProgram({ v: 1, rungs });
+    if (!clean) return null;
+    const userTags = (Array.isArray(o.u) ? o.u : []).filter((x) => Array.isArray(x) && typeof x[0] === 'string' && /^[A-Za-z_]\w{0,40}$/.test(x[0]) && typeof x[1] === 'string' && SC.addr.parseAddr(x[1])).map((x) => ({ name: x[0], addr: x[1], type: /^MW|^QW|^IW/.test(x[1]) ? 'Int' : 'Bool', user: true, src: 'mem', desc: { en: '', ar: '' } }));
+    return { level: o.l, program: clean, userTags };
   }
 
   const b64u = {
@@ -76,7 +78,7 @@
   U.share = { pack, unpack, encode, decode, MAX_URL: 2000 };
 
   U.shareUrl = function (levelId, program, userTags, forceB64) {
-    const base = location.href.split('#')[0].split('?')[0];
+    const base = location.protocol === 'file:' ? 'https://itsak7m.github.io/scan-cycle/' : location.href.split('#')[0].split('?')[0];
     return base + '#p=' + encode(levelId, program, userTags, forceB64);
   };
 
@@ -162,7 +164,7 @@
     const canvas = h('canvas', { class: 'share-canvas', width: 1200, height: 627, 'aria-label': 'Share card preview' });
     U.drawShareCard(canvas, L, lv, program);
     const urlBox = h('input', { type: 'text', readonly: true, value: tooLong ? '' : url, 'aria-label': 'Share link' });
-    const copy = (text, msg) => { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => U.toast(msg), () => { try { urlBox.value = text; urlBox.select(); document.execCommand('copy'); U.toast(msg); } catch (e) { U.toast(tr('Copy failed — select the text and copy it.', 'فشل النسخ — حدد النص وانسخه.')); } }); };
+    const copy = (text, msg) => { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => U.toast(msg), () => { try { urlBox.value = text; urlBox.select(); if (document.execCommand('copy')) U.toast(msg); else throw new Error('copy'); } catch (e) { U.toast(tr('Copy failed — select the text and copy it.', 'فشل النسخ — حدد النص وانسخه.')); } }); };
     const body = h('div', { class: 'share' },
       tooLong ? h('p', { class: 'warn small' }, tr(`The link would be ${url.length} characters (over ${U.share.MAX_URL}). Copy the JSON instead.`, `الرابط ${url.length} حرف (أكثر من ${U.share.MAX_URL}). انسخ الـ JSON بدالو.`)) : h('p', { class: 'small muted' }, `${url.length} ` + tr('characters', 'حرف')),
       h('div', { class: 'maptools' },

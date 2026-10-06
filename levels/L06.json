@@ -1,0 +1,149 @@
+{
+  "id": "L06", "order": 6,
+  "title": {"en": "Pneumatic Stopper", "ar": "المصدّ الهوائي"},
+  "concept": "Cylinder feedback with reed switches, air pressure interlock, TP pulse timer",
+  "workOrder": {
+    "en": "Extend the stopper before the bottle arrives. When the bottle is at the filler, stop the conveyor. Fill for 3.0 seconds, only when the reed switch says extended. Then retract the stopper, and run the conveyor only when the reed switch says retracted. If air pressure is lost, hold everything: no conveyor, no filling.",
+    "ar": "مدّ الـ {{stopper}} قبل ما توصل القنينة. لما تكون القنينة عند الحشّاء، وقّف الناقل. عبّي 3.0 ثواني، بس لما الـ {{reed switch}} يقول ممدود. بعدين اسحب الـ {{stopper}}، وشغّل الناقل بس لما الـ {{reed switch}} يقول مسحوب. إذا راح ضغط الهوا، وقّف كل شي: ما في ناقل وما في تعبئة."
+  },
+  "datasheets": [
+    {
+      "id": "stopper_cylinder", "title": {"en": "Pneumatic stopper cylinder", "ar": "أسطوانة المصدّ الهوائية"},
+      "rows": [["Tag", "Stopper_SOL  (Q0.2)"], ["SOL = 1", "cylinder extends: the stopper holds the bottle"], ["SOL = 0", "spring returns: the stopper retracts"], ["Travel time", "about 0.4 s (3 times slower when air is low)"]],
+      "note": {"en": "A solenoid valve sends air to the cylinder. The cylinder needs time to move. After the command, do not guess: wait for the reed switch.", "ar": "الـ {{solenoid valve}} بيبعت هوا للأسطوانة. الأسطوانة بدها وقت عشان تتحرك. بعد الأمر لا تخمّن: استنى الـ {{reed switch}}."},
+      "timing": {"step": 200, "unit": "ms", "signals": [{"name": "Stopper_SOL", "wave": "0011111000"}, {"name": "Stopper_Ext", "wave": "0000111100"}, {"name": "Stopper_Ret", "wave": "1110000001"}]}
+    },
+    {
+      "id": "reed_switches", "title": {"en": "Reed switches (feedback)", "ar": "مفاتيح الريد (التغذية الراجعة)"},
+      "rows": [["Stopper_Ext", "I2.0: 1 = fully extended"], ["Stopper_Ret", "I2.1: 1 = fully retracted"], ["Both 0", "the cylinder is moving, or stuck"], ["Both 1", "never happens"]],
+      "note": {"en": "A reed switch is a magnetic switch on the cylinder. It tells the PLC where the piston really is. A fixed delay fails when the cylinder is slow. The reed switch does not.", "ar": "الـ {{reed switch}} مفتاح مغناطيسي على الأسطوانة. بيخبّر الـ {{PLC}} وين المكبس فعلًا. التأخير الثابت بيفشل لما الأسطوانة بطيئة. الـ {{reed switch}} لا."}
+    },
+    {
+      "id": "air_ok", "title": {"en": "Air pressure switch", "ar": "مفتاح ضغط الهوا"},
+      "rows": [["Tag", "Air_OK  (I2.2)"], ["Pressure OK", "bit = 1"], ["Air lost", "bit = 0, the cylinders freeze"], ["Air low", "bit = 1 but the cylinders are 3 times slower"]],
+      "note": {"en": "When Air_OK = 0 hold everything. When the air comes back, the line starts again by itself.", "ar": "لما {{Air_OK}} = 0 وقّف كل شي. لما الهوا يرجع، الخط بيشتغل من جديد لحاله."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "Air_OK", "wave": "1111000111"}, {"name": "Conveyor_Motor", "wave": "1111000111"}]}
+    },
+    {
+      "id": "tp_timer", "title": {"en": "TP pulse timer", "ar": "مؤقّت النبضة TP"},
+      "rows": [["Block", "TP(instance, PT)"], ["IN rising edge", "starts a pulse"], ["Q", "1 for exactly PT"], ["IN changes", "do nothing while the pulse runs"]],
+      "note": {"en": "TON waits, then turns ON. TP turns ON at once and stays ON for exactly PT, even if IN goes OFF. TP does not stop when the air is lost: gate its output yourself.", "ar": "الـ {{TON}} بيستنى وبعدين بيشتغل. الـ {{TP}} بيشتغل فورًا وبيضل شغّال {{PT}} بالضبط، حتى لو {{IN}} انطفى. الـ {{TP}} ما بيوقف لما يروح الهوا: لازم إنت تحكم بمخرجه."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "IN", "wave": "0110000000"}, {"name": "Q (PT = 1.5 s)", "wave": "0111000000"}]}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH", "TON", "TP"],
+  "tags": [
+    "PE_Fill", "Fill_Valve", "Conveyor_Motor", "Stopper_SOL", "Stopper_Ext", "Stopper_Ret", "Air_OK",
+    {"name": "Filled", "addr": "M0.0", "type": "Bool", "user": true}
+  ],
+  "plant": {"stations": ["infeed", "filler", "stopper"], "bottlesPerMin": 24, "jitterMs": 150, "fillSeconds": 3.0},
+  "starter": {"lines": [
+    "/Filled (Stopper_SOL)",
+    "PE_Fill /Filled TON(DB_Fill,T#3s)",
+    "[DB_Fill.Q | Filled] PE_Fill (Filled)",
+    "PE_Fill /Filled (Fill_Valve)",
+    "[/PE_Fill | Filled] (Conveyor_Motor)"
+  ]},
+  "example": {"mode": "completion", "title": {"en": "Complete the program: add the feedback contacts", "ar": "كمّل البرنامج: زيد ملامسات التغذية الراجعة"}},
+  "scenarios": [
+    {
+      "id": "L06-nominal", "title": {"en": "Extend, fill, retract, release", "ar": "مدّ، تعبئة، سحب، تحرير"}, "seed": 61, "durationMs": 16000,
+      "events": [],
+      "asserts": [
+        {"window": [700, 3300], "always": {"Stopper_Ext": true}, "msg": {"en": "The first bottle is on its way and the stopper is not extended. Extend the stopper before the bottle arrives", "ar": "القنينة الأولى بالطريق والـ {{stopper}} مش ممدود. مدّ الـ {{stopper}} قبل ما توصل القنينة"}},
+        {"when": {"PE_Fill": true}, "within": 0, "tol": 10, "expect": {"Conveyor_Motor": false}, "msg": {"en": "A bottle is at the filler: the conveyor must stop", "ar": "في قنينة عند الحشّاء: الناقل لازم يوقف"}},
+        {"when": {"PE_Fill": true, "Stopper_Ext": true}, "within": 30, "tol": 0, "expect": {"Fill_Valve": true}, "msg": {"en": "The stopper is extended and a bottle is present: the fill must start", "ar": "الـ {{stopper}} ممدود وفي قنينة: التعبئة لازم تبدأ"}},
+        {"when": {"Fill_Valve": true}, "within": 3020, "tol": 0, "expect": {"Fill_Valve": false}, "msg": {"en": "The valve must close after 3.0 seconds", "ar": "الصمام لازم يسكّر بعد 3.0 ثواني"}},
+        {"when": {"Fill_Valve": true}, "within": 3400, "tol": 0, "expect": {"Level_OK": true}, "msg": {"en": "The bottle did not reach the fill level", "ar": "القنينة ما وصلت مستوى التعبئة"}},
+        {"when": {"Fill_Valve": true}, "within": 6000, "tol": 0, "expect": {"Stopper_Ret": true}, "msg": {"en": "After filling, the stopper must retract", "ar": "بعد التعبئة لازم الـ {{stopper}} ينسحب"}},
+        {"when": {"Fill_Valve": true}, "within": 7000, "tol": 0, "expect": {"Conveyor_Motor": true}, "msg": {"en": "After the reed switch says retracted, the conveyor must release the bottle", "ar": "بعد ما الـ {{reed switch}} يقول مسحوب، الناقل لازم يحرّر القنينة"}},
+        {"window": [0, 16000], "never": {"Fill_Valve": true, "Stopper_Ext": false}, "msg": {"en": "The valve opened before Stopper_Ext said extended", "ar": "الصمام فتح قبل ما {{Stopper_Ext}} يقول ممدود"}},
+        {"window": [0, 16000], "never": {"Conveyor_Motor": true, "Stopper_SOL": false, "Stopper_Ext": false, "Stopper_Ret": false}, "msg": {"en": "The conveyor ran while the stopper was still retracting. Wait for Stopper_Ret", "ar": "الناقل اشتغل والـ {{stopper}} لسا عم ينسحب. استنى {{Stopper_Ret}}"}},
+        {"window": [0, 16000], "never": {"Fill_Valve": true, "PE_Fill": false}, "msg": {"en": "The valve is open but no bottle is present", "ar": "الصمام مفتوح وما في قنينة"}},
+        {"window": [0, 16000], "never": {"overflow": true}, "msg": {"en": "Overflow: a spill happened", "ar": "{{overflow}}: صار انسكاب"}},
+        {"t": 15500, "expect": {"filledCount": {"gte": 2}}, "msg": {"en": "Two bottles must be filled, one after the other", "ar": "لازم تنعبّى قنينتين، وحدة ورا التانية"}}
+      ]
+    },
+    {
+      "id": "L06-power-up", "title": {"en": "Bottle at the filler, stopper retracted at power-up", "ar": "قنينة عند الحشّاء والـ {{stopper}} مسحوب لحظة التشغيل"}, "seed": 62, "durationMs": 9000,
+      "plant": {"genOn": false, "preload": [{"x": 500}]},
+      "events": [],
+      "asserts": [
+        {"window": [0, 9000], "never": {"Fill_Valve": true, "Stopper_Ext": false}, "msg": {"en": "The valve opened before Stopper_Ext said extended. A bottle is already here: extend the stopper first, then fill", "ar": "الصمام فتح قبل ما {{Stopper_Ext}} يقول ممدود. القنينة موجودة أصلًا: مدّ الـ {{stopper}} أول، وبعدين عبّي"}},
+        {"when": {"Stopper_Ext": true, "PE_Fill": true}, "within": 30, "tol": 0, "expect": {"Fill_Valve": true}, "msg": {"en": "The reed switch says extended and a bottle is present: the fill must start", "ar": "الـ {{reed switch}} بيقول ممدود وفي قنينة: التعبئة لازم تبدأ"}},
+        {"window": [10, 3200], "always": {"Conveyor_Motor": false}, "msg": {"en": "A bottle is at the filler: the conveyor must stay stopped while the stopper extends and the bottle is filled", "ar": "في قنينة عند الحشّاء: الناقل لازم يضل واقف طول ما الـ {{stopper}} بيتمدد والقنينة بتنعبّى"}},
+        {"when": {"Fill_Valve": true}, "within": 3020, "tol": 0, "expect": {"Fill_Valve": false}, "msg": {"en": "The valve must close after 3.0 seconds", "ar": "الصمام لازم يسكّر بعد 3.0 ثواني"}},
+        {"when": {"Fill_Valve": true}, "within": 3400, "tol": 0, "expect": {"Level_OK": true}, "msg": {"en": "The bottle did not reach the fill level", "ar": "القنينة ما وصلت مستوى التعبئة"}},
+        {"when": {"Fill_Valve": true}, "within": 6000, "tol": 0, "expect": {"Stopper_Ret": true}, "msg": {"en": "After filling, the stopper must retract", "ar": "بعد التعبئة لازم الـ {{stopper}} ينسحب"}},
+        {"when": {"Fill_Valve": true}, "within": 7000, "tol": 0, "expect": {"Conveyor_Motor": true}, "msg": {"en": "After the reed switch says retracted, the conveyor must release the bottle", "ar": "بعد ما الـ {{reed switch}} يقول مسحوب، الناقل لازم يحرّر القنينة"}},
+        {"window": [0, 9000], "never": {"Conveyor_Motor": true, "Stopper_SOL": false, "Stopper_Ext": false, "Stopper_Ret": false}, "msg": {"en": "The conveyor ran while the stopper was still retracting. Wait for Stopper_Ret", "ar": "الناقل اشتغل والـ {{stopper}} لسا عم ينسحب. استنى {{Stopper_Ret}}"}},
+        {"window": [0, 9000], "never": {"overflow": true}, "msg": {"en": "Overflow: a spill happened", "ar": "{{overflow}}: صار انسكاب"}},
+        {"t": 8900, "expect": {"filledCount": {"eq": 1}}, "msg": {"en": "Exactly one bottle must be filled", "ar": "لازم قنينة وحدة بالضبط تنعبّى"}}
+      ]
+    },
+    {
+      "id": "L06-low-air", "title": {"en": "Low air: the cylinder is slow", "ar": "ضغط هوا منخفض: الأسطوانة بطيئة"}, "seed": 63, "durationMs": 15000,
+      "plant": {"genOn": false, "preload": [{"x": 500}]},
+      "events": [{"t": 0, "fault": "airLow"}],
+      "asserts": [
+        {"window": [0, 15000], "never": {"Fill_Valve": true, "Stopper_Ext": false}, "msg": {"en": "The valve opened before Stopper_Ext said extended. With low air the stopper is slow: do not use a fixed delay, wait for the reed switch", "ar": "الصمام فتح قبل ما {{Stopper_Ext}} يقول ممدود. والهوا منخفض الـ {{stopper}} بطيء: لا تستخدم تأخير ثابت، استنى الـ {{reed switch}}"}},
+        {"when": {"Stopper_Ext": true, "PE_Fill": true}, "within": 30, "tol": 0, "expect": {"Fill_Valve": true}, "msg": {"en": "The reed switch says extended and a bottle is present: the fill must start", "ar": "الـ {{reed switch}} بيقول ممدود وفي قنينة: التعبئة لازم تبدأ"}},
+        {"window": [10, 3800], "always": {"Conveyor_Motor": false}, "msg": {"en": "A bottle is at the filler: the conveyor must stay stopped", "ar": "في قنينة عند الحشّاء: الناقل لازم يضل واقف"}},
+        {"when": {"Fill_Valve": true}, "within": 3020, "tol": 0, "expect": {"Fill_Valve": false}, "msg": {"en": "The valve must close after 3.0 seconds", "ar": "الصمام لازم يسكّر بعد 3.0 ثواني"}},
+        {"when": {"Fill_Valve": true}, "within": 3400, "tol": 0, "expect": {"Level_OK": true}, "msg": {"en": "The bottle did not reach the fill level", "ar": "القنينة ما وصلت مستوى التعبئة"}},
+        {"when": {"Fill_Valve": true}, "within": 9000, "tol": 0, "expect": {"Stopper_Ret": true}, "msg": {"en": "After filling, the stopper must retract", "ar": "بعد التعبئة لازم الـ {{stopper}} ينسحب"}},
+        {"when": {"Fill_Valve": true}, "within": 10000, "tol": 0, "expect": {"Conveyor_Motor": true}, "msg": {"en": "After the reed switch says retracted, the conveyor must release the bottle", "ar": "بعد ما الـ {{reed switch}} يقول مسحوب، الناقل لازم يحرّر القنينة"}},
+        {"window": [0, 15000], "never": {"Conveyor_Motor": true, "Stopper_SOL": false, "Stopper_Ext": false, "Stopper_Ret": false}, "msg": {"en": "The conveyor ran while the slow stopper was still retracting. Wait for Stopper_Ret, not for a fixed time", "ar": "الناقل اشتغل والـ {{stopper}} البطيء لسا عم ينسحب. استنى {{Stopper_Ret}} مش وقت ثابت"}},
+        {"window": [0, 15000], "never": {"overflow": true}, "msg": {"en": "Overflow: a spill happened", "ar": "{{overflow}}: صار انسكاب"}},
+        {"t": 14900, "expect": {"filledCount": {"eq": 1}}, "msg": {"en": "Exactly one bottle must be filled", "ar": "لازم قنينة وحدة بالضبط تنعبّى"}}
+      ]
+    },
+    {
+      "id": "L06-air-lost-fill", "title": {"en": "Air lost during the fill", "ar": "راح الهوا أثناء التعبئة"}, "seed": 64, "durationMs": 8000,
+      "plant": {"genOn": false, "preload": [{"x": 500}]},
+      "events": [{"t": 2000, "fault": "airLost"}],
+      "asserts": [
+        {"t": 1900, "expect": {"Fill_Valve": true}, "tol": 0, "msg": {"en": "The fill must be running before the air is lost", "ar": "التعبئة لازم تكون شغّالة قبل ما يروح الهوا"}},
+        {"window": [2020, 8000], "always": {"Fill_Valve": false}, "msg": {"en": "Air is lost: hold everything. Close the fill valve", "ar": "راح الهوا: وقّف كل شي. سكّر صمام التعبئة"}},
+        {"window": [2020, 8000], "always": {"Conveyor_Motor": false}, "msg": {"en": "Air is lost: hold everything. The conveyor must not run", "ar": "راح الهوا: وقّف كل شي. الناقل ما لازم يشتغل"}},
+        {"window": [0, 8000], "never": {"Fill_Valve": true, "Stopper_Ext": false}, "msg": {"en": "The valve opened before Stopper_Ext said extended", "ar": "الصمام فتح قبل ما {{Stopper_Ext}} يقول ممدود"}},
+        {"window": [0, 8000], "never": {"overflow": true}, "msg": {"en": "Overflow: a spill happened", "ar": "{{overflow}}: صار انسكاب"}}
+      ]
+    },
+    {
+      "id": "L06-air-lost-idle", "title": {"en": "Air lost while waiting, then back", "ar": "راح الهوا والخط مستنّي، وبعدين رجع"}, "seed": 65, "durationMs": 14000,
+      "events": [{"t": 1000, "fault": "airLost"}, {"t": 6000, "clear": "airLost"}],
+      "asserts": [
+        {"window": [1020, 5990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Air is lost: hold everything. The conveyor must stop, even if no bottle is at the filler", "ar": "راح الهوا: وقّف كل شي. الناقل لازم يوقف، حتى لو ما في قنينة عند الحشّاء"}},
+        {"window": [1020, 5990], "always": {"Fill_Valve": false}, "msg": {"en": "Air is lost: no filling", "ar": "راح الهوا: ممنوع التعبئة"}},
+        {"window": [0, 14000], "never": {"Fill_Valve": true, "Stopper_Ext": false}, "msg": {"en": "The valve opened before Stopper_Ext said extended", "ar": "الصمام فتح قبل ما {{Stopper_Ext}} يقول ممدود"}},
+        {"window": [0, 14000], "never": {"overflow": true}, "msg": {"en": "Overflow: a spill happened", "ar": "{{overflow}}: صار انسكاب"}},
+        {"t": 13500, "expect": {"filledCount": {"gte": 1}}, "msg": {"en": "When the air comes back, the line must start again by itself and fill a bottle", "ar": "لما يرجع الهوا، الخط لازم يشتغل من جديد لحاله ويعبّي قنينة"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 8, "seedBase": 6000, "vary": {"jitterMs": [0, 300], "genDelayMs": [0, 1000], "plant": {"stopperTravelMs": [-25, 50]}}},
+  "diagnostics": ["fill_before_extended", "conveyor_before_retracted", "delay_instead_of_feedback", "air_not_checked", "tp_ignores_air_loss", "valve_ignores_air", "fill_restarts_when_stopper_moves", "stopper_not_retracted", "conveyor_blocked_when_empty"],
+  "hints": [
+    {"en": "Open the failed test. Which output moved too early: the valve before the stopper was extended, or the conveyor before the stopper was retracted? Or did something run when Air_OK = 0?", "ar": "افتح الفحص اللي فشل. أي مخرج اشتغل بدري: الصمام قبل ما الـ {{stopper}} يتمدد، ولا الناقل قبل ما الـ {{stopper}} ينسحب؟ ولا في شي اشتغل و{{Air_OK}} = 0؟"},
+    {"en": "Do not trust a time delay: a slow cylinder needs more time. Put the reed switches Stopper_Ext and Stopper_Ret, and Air_OK, as contacts in series with the valve and the conveyor.", "ar": "لا تعتمد على تأخير زمني: الأسطوانة البطيئة بدها وقت أكثر. حط {{reed switches}} ({{Stopper_Ext}} و{{Stopper_Ret}}) و{{Air_OK}} كـ {{contacts}} على التوالي مع الصمام والناقل."},
+    {"en": "The valve rung needs three conditions in series: a bottle, the stopper confirmed extended, and air OK. The conveyor needs Stopper_Ret only after the bottle is filled.", "ar": "درجة الصمام بدها ثلاث شروط على التوالي: قنينة، والـ {{stopper}} مأكّد إنه ممدود، والهوا سليم. والناقل بده {{Stopper_Ret}} بس بعد ما تنعبّى القنينة.", "lines": ["PE_Fill Stopper_Ext Air_OK /Filled"]}
+  ],
+  "glossary": ["pneumatic_cylinder", "solenoid_valve", "reed_switch", "extend", "retract", "feedback", "travel_time", "pressure_switch", "interlock", "permissive", "timer"],
+  "glossaryDefs": [
+    {"id": "pneumatic_cylinder", "en": "pneumatic cylinder", "ar": "أسطوانة هوائية", "ex": {"en": "The stopper is a pneumatic cylinder.", "ar": "الـ {{stopper}} أسطوانة هوائية."}},
+    {"id": "solenoid_valve", "en": "solenoid valve", "ar": "صمام كهرومغناطيسي (سولينويد)", "ex": {"en": "The PLC switches the solenoid valve to send air to the cylinder.", "ar": "الـ {{PLC}} بيشغّل الـ {{solenoid valve}} عشان يبعت هوا للأسطوانة."}},
+    {"id": "reed_switch", "en": "reed switch", "ar": "مفتاح ريد (حساس مغناطيسي)", "ex": {"en": "A reed switch tells the PLC the cylinder is extended.", "ar": "الـ {{reed switch}} بيخبّر الـ {{PLC}} إنه الأسطوانة ممدودة."}},
+    {"id": "extend", "en": "extend", "ar": "مدّ", "ex": {"en": "Extend the stopper before the bottle arrives.", "ar": "مدّ الـ {{stopper}} قبل ما توصل القنينة."}},
+    {"id": "retract", "en": "retract", "ar": "سحب", "ex": {"en": "Retract the stopper to let the bottle go.", "ar": "اسحب الـ {{stopper}} عشان تمشي القنينة."}},
+    {"id": "feedback", "en": "feedback", "ar": "تغذية راجعة", "ex": {"en": "The reed switch is feedback: it confirms the movement.", "ar": "الـ {{reed switch}} تغذية راجعة: بتأكّد الحركة."}},
+    {"id": "travel_time", "en": "travel time", "ar": "زمن الحركة", "ex": {"en": "The travel time of the stopper is about 0.4 seconds.", "ar": "زمن حركة الـ {{stopper}} حوالي 0.4 ثانية."}},
+    {"id": "pressure_switch", "en": "pressure switch", "ar": "مفتاح الضغط", "ex": {"en": "The pressure switch gives Air_OK = 0 when the air is lost.", "ar": "مفتاح الضغط بيعطي {{Air_OK}} = 0 لما يروح الهوا."}}
+  ],
+  "explain": {"frames": [
+    {"en": "The stopper is extended before the bottle arrives. It is retracted only after {valve} has finished.", "ar": "الـ {{stopper}} بيتمدد قبل ما توصل القنينة. وبينسحب بس بعد ما {valve} يخلص."},
+    {"en": "{valve} opens only when {sensor} sees a bottle and {ext} says the stopper is extended.", "ar": "{valve} بيفتح بس لما {sensor} يشوف قنينة و{ext} يقول إنه الـ {{stopper}} ممدود."},
+    {"en": "The conveyor runs when the filler is empty, or when the bottle is filled and {ret} says the stopper is retracted. If {air} is OFF, everything holds.", "ar": "الناقل بيشتغل لما الحشّاء فاضية، أو لما القنينة تنعبّى و{ret} يقول إنه الـ {{stopper}} مسحوب. إذا {air} مطفي، كل شي بيوقف."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 5}, {"id": "clean", "noLint": true}]
+}

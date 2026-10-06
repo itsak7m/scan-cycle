@@ -1,6 +1,6 @@
 :root {
   --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #4A5E64; --line: #C6D0D2;
-  --power: #0B6E78; --alarm: #B3461E; --ok: #2F6B4C; --amber: #9A6B12;
+  --power: #0B6E78; --alarm: #B3461E; --ok: #2F6B4C; --amber: #8A5F0F;
   --font: system-ui, "Segoe UI", "SF Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
   --mono: ui-monospace, Consolas, Menlo, monospace;
 }

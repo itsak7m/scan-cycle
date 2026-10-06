@@ -1,0 +1,1 @@
+{"level": "L07", "diag": "counter_resets_itself", "note": "R reads the lamp that the counter itself drives: at 12 the lamp resets the count, the lamp goes OFF again after one scan", "lines": ["PE_Exit CTU(DB_Batch,12,Batch_Lamp) (Batch_Lamp)", "[Start_PB | Conveyor_Motor] Stop_PB /Batch_Lamp (Conveyor_Motor)"]}

@@ -152,6 +152,8 @@
     else { reveal(); if (!r.box) { r.box = 1; r.due = U.data.session + INTERVALS[0]; } }
     U.save();
     U._termpop = { pop, anchor };
+    pop.setAttribute('tabindex', '-1');
+    const f0 = pop.querySelector('button'); if (f0) f0.focus(); else pop.focus();
     setTimeout(() => { document.addEventListener('pointerdown', out, true); document.addEventListener('keydown', esc, true); }, 0);
     function out(e) { if (!pop.contains(e.target) && e.target !== anchor) closePop(); }
     function esc(e) { if (e.key === 'Escape') closePop(); }
@@ -163,6 +165,7 @@
     p.pop._cleanup && p.pop._cleanup();
     p.pop.remove();
     U._termpop = null;
+    if (p.anchor && p.anchor.isConnected && p.anchor.focus) p.anchor.focus();
   }
   G.closePop = closePop;
 

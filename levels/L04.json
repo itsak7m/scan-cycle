@@ -1,0 +1,112 @@
+{
+  "id": "L04", "order": 4,
+  "title": {"en": "Stop at the Filler", "ar": "توقف عند الحشّاء"},
+  "concept": "Sensor-driven stop, release latch cleared by the sensor",
+  "workOrder": {
+    "en": "The conveyor runs by itself. When a bottle reaches the filler photo-eye, stop the conveyor. The operator presses Release to let that bottle go. Do not stop again for the same bottle. If a bottle is already at the filler at power-up, do not move it.",
+    "ar": "الناقل بيشتغل لحاله. لما قنينة توصل لـ {{photo-eye}} تبع الحشّاء، وقّف الناقل. المشغّل بيضغط {{Release}} عشان القنينة هاي تكمّل طريقها. لا توقّف مرة ثانية لنفس القنينة. وإذا كانت قنينة أصلًا عند الحشّاء لحظة {{power-up}}، لا تحرّكها."
+  },
+  "datasheets": [
+    {
+      "id": "pe_fill", "title": {"en": "Photo-eye at the filler", "ar": "العين الضوئية عند الحشّاء"},
+      "rows": [["Tag", "PE_Fill  (I0.5)"], ["Beam clear", "bit = 0"], ["Bottle in the beam", "bit = 1"], ["Moving bottle", "blocks the beam for about 0.4 s"]],
+      "note": {"en": "The bit is 1 only while a bottle is in the beam. When the bottle moves on, the bit goes back to 0.", "ar": "البت = 1 بس طول ما في قنينة بالشعاع. لما القنينة تكمّل، البت بيرجع 0."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "PE_Fill", "wave": "0011111000"}]}
+    },
+    {
+      "id": "release_pb", "title": {"en": "Release push button", "ar": "زر التحرير"},
+      "rows": [["Tag", "Release_PB  (I1.4)"], ["Type", "Momentary, normally open (NO)"], ["Not pressed", "bit = 0"], ["Pressed", "bit = 1"]],
+      "note": {"en": "Release only lets the bottle go. The photo-eye still sees the bottle for a short time after the button is gone. Your program must remember that this bottle was released.", "ar": "الـ {{Release}} بس بيخلّي القنينة تمشي. العين الضوئية لسا بتشوف القنينة فترة قصيرة بعد ما يروح الزر. برنامجك لازم يتذكّر إنه هاي القنينة انحرّرت."},
+      "timing": {"step": 500, "unit": "ms", "signals": [{"name": "PE_Fill", "wave": "0011111000"}, {"name": "Release_PB", "wave": "0000010000"}, {"name": "Conveyor_Motor", "wave": "1100011111"}]}
+    },
+    {
+      "id": "conv_auto", "title": {"en": "Conveyor in this level", "ar": "الناقل بهالمستوى"},
+      "rows": [["Tag", "Conveyor_Motor  (Q0.0)"], ["Start button", "none"], ["Runs", "unless your program stops it"], ["Belt speed", "150 mm/s"]],
+      "note": {"en": "There is no Start button now. The conveyor must run by itself, and your program decides when it stops.", "ar": "ما في زر {{Start}} هلأ. الناقل لازم يشتغل لحاله، وبرنامجك هو اللي بيقرّر متى يوقف."}
+    }
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH"],
+  "tags": ["PE_Fill", "Release_PB", "Conveyor_Motor"],
+  "plant": {"stations": ["infeed", "filler"], "bottlesPerMin": 20, "jitterMs": 150},
+  "starter": null,
+  "example": {"mode": "none"},
+  "scenarios": [
+    {
+      "id": "L04-arrive-stop", "title": {"en": "A bottle arrives: the conveyor stops", "ar": "قنينة بتوصل: الناقل بيوقف"}, "seed": 41, "durationMs": 8000,
+      "events": [],
+      "asserts": [
+        {"window": [0, 3000], "always": {"Conveyor_Motor": true}, "msg": {"en": "With no bottle at the filler the conveyor must run by itself", "ar": "ما في قنينة عند الحشّاء، فالناقل لازم يشتغل لحاله"}},
+        {"when": {"PE_Fill": true}, "within": 0, "tol": 10, "expect": {"Conveyor_Motor": false}, "msg": {"en": "When the bottle reaches PE_Fill the conveyor must stop at once", "ar": "لما القنينة توصل {{PE_Fill}} لازم الناقل يوقف فورًا"}},
+        {"window": [5000, 7990], "always": {"Conveyor_Motor": false}, "msg": {"en": "The bottle must stay at the filler until the operator presses Release", "ar": "القنينة لازم تضل عند الحشّاء لحد ما المشغّل يضغط {{Release}}"}}
+      ]
+    },
+    {
+      "id": "L04-release", "title": {"en": "Release lets the bottle go", "ar": "{{Release}} بيخلّي القنينة تمشي"}, "seed": 42, "durationMs": 14000,
+      "events": [{"t": 6000, "press": "Release_PB", "ms": 1000}],
+      "asserts": [
+        {"window": [5000, 5990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Before Release the bottle waits at the filler", "ar": "قبل {{Release}} القنينة بتستنى عند الحشّاء"}},
+        {"t": 6000, "expect": {"Conveyor_Motor": true}, "tol": 10, "msg": {"en": "Release must start the conveyor", "ar": "{{Release}} لازم يشغّل الناقل"}},
+        {"window": [6020, 6350], "always": {"Conveyor_Motor": true}, "msg": {"en": "The released bottle is still in the beam. Do not stop again for the same bottle", "ar": "القنينة المحرّرة لسا بالشعاع. لا توقّف مرة ثانية لنفس القنينة"}},
+        {"when": {"PE_Fill": true}, "within": 0, "tol": 10, "expect": {"Conveyor_Motor": false}, "msg": {"en": "Every new bottle must stop at the filler", "ar": "كل قنينة جديدة لازم توقف عند الحشّاء"}},
+        {"t": 13000, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "The next bottle must be stopped at the filler too", "ar": "القنينة الجاية لازم تكون واقفة عند الحشّاء كمان"}}
+      ]
+    },
+    {
+      "id": "L04-short-tap", "title": {"en": "Short tap on Release", "ar": "ضغطة قصيرة على {{Release}}"}, "seed": 43, "durationMs": 14000,
+      "events": [{"t": 6000, "press": "Release_PB", "ms": 100}],
+      "asserts": [
+        {"window": [5000, 5990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Before Release the bottle waits at the filler", "ar": "قبل {{Release}} القنينة بتستنى عند الحشّاء"}},
+        {"t": 6000, "expect": {"Conveyor_Motor": true}, "tol": 10, "msg": {"en": "Even a short tap must start the conveyor", "ar": "حتى الضغطة القصيرة لازم تشغّل الناقل"}},
+        {"window": [6020, 6350], "always": {"Conveyor_Motor": true}, "msg": {"en": "The button is gone but the bottle is still in the beam: the conveyor must keep running", "ar": "الزر راح بس القنينة لسا بالشعاع: الناقل لازم يضل شغّال"}},
+        {"t": 13000, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "The next bottle must be stopped at the filler too", "ar": "القنينة الجاية لازم تكون واقفة عند الحشّاء كمان"}}
+      ]
+    },
+    {
+      "id": "L04-two-queued", "title": {"en": "Two bottles close together", "ar": "قنينتين قريبين من بعض"}, "seed": 44, "durationMs": 9000,
+      "plant": {"genOn": false, "preload": [{"x": 340}, {"x": 240}]},
+      "events": [{"t": 4000, "press": "Release_PB", "ms": 300}],
+      "asserts": [
+        {"when": {"PE_Fill": true}, "within": 0, "tol": 10, "expect": {"Conveyor_Motor": false}, "msg": {"en": "Each bottle must stop when it reaches PE_Fill", "ar": "كل قنينة لازم توقف لما توصل {{PE_Fill}}"}},
+        {"window": [2500, 3990], "always": {"Conveyor_Motor": false}, "msg": {"en": "The first bottle waits at the filler for Release", "ar": "القنينة الأولى بتستنى {{Release}} عند الحشّاء"}},
+        {"t": 4000, "expect": {"Conveyor_Motor": true}, "tol": 10, "msg": {"en": "Release must start the conveyor", "ar": "{{Release}} لازم يشغّل الناقل"}},
+        {"window": [4020, 4350], "always": {"Conveyor_Motor": true}, "msg": {"en": "The first bottle is still in the beam: do not stop again for it", "ar": "القنينة الأولى لسا بالشعاع: لا توقّف مرة ثانية إلها"}},
+        {"t": 7500, "expect": {"Conveyor_Motor": false}, "tol": 0, "msg": {"en": "The second bottle must stop at the filler", "ar": "القنينة الثانية لازم توقف عند الحشّاء"}},
+        {"window": [5500, 8990], "always": {"Conveyor_Motor": false}, "msg": {"en": "The second bottle waits for its own Release", "ar": "القنينة الثانية بتستنى {{Release}} الخاص فيها"}}
+      ]
+    },
+    {
+      "id": "L04-power-up", "title": {"en": "A bottle is at the filler at power-up", "ar": "قنينة عند الحشّاء لحظة التشغيل"}, "seed": 45, "durationMs": 5000,
+      "plant": {"genOn": false, "preload": [{"x": 500}]},
+      "events": [{"t": 3000, "press": "Release_PB", "ms": 300}],
+      "asserts": [
+        {"window": [10, 2990], "always": {"Conveyor_Motor": false}, "msg": {"en": "A bottle is already in the beam at power-up: the conveyor must not move", "ar": "في قنينة أصلًا بالشعاع لحظة التشغيل: الناقل ما لازم يتحرك"}},
+        {"t": 3000, "expect": {"Conveyor_Motor": true}, "tol": 10, "msg": {"en": "Release must still let this bottle go", "ar": "{{Release}} لازم لسا يخلّي هاي القنينة تمشي"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 8, "seedBase": 4000, "vary": {"jitterMs": [0, 400], "genDelayMs": [0, 1200], "bottlesPerMinPct": [-15, 25]}},
+  "diagnostics": ["coil_always_powered", "release_not_used", "release_no_memory", "restop_same_bottle", "release_latch_not_cleared", "powerup_bottle_ignored"],
+  "skipGeneric": ["nc_on_start"],
+  "hints": [
+    {"en": "Open the failed test. Look at PE_Fill and the conveyor at that time. Does the bottle stop? Does it go after Release? Does it stop AGAIN?", "ar": "افتح الفحص اللي فشل. شوف {{PE_Fill}} والناقل بهداك الوقت. هل القنينة بتوقف؟ هل بتمشي بعد {{Release}}؟ هل بتوقف مرة ثانية؟"},
+    {"en": "After Release the bottle is still in the beam for about half a second. Your program needs a memory: this bottle was released. What must clear that memory?", "ar": "بعد {{Release}} القنينة لسا بالشعاع حوالي نص ثانية. برنامجك بده ذاكرة: هاي القنينة انحرّرت. شو اللي لازم يمسح هالذاكرة؟"},
+    {"en": "Build a Freed memory: Release sets it, and it holds itself only while PE_Fill is ON. The conveyor runs when the beam is clear OR the bottle is Freed.", "ar": "ابني ذاكرة {{Freed}}: {{Release}} بيشغّلها، وبتثبّت حالها بس طول ما {{PE_Fill}} شغّال. الناقل بيشتغل لما الشعاع فاضي أو القنينة {{Freed}}.", "lines": ["[Release_PB | Freed] PE_Fill"]}
+  ],
+  "glossary": ["photoelectric_sensor", "beam", "present", "index", "release", "position", "debounce", "power_up", "latch", "normally_open"],
+  "glossaryDefs": [
+    {"id": "photoelectric_sensor", "en": "photoelectric sensor (photo-eye)", "ar": "حساس ضوئي (عين ضوئية)", "ex": {"en": "PE_Fill is a photoelectric sensor at the filler.", "ar": "{{PE_Fill}} حساس ضوئي عند الحشّاء."}},
+    {"id": "beam", "en": "beam", "ar": "شعاع الضوء", "ex": {"en": "A bottle breaks the beam, so PE_Fill turns ON.", "ar": "القنينة بتقطع الشعاع، فـ {{PE_Fill}} بيشتغل."}},
+    {"id": "present", "en": "present", "ar": "موجود", "ex": {"en": "A bottle is present when PE_Fill is 1.", "ar": "القنينة موجودة لما {{PE_Fill}} = 1."}},
+    {"id": "index", "en": "index", "ar": "تقديم خطوة بخطوة", "ex": {"en": "The line indexes one bottle at a time to the filler.", "ar": "الخط بيقدّم قنينة وحدة كل مرة للحشّاء."}},
+    {"id": "release", "en": "release", "ar": "تحرير", "ex": {"en": "The operator presses Release to free the bottle.", "ar": "المشغّل بيضغط {{Release}} عشان يحرّر القنينة."}},
+    {"id": "position", "en": "position", "ar": "موضع", "ex": {"en": "The bottle must stop at the filling position.", "ar": "القنينة لازم توقف عند موضع التعبئة."}},
+    {"id": "debounce", "en": "debounce", "ar": "تثبيت الإشارة (منع الرجفة)", "ex": {"en": "A debounce timer waits until the signal is stable.", "ar": "مؤقّت الـ {{debounce}} بيستنى لحد ما الإشارة تثبت."}},
+    {"id": "power_up", "en": "power-up", "ar": "لحظة التشغيل الأولى", "ex": {"en": "At power-up a bottle can already be in the beam.", "ar": "لحظة {{power-up}} ممكن تكون قنينة أصلًا بالشعاع."}}
+  ],
+  "explain": {"frames": [
+    {"en": "When {sensor} sees a bottle, {output} turns OFF and the bottle stops.", "ar": "لما {sensor} يشوف قنينة، {output} بينطفي والقنينة بتوقف."},
+    {"en": "When {input} is pressed, the bottle is remembered as released and {output} turns ON.", "ar": "لما {input} ينضغط، القنينة بتنذكر كمحرّرة و{output} بيشتغل."},
+    {"en": "The memory stays ON while {sensor} still sees the bottle, so the same bottle does not stop again.", "ar": "الذاكرة بتضل شغّالة طول ما {sensor} لسا بيشوف القنينة، فنفس القنينة ما بتوقف مرة ثانية."}
+  ]},
+  "badges": [{"id": "lean", "maxRungs": 2}, {"id": "clean", "noLint": true}]
+}

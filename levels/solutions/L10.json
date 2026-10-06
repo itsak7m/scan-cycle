@@ -1,0 +1,1 @@
+{"lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Cap /Cap_Present (NoCap)", "Conv_Encoder POS(Enc_Edge) SHL(Track,NoCap)", "CMP(<,Track,0) (Reject_Pusher)"]}

@@ -1,0 +1,86 @@
+{
+  "id": "L07",
+  "order": 7,
+  "title": {"en": "Count the Batch", "ar": "عدّ الدفعة"},
+  "concept": "CTU up-counter, count reset, rising edge",
+  "workOrder": {"en": "Count the bottles at the exit photo-eye. When 12 bottles have passed, turn on the batch lamp and stop the conveyor. Reset clears the count and the lamp. Start and Stop work as before.", "ar": "عدّ القوارير عند العين الضوئية في المخرج. لما تمرّ 12 قارورة، شغّل مصباح الدفعة ({{Batch_Lamp}}) ووقّف الناقل. {{Reset}} بيمسح العدّ والمصباح. {{Start}} و{{Stop}} زي قبل."},
+  "datasheets": [
+    {"id": "ctu", "title": {"en": "CTU up-counter", "ar": "العدّاد التصاعدي CTU"}, "rows": [["CU", "Count input: +1 at each rising edge (0 to 1)"], ["PV", "Preset value, a number, e.g. 12"], ["R", "Reset input: the count goes back to 0"], ["CV", "Current value = the count"], ["Q", "ON when CV is equal to or more than PV"]], "note": {"en": "CTU counts the CHANGE from 0 to 1, not every scan. A bottle that stays 2 s in the beam is counted once. (In this picture PV = 3.)", "ar": "الـ {{CTU}} بيعدّ التغيّر من 0 إلى 1، مش كل {{scan}}. القارورة اللي بتضل ثانيتين بالشعاع بتنعدّ مرة وحدة. (بهالصورة PV = 3.)"}, "timing": {"step": 500, "unit": "ms", "signals": [{"name": "CU", "wave": "01101011010000"}, {"name": "R", "wave": "00000000000100"}, {"name": "Q", "wave": "00000011111000"}]}},
+    {"id": "pe_exit", "title": {"en": "Exit photo-eye", "ar": "العين الضوئية عند المخرج"}, "rows": [["Tag", "PE_Exit  (I1.3)"], ["Bottle in the beam", "bit = 1"], ["No bottle", "bit = 0"], ["Beam time", "about 0.4 s per bottle at normal speed"]], "note": {"en": "Each bottle gives one pulse on PE_Exit. A slow belt gives a longer pulse, but it is still ONE bottle.", "ar": "كل قارورة بتعطي نبضة وحدة على {{PE_Exit}}. السير البطيء بيعطي نبضة أطول، بس لسا قارورة وحدة."}, "timing": {"step": 500, "unit": "ms", "signals": [{"name": "PE_Exit", "wave": "00110011100110"}]}},
+    {"id": "batch_lamp", "title": {"en": "Batch lamp", "ar": "مصباح الدفعة"}, "rows": [["Tag", "Batch_Lamp  (Q1.6)"], ["Type", "Stack light lamp, 24 V"], ["Bit = 1", "Batch complete"], ["Bit = 0", "Batch not complete"]], "note": {"en": "Here the lamp turns ON at 12 bottles and stays ON until the operator presses Reset.", "ar": "هون المصباح بيشتغل عند 12 قارورة وبيضل شغّال لحد ما المشغّل يضغط {{Reset}}."}}
+  ],
+  "palette": ["NO", "NC", "OUT", "BRANCH", "TON", "TP", "CTU"],
+  "tags": ["Start_PB", "Stop_PB", "PE_Exit", "Reset_PB", "Conveyor_Motor", "Batch_Lamp"],
+  "plant": {"stations": ["infeed", "exit"], "bottlesPerMin": 48, "jitterMs": 100, "convLen": 495, "x": {"exit": 450}},
+  "starter": null,
+  "example": {"mode": "full", "title": {"en": "Worked example: horn after 6 capped bottles", "ar": "مثال محلول: بوق بعد 6 قوارير مغطّاة"}, "lines": ["PE_Cap CTU(DB_Caps,6,Release_PB) (Horn)"], "explain": [{"rung": 1, "en": "PE_Cap is a photo-eye: it gives 1 when a capped bottle is in the beam. CTU counts each rising edge of its input, so a bottle that stays in the beam is counted once. PV = 6: when the count reaches 6, the output Q turns ON and the coil switches the Horn. Release_PB is wired to R: while you press it, the count is 0 and the Horn stops.", "ar": "الـ {{PE_Cap}} عين ضوئية: بتعطي 1 لما قارورة مغطّاة تكون بالشعاع. الـ {{CTU}} بيعدّ كل {{rising edge}} على مدخله، فالقارورة اللي بتضل بالشعاع بتنعدّ مرة وحدة. PV = 6: لما العدّ يوصل 6، المخرج Q بيشتغل والـ {{coil}} بيشغّل {{Horn}}. الـ {{Release_PB}} موصول على R: طول ما بتضغطه العدّ = 0 والبوق بيوقف."}]},
+  "scenarios": [
+    {
+      "id": "L07-twelve", "title": {"en": "12 bottles: lamp ON, conveyor stops", "ar": "12 قارورة: المصباح بيشتغل والناقل بيوقف"}, "seed": 71, "durationMs": 21000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [1000, 10000], "always": {"Conveyor_Motor": true, "Batch_Lamp": false}, "msg": {"en": "After Start the conveyor must run and the lamp must be OFF while the batch is not complete", "ar": "بعد {{Start}} لازم الناقل يشتغل والمصباح يكون مطفي طول ما الدفعة مش كاملة"}},
+        {"window": [0, 21000], "never": {"Batch_Lamp": true, "out": {"lt": 11}}, "msg": {"en": "The batch lamp must stay OFF until the 12th bottle reaches the exit photo-eye", "ar": "مصباح الدفعة لازم يضل مطفي لحد ما القارورة رقم 12 توصل للعين الضوئية عند المخرج"}},
+        {"window": [0, 21000], "never": {"out": {"gte": 12}}, "msg": {"en": "At 12 bottles the conveyor must stop: the 12th bottle must not go through", "ar": "عند 12 قارورة لازم الناقل يوقف: القارورة رقم 12 ما لازم تمرّ"}},
+        {"window": [19000, 21000], "always": {"Batch_Lamp": true}, "msg": {"en": "At 12 bottles the batch lamp must turn ON and stay ON", "ar": "عند 12 قارورة لازم مصباح الدفعة يشتغل وبيضل شغّال"}},
+        {"window": [19000, 21000], "always": {"Conveyor_Motor": false}, "msg": {"en": "With the batch complete the conveyor must be OFF", "ar": "والدفعة كاملة لازم الناقل يكون مطفي"}}
+      ]
+    },
+    {
+      "id": "L07-long-pulse", "title": {"en": "Slow bottles: a long pulse counts once", "ar": "قوارير بطيئة: النبضة الطويلة بتنعدّ مرة"}, "seed": 72, "durationMs": 14000,
+      "plant": {"genOn": false, "speedPct": 25, "preload": [{"x": 300}, {"x": 140}]},
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 14000], "never": {"Batch_Lamp": true}, "msg": {"en": "A bottle can stay almost 2 seconds in the beam on a slow belt. It is ONE bottle. With 2 bottles the lamp must stay OFF", "ar": "القارورة ممكن تضل تقريبًا ثانيتين بالشعاع على سير بطيء. هي قارورة وحدة. مع قارورتين لازم المصباح يضل مطفي"}},
+        {"t": 13500, "expect": {"out": {"gte": 2}}, "tol": 0, "msg": {"en": "Both bottles must pass the exit: Start must run the conveyor", "ar": "القارورتين لازم تمرّا من المخرج: {{Start}} لازم يشغّل الناقل"}}
+      ]
+    },
+    {
+      "id": "L07-reset", "title": {"en": "Reset clears the count and the lamp", "ar": "{{Reset}} بيمسح العدّ والمصباح"}, "seed": 73, "durationMs": 36000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}, {"t": 21500, "press": "Reset_PB", "ms": 300}, {"t": 22500, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [0, 21400], "never": {"Batch_Lamp": true, "out": {"lt": 11}}, "msg": {"en": "The batch lamp must stay OFF until the 12th bottle reaches the exit photo-eye", "ar": "مصباح الدفعة لازم يضل مطفي لحد ما القارورة رقم 12 توصل للعين الضوئية عند المخرج"}},
+        {"window": [0, 21480], "never": {"out": {"gte": 12}}, "msg": {"en": "At 12 bottles the conveyor must stop: the 12th bottle must not go through", "ar": "عند 12 قارورة لازم الناقل يوقف: القارورة رقم 12 ما لازم تمرّ"}},
+        {"window": [20500, 21400], "always": {"Batch_Lamp": true, "Conveyor_Motor": false}, "msg": {"en": "At 12 bottles the lamp must be ON and the conveyor OFF, until Reset", "ar": "عند 12 قارورة لازم المصباح يكون شغّال والناقل مطفي، لحد {{Reset}}"}},
+        {"window": [21520, 22400], "always": {"Batch_Lamp": false}, "msg": {"en": "Reset must clear the count and turn the lamp OFF", "ar": "{{Reset}} لازم يمسح العدّ ويطفي المصباح"}},
+        {"window": [22700, 24000], "always": {"Conveyor_Motor": true}, "msg": {"en": "After Reset and Start the conveyor must run again", "ar": "بعد {{Reset}} و{{Start}} لازم الناقل يرجع يشتغل"}},
+        {"window": [21520, 36000], "never": {"Batch_Lamp": true, "out": {"lt": 23}}, "msg": {"en": "After Reset the count starts at 0: the lamp must stay OFF until 12 NEW bottles have passed. The bottle that is still in the beam was already counted", "ar": "بعد {{Reset}} العدّ بيبدأ من 0: المصباح لازم يضل مطفي لحد ما تمرّ 12 قارورة جديدة. القارورة اللي لسا بالشعاع انعدّت قبل"}},
+        {"window": [22500, 36000], "never": {"out": {"gte": 24}}, "msg": {"en": "After the second batch of 12 the conveyor must stop again", "ar": "بعد الدفعة الثانية (12) لازم الناقل يوقف من جديد"}},
+        {"window": [34500, 36000], "always": {"Batch_Lamp": true, "Conveyor_Motor": false}, "msg": {"en": "The second batch must also turn the lamp ON and stop the conveyor", "ar": "الدفعة الثانية لازم كمان تشغّل المصباح وتوقّف الناقل"}}
+      ]
+    },
+    {
+      "id": "L07-pause", "title": {"en": "Stop and Start in the middle: the count stays", "ar": "{{Stop}} و{{Start}} بالنص: العدّ بيضل"}, "seed": 74, "durationMs": 22000,
+      "events": [{"t": 500, "press": "Start_PB", "ms": 300}, {"t": 7000, "press": "Stop_PB", "ms": 300}, {"t": 10000, "press": "Start_PB", "ms": 300}],
+      "asserts": [
+        {"window": [7010, 9990], "always": {"Conveyor_Motor": false}, "msg": {"en": "Stop must stop the conveyor", "ar": "{{Stop}} لازم يوقف الناقل"}},
+        {"window": [0, 22000], "never": {"Batch_Lamp": true, "out": {"lt": 11}}, "msg": {"en": "The count must not be lost when you press Stop and Start. The lamp must stay OFF until the 12th bottle", "ar": "العدّ ما لازم ينمسح لما تضغط {{Stop}} و{{Start}}. المصباح لازم يضل مطفي لحد القارورة رقم 12"}},
+        {"window": [0, 22000], "never": {"out": {"gte": 12}}, "msg": {"en": "The count must not be lost when you press Stop and Start. At 12 bottles the conveyor must stop", "ar": "العدّ ما لازم ينمسح لما تضغط {{Stop}} و{{Start}}. عند 12 قارورة لازم الناقل يوقف"}},
+        {"window": [20000, 22000], "always": {"Batch_Lamp": true, "Conveyor_Motor": false}, "msg": {"en": "At 12 bottles the lamp must be ON and the conveyor OFF", "ar": "عند 12 قارورة لازم المصباح يكون شغّال والناقل مطفي"}}
+      ]
+    }
+  ],
+  "hidden": {"count": 8, "seedBase": 7000, "vary": {"shiftMs": [0, 500], "jitterMs": [0, 200], "bottlesPerMinPct": [0, 25], "plant": {"speedPct": [-10, 10]}}},
+  "diagnostics": ["reset_held_high", "counter_resets_itself", "batch_no_stop", "wrong_preset", "lamp_latched_no_reset", "reset_on_start"],
+  "hints": [
+    {"en": "Open the failed test. Is the lamp ON too early, too late or never? Does the conveyor stop? Does Reset clear everything?", "ar": "افتح الفحص اللي فشل. هل المصباح بيشتغل بدري، متأخر، ولا ما بيشتغل؟ هل الناقل بيوقف؟ هل {{Reset}} بيمسح كل شي؟"},
+    {"en": "Which block remembers how many bottles passed? Look at its pins: CU (what it counts), PV (how many) and R (what clears it). What does each pin read?", "ar": "أي بلوك بيتذكّر كم قارورة مرّت؟ شوف أرجله: CU (شو بيعدّ)، PV (كم)، و R (شو بيمسحه). كل رجل شو بتقرا؟"},
+    {"en": "The photo-eye contact feeds CU. PV = 12. R reads the Reset button. The lamp and the conveyor read the counter output Q.", "ar": "{{contact}} العين الضوئية بيغذّي CU. PV = 12. و R بيقرا زر {{Reset}}. المصباح والناقل بيقرأوا مخرج العدّاد Q.", "lines": ["PE_Exit CTU(DB_Batch,12,Reset_PB)"]}
+  ],
+  "glossary": ["counter", "count_up", "preset_value", "current_value", "batch", "rising_edge", "stack_light", "count_reset", "reset", "latch"],
+  "glossaryDefs": [
+    {"id": "counter", "en": "counter", "ar": "عدّاد", "ex": {"en": "The counter counts the bottles.", "ar": "الـ {{counter}} بيعدّ القوارير."}},
+    {"id": "count_up", "en": "count up (CTU)", "ar": "عدّ تصاعدي", "ex": {"en": "A CTU counts up: 1, 2, 3 ...", "ar": "الـ {{CTU}} بيعدّ تصاعدي: 1، 2، 3 ..."}},
+    {"id": "preset_value", "en": "preset value (PV)", "ar": "القيمة المحددة", "ex": {"en": "The preset value is 12 bottles.", "ar": "الـ {{PV}} هو 12 قارورة."}},
+    {"id": "current_value", "en": "current value (CV)", "ar": "القيمة الحالية", "ex": {"en": "The current value is 7: seven bottles have passed.", "ar": "الـ {{CV}} هو 7: مرّت سبع قوارير."}},
+    {"id": "batch", "en": "batch", "ar": "دفعة", "ex": {"en": "One batch is 12 bottles.", "ar": "الدفعة الوحدة هي 12 قارورة."}},
+    {"id": "rising_edge", "en": "rising edge", "ar": "حافة صاعدة", "ex": {"en": "A rising edge is the moment a signal goes from 0 to 1.", "ar": "الـ {{rising edge}} هي اللحظة اللي الإشارة بتروح فيها من 0 إلى 1."}},
+    {"id": "stack_light", "en": "stack light", "ar": "عمود الإشارة", "ex": {"en": "The stack light shows the state of the machine.", "ar": "الـ {{stack light}} بيعرض حالة الماكينة."}},
+    {"id": "count_reset", "en": "count reset (R)", "ar": "تصفير العدّ", "ex": {"en": "A count reset sets the count back to 0.", "ar": "الـ {{count reset}} بيرجّع العدّ إلى 0."}}
+  ],
+  "explain": {"frames": [{"en": "The counter adds 1 each time {sensor} goes from OFF to ON.", "ar": "العدّاد بيزيد 1 كل ما {sensor} يروح من OFF إلى ON."}, {"en": "When the count reaches {preset}, {lamp} turns ON and the conveyor stops.", "ar": "لما العدّ يوصل {preset}، {lamp} بيشتغل والناقل بيوقف."}, {"en": "{reset} sets the count back to 0 and turns {lamp} OFF.", "ar": "{reset} بيرجّع العدّ إلى 0 وبيطفي {lamp}."}]},
+  "badges": [
+    {"id": "lean", "maxRungs": 2},
+    {"id": "clean", "noLint": true}
+  ]
+}

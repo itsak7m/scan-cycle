@@ -1,0 +1,1 @@
+{"level": "L05", "diag": "refill_same_bottle", "note": "The timer only runs while the conveyor is stopped. When the timer finishes the conveyor starts, which resets the timer, so the same bottle is filled again and again (no filled memory)", "lines": ["PE_Fill /Conveyor_Motor TON(DB_Fill,T#3s)", "PE_Fill /DB_Fill.Q (Fill_Valve)", "[/PE_Fill | DB_Fill.Q] (Conveyor_Motor)"]}

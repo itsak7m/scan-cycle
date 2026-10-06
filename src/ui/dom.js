@@ -49,6 +49,7 @@
     failed: false,
   };
 
+  SC.ui.motion = () => (globalThis.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
   SC.ui.h = h;
   SC.ui.esc = esc;
   SC.ui.arHtml = arHtml;

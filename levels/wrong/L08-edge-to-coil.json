@@ -1,0 +1,1 @@
+{"level": "L08", "diag": "edge_pulse_too_short", "note": "an edge contact straight in front of the pusher coil gives a one-scan pulse (10 ms): the pusher never moves out", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Reject /Level_OK POS(Edge1) (Reject_Pusher)"]}

@@ -1,0 +1,1 @@
+{"level": "L08", "diag": "level_not_checked", "note": "the starter rung with a timer but Level_OK is never looked at: every bottle is pushed off", "lines": ["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)", "PE_Reject TP(DB_Push,T#500ms) (Reject_Pusher)"]}

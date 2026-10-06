@@ -1,0 +1,1 @@
+{"level": "L04", "diag": "restop_same_bottle", "note": "The stop latch is cleared by Release but PE_Fill sets it again at once, because the bottle is still in the beam: immediate re-stop", "lines": ["[PE_Fill | Held] /Release_PB (Held)", "/Held (Conveyor_Motor)"]}
