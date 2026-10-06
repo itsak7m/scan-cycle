@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scan Cycle</title>
+<style>
+  :root {
+    --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #5E7279; --line: #C6D0D2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101A1E; --surface: #17252A; --ink: #E3ECEE; --muted: #9DB1B7; --line: #2C4249;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101A1E; --surface: #17252A; --ink: #E3ECEE; --muted: #9DB1B7; --line: #2C4249;
+  }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: var(--ground); color: var(--ink);
+    font-family: system-ui, "Segoe UI", "SF Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  }
+  main { max-width: 32rem; margin: 1rem; padding: 1.5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  h1 { margin: 0 0 .5rem; font-size: 1.5rem; }
+  p { margin: .5rem 0; line-height: 1.5; }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Scan Cycle</h1>
+  <p>Write real PLC ladder logic. Run a bottling line. Pass the FAT.</p>
+  <p class="muted">Phase 0 — the game is coming soon.</p>
+  <section lang="ar" dir="rtl">
+    <p>اكتب <bdi lang="en">ladder logic</bdi> حقيقي وشغّل خط تعبئة، وانجح بالفحص.</p>
+    <p class="muted">المرحلة صفر — اللعبة قريبًا.</p>
+  </section>
+</main>
+</body>
+</html>
