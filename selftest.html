@@ -92,6 +92,11 @@ details > summary { cursor: pointer; min-height: 32px; display: flex; align-item
 .rung-grid.static .cell { cursor: default; }
 .rung-grid.static .cell:hover { background: none; }
 
+.card-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-h h3 { margin: 0 0 8px; }
+.share-canvas { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+.share input[type=text] { width: 100%; min-height: 44px; margin: 6px 0; border: 1.5px solid var(--ink); border-radius: 6px; padding: 0 8px; font-family: var(--mono); background: var(--surface); color: var(--ink); }
+
 :root {
   --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #5E7279; --line: #C6D0D2;
   --power: #0B6E78; --alarm: #B3461E; --ok: #2F6B4C; --amber: #9A6B12;
@@ -202,12 +207,93 @@ code, pre { font-family: var(--mono); }
 .toast.show { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
 
+/* ---------- level layout (left learning column / right stage) ---------- */
+.col-left, .col-right { min-width: 0; }
+.col-left { position: sticky; top: 64px; max-height: calc(100vh - 76px); overflow: auto; align-self: start; padding-right: 2px; }
+@media (max-width: 920px) {
+  .col-left, .col-right { display: contents; }
+  .col-left { position: static; max-height: none; overflow: visible; }
+  .o-wo { order: 1; } .o-plant { order: 2; } .o-ladder { order: 3; } .o-fat { order: 4; } .o-report { order: 5; } .o-ds { order: 6; }
+  .o-panel { order: 7; } .o-io { order: 8; } .o-tags { order: 9; } .o-xfer { order: 10; }
+  .level-grid { display: flex; flex-direction: column; }
+}
+.stars { color: var(--amber); letter-spacing: .06em; font-weight: 700; }
+.hstars { font-size: 1.1rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wo-tools { display: flex; gap: 6px; align-items: center; margin: 6px 0; }
+.wo-en { font-size: 1.05rem; line-height: 1.55; }
+.concept { margin: 0 0 6px; }
+
+/* glossary terms */
+button.term { border: 0; border-bottom: 2px dotted var(--power); background: transparent; color: inherit; font: inherit; padding: 0; cursor: pointer; border-radius: 2px; }
+button.term:hover, button.term:focus-visible { background: color-mix(in srgb, var(--power) 14%, transparent); }
+.termpop { position: absolute; z-index: 70; width: min(360px, 94vw); background: var(--surface); border: 1.5px solid var(--ink); border-radius: 8px; padding: 10px 12px; box-shadow: 0 8px 28px rgba(0, 0, 0, .25); }
+.termpop.sheet { position: fixed; left: 0; right: 0; bottom: 0; top: auto !important; width: auto; border-radius: 14px 14px 0 0; }
+.tp-en { font-size: 1.1rem; } .tp-ar { font-size: 1.15rem; margin: 4px 0; }
+.quiz-opts { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.quiz-opts .btn.right { background: var(--ok); color: #fff; border-color: var(--ok); }
+.quiz-opts .btn.wrong { background: var(--alarm); color: #fff; border-color: var(--alarm); }
+.ok { color: var(--ok); } .ok-note { color: var(--ok); }
+
+/* FAT list, hints */
+.fat-btn { width: 100%; }
+.fatlist { list-style: none; padding: 0; margin: 8px 0; }
+.fatlist li { display: flex; gap: 8px; align-items: baseline; padding: 4px 2px; border-bottom: 1px solid var(--line); font-size: .9rem; }
+.fatlist li.pass .fl-ic { color: var(--ok); font-weight: 700; } .fatlist li.fail .fl-ic { color: var(--alarm); font-weight: 700; }
+.fl-ic { width: 1.2em; text-align: center; font-family: var(--mono); }
+.fl-hidden { color: var(--muted); }
+.hint-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.hint-btns .btn.used { background: var(--ground); }
+.hint-show { margin-top: 6px; }
+.gl .chips { margin: 4px 0; }
+.starbox { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
+details.ds { border-top: 1px solid var(--line); padding: 4px 0; }
+details.ds.ex { background: var(--ground); border-radius: 6px; padding: 6px 8px; }
+
+/* timing diagrams */
+.tl-wrap { overflow-x: auto; }
+svg.timing .tm-l { font: 600 10.5px var(--mono); fill: var(--ink); }
+svg.timing .tm-l.tm-key { fill: var(--alarm); }
+svg.timing .tm-v { font: 9px var(--mono); fill: var(--muted); }
+svg.timing .tm-w { stroke: var(--power); stroke-width: 2.4; }
+svg.timing .tm-g { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 3; }
+svg.timing .tm-fail { stroke: var(--alarm); stroke-width: 2; stroke-dasharray: 5 3; }
+svg.timing .tm-failt { font: 700 10px var(--mono); fill: var(--alarm); }
+svg.timing .tm-exp { stroke: var(--alarm); stroke-width: 2; }
+
+/* failure report */
+.report { border: 2px solid var(--alarm); border-radius: 8px; padding: 12px 14px; background: var(--surface); margin-bottom: 12px; }
+.report.success { border-color: var(--ok); }
+.rp-diff { background: var(--ground); padding: 8px 10px; border-radius: 6px; }
+.rp-q { padding: 8px 10px; border-left: 4px solid var(--amber); background: var(--ground); margin: 8px 0; font-weight: 600; }
+.rp-diag { padding: 8px 10px; border-left: 4px solid var(--power); background: var(--ground); margin: 8px 0; }
+.rp-sec { margin: 8px 0; }
+.rp-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.explain { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.ex-line { margin: 4px 0; line-height: 2.2; }
+.ex-in { min-height: 36px; border: 1.5px solid var(--ink); border-radius: 4px; background: var(--surface); color: var(--ink); padding: 0 4px; font-family: var(--mono); max-width: 100%; }
+.ex-ta { width: 100%; border: 1.5px solid var(--ink); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 6px; font: inherit; }
+.replay-bar { position: sticky; top: 56px; z-index: 19; display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 6px 14px; background: var(--power); color: var(--surface); font-weight: 700; }
+.replay-bar .btn { color: var(--ink); }
+.forces.flash { animation: flash .3s 4; }
+@keyframes flash { 50% { background: var(--ink); } }
+@media (prefers-reduced-motion: reduce) { .forces.flash { animation: none; outline: 3px solid var(--ink); } }
+body.replaying .panelbox, body.replaying .io { opacity: .5; pointer-events: none; }
+
+/* map */
+.maptools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+.lvl .stars { margin-top: auto; }
+.lvl.done { border-color: var(--ok); }
+.lvl.next { border-color: var(--power); border-width: 2.5px; }
+.nextmark { color: var(--power); font-weight: 700; }
+
 </style>
 </head>
 <body data-autotest="1">
 <div id="app"></div>
-<script type="application/json" id="levels">[]</script>
-<script type="application/json" id="fixtures">{"solutions":{},"wrong":{}}</script>
+<script type="application/json" id="levels">[{"id":"L01","order":1,"title":{"en":"Conveyor Jog","ar":"تشغيل الناقل"},"concept":"NO contact and coil","workOrder":{"en":"Run the conveyor only while the Start button is pressed. When you release the button, the conveyor must stop.","ar":"شغّل الناقل فقط طول ما زر {{Start}} مضغوط. لما تفلت الزر، لازم الناقل يوقف."},"datasheets":[{"id":"start_pb","title":{"en":"Start push button","ar":"زر التشغيل"},"rows":[["Tag","Start_PB  (I0.0)"],["Type","Momentary, normally open (NO)"],["Not pressed","bit = 0"],["Pressed","bit = 1"]],"note":{"en":"A momentary button only gives 1 while your finger is on it.","ar":"الزر اللحظي بيعطي 1 بس وإصبعك عليه."},"timing":{"step":500,"unit":"ms","signals":[{"name":"Start_PB","wave":"0011110000"}]}},{"id":"conv_contactor","title":{"en":"Conveyor contactor","ar":"كونتاكتور الناقل"},"rows":[["Tag","Conveyor_Motor  (Q0.0)"],["Type","Contactor coil, 24 V"],["Bit = 1","Motor runs"],["Bit = 0","Motor stops"]],"note":{"en":"The PLC output bit switches the contactor. Contactor on = the belt moves.","ar":"بت المخرج بيشغّل الكونتاكتور. الكونتاكتور شغّال = السير بيتحرك."}}],"palette":["NO","NC","OUT"],"tags":["Start_PB","Conveyor_Motor"],"plant":{"stations":["infeed","filler","exit"],"bottlesPerMin":20},"starter":null,"example":{"mode":"full","title":{"en":"Worked example: alarm lamp while Ack is pressed","ar":"مثال محلول: مصباح الإنذار طول ما زر {{Ack}} مضغوط"},"lines":["Ack_PB (Alarm_Lamp)"],"explain":[{"rung":1,"en":"Ack_PB is an input. It is wired normally open, so its bit is 0 until you press it. The NO contact passes power only when its bit is 1. The coil copies the power to Alarm_Lamp, an output. Press = lamp on. Release = lamp off. The PLC repeats this every scan.","ar":"الـ {{Ack_PB}} مدخل. موصول مفتوح عادةً، فالبت = 0 لحد ما تضغطه. الـ {{NO contact}} بيمرّر الـ power بس لما البت = 1. الـ {{coil}} بينسخ الـ power على {{Alarm_Lamp}} (مخرج). ضغط = المصباح شغّال. فلت = المصباح مطفي. والـ {{PLC}} بيعيد هاد كل {{scan}}."}]},"scenarios":[{"id":"L01-press-2s","title":{"en":"Press for 2 seconds","ar":"اضغط ثانيتين"},"seed":11,"durationMs":8000,"events":[{"t":500,"press":"Start_PB","ms":2000}],"asserts":[{"t":490,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"Before you press Start, the motor must be OFF","ar":"قبل ما تضغط {{Start}}، لازم المحرك يكون مطفي"}},{"t":500,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"The motor must start in the same scan that sees Start","ar":"لازم المحرك يشتغل بنفس الـ scan اللي بيشوف فيه {{Start}}"}},{"t":2490,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"The motor must keep running while Start is held","ar":"لازم المحرك يضل شغّال طول ما {{Start}} مضغوط"}},{"t":2500,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"When you release Start, the motor must stop at once","ar":"لما تفلت {{Start}}، لازم المحرك يوقف فورًا"}},{"window":[2500,8000],"always":{"Conveyor_Motor":false},"msg":{"en":"After the release the motor must stay OFF","ar":"بعد ما تفلت لازم المحرك يضل مطفي"}}]},{"id":"L01-tap-03s","title":{"en":"Short tap, 0.3 seconds","ar":"ضغطة قصيرة، 0.3 ثانية"},"seed":12,"durationMs":6000,"events":[{"t":1000,"press":"Start_PB","ms":300}],"asserts":[{"window":[0,990],"always":{"Conveyor_Motor":false},"msg":{"en":"The motor must be OFF before the tap","ar":"لازم المحرك يكون مطفي قبل الضغطة"}},{"t":1000,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"Even a short tap must start the motor","ar":"حتى الضغطة القصيرة لازم تشغّل المحرك"}},{"t":1290,"expect":{"Conveyor_Motor":true},"tol":0},{"t":1300,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"The motor must stop when the tap ends","ar":"لازم المحرك يوقف لما تنتهي الضغطة"}},{"window":[1300,6000],"always":{"Conveyor_Motor":false}}]},{"id":"L01-hold-5s","title":{"en":"Hold for 5 seconds","ar":"اضغط 5 ثواني"},"seed":13,"durationMs":9000,"events":[{"t":500,"press":"Start_PB","ms":5000}],"asserts":[{"window":[500,5490],"always":{"Conveyor_Motor":true},"msg":{"en":"The motor must run the whole time Start is held","ar":"لازم المحرك يضل شغّال طول ما {{Start}} مضغوط"}},{"t":5500,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"The motor must stop when Start is released","ar":"لازم المحرك يوقف لما تفلت {{Start}}"}}]},{"id":"L01-two-presses","title":{"en":"Two presses","ar":"ضغطتين"},"seed":14,"durationMs":9000,"events":[{"t":500,"press":"Start_PB","ms":1000},{"t":3000,"press":"Start_PB","ms":1500}],"asserts":[{"t":500,"expect":{"Conveyor_Motor":true},"tol":0},{"t":1500,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"Released: the motor must be OFF","ar":"فلتّ الزر: لازم المحرك يكون مطفي"}},{"window":[1500,2990],"always":{"Conveyor_Motor":false},"msg":{"en":"Between the presses the motor must stay OFF","ar":"بين الضغطتين لازم المحرك يضل مطفي"}},{"t":3000,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"The second press must start the motor again","ar":"الضغطة الثانية لازم تشغّل المحرك مرة ثانية"}},{"t":4500,"expect":{"Conveyor_Motor":false},"tol":0}]}],"hidden":{"count":5,"seedBase":1000,"vary":{"shiftMs":[0,700],"jitterMs":[0,400]}},"diagnostics":["nc_on_start","coil_always_powered","double_coil"],"hints":[{"en":"Open the failed test. Look at the Start button and the motor at that time. Is the motor ON when it should be OFF, or the other way?","ar":"افتح الفحص اللي فشل. شوف زر {{Start}} والمحرك بهداك الوقت. هل المحرك شغّال وهو لازم يكون مطفي، ولا العكس؟"},{"en":"Look at your rung. What is in front of the coil? What is the bit of Start_PB when the button is NOT pressed?","ar":"شوف الـ {{rung}} تبعك. شو اللي قبل الـ {{coil}}؟ شو قيمة بت {{Start_PB}} لما الزر مش مضغوط؟"},{"en":"The motor coil needs a contact in front of it that conducts when Start_PB is 1.","ar":"ملف المحرك بده {{contact}} قبله بيمرّر لما {{Start_PB}} = 1.","lines":["Start_PB"]}],"glossary":["plc","input","output","rung","contact","coil","normally_open","scan_cycle"],"glossaryDefs":[{"id":"plc","en":"PLC","ar":"المتحكم المنطقي القابل للبرمجة","ex":{"en":"The PLC reads the buttons and switches the motor.","ar":"الـ {{PLC}} بيقرا الأزرار وبيشغّل المحرك."}},{"id":"input","en":"input","ar":"مدخل","ex":{"en":"Start_PB is an input.","ar":"{{Start_PB}} مدخل."}},{"id":"output","en":"output","ar":"مخرج","ex":{"en":"Conveyor_Motor is an output.","ar":"{{Conveyor_Motor}} مخرج."}},{"id":"rung","en":"rung","ar":"درجة (سطر منطق)","ex":{"en":"One rung is one line of ladder logic.","ar":"الـ {{rung}} الواحد هو سطر منطق واحد."}},{"id":"contact","en":"contact","ar":"ملامس","ex":{"en":"A contact reads the bit of an input.","ar":"الـ {{contact}} بيقرا بت المدخل."}},{"id":"coil","en":"coil","ar":"ملف (مخرج المنطق)","ex":{"en":"The coil writes the power into the output bit.","ar":"الـ {{coil}} بيكتب الـ power بالبت تبع المخرج."}},{"id":"normally_open","en":"normally open","ar":"مفتوح عادةً","ex":{"en":"A normally open button gives 0 until you press it.","ar":"الزر المفتوح عادةً بيعطي 0 لحد ما تضغطه."}},{"id":"scan_cycle","en":"scan cycle","ar":"دورة المسح","ex":{"en":"The PLC repeats the scan cycle every 10 ms.","ar":"الـ {{PLC}} بيعيد دورة المسح كل 10 ms."}}],"explain":{"frames":[{"en":"When {input} is pressed, {output} turns ON.","ar":"لما {input} ينضغط، {output} بيشتغل."},{"en":"When {input} is released, {output} turns OFF.","ar":"لما {input} ينفلت، {output} بينطفي."}]},"badges":[{"id":"lean","maxRungs":1},{"id":"clean","noLint":true}]},{"id":"L02","order":2,"title":{"en":"Start / Stop with Seal-in","ar":"تشغيل وإيقاف مع تثبيت"},"concept":"NC-wired stop, parallel branch, seal-in","workOrder":{"en":"Start starts the conveyor and it keeps running after you release. Stop stops it. The Stop button is wired normally closed. Stop always wins.","ar":"{{Start}} بيشغّل الناقل وبيضل شغّال بعد ما تفلت. {{Stop}} بيوقفه. زر {{Stop}} موصول مغلق عادةً ({{NC}}). الـ {{Stop}} دايمًا بيغلب."},"datasheets":[{"id":"stop_pb","title":{"en":"Stop push button (wired NC)","ar":"زر الإيقاف (موصول NC)"},"rows":[["Tag","Stop_PB  (I0.1)"],["Wiring","Normally closed (NC)"],["Not pressed","bit = 1"],["Pressed","bit = 0"],["Wire broken","bit = 0 (like pressed)"]],"note":{"en":"NC wiring is fail-safe: a broken wire looks like a pressed Stop, so the machine stops.","ar":"التوصيل {{NC}} آمن عند الفشل: سلك مقطوع بيشبه ضغط {{Stop}} فالماكينة بتوقف."},"timing":{"step":500,"unit":"ms","signals":[{"name":"Stop_PB","wave":"1111101111"}]}},{"id":"seal_in","title":{"en":"Seal-in behaviour","ar":"سلوك التثبيت"},"rows":[["Start pulse","starts the motor"],["After release","motor keeps running"],["Stop pressed","motor stops, even if Start is held"]],"note":{"en":"The motor output remembers itself: it feeds its own condition. This is the classic start/stop circuit.","ar":"مخرج المحرك بيتذكر حاله: بيغذّي شرطه بنفسه. هاي دارة التشغيل والإيقاف الكلاسيكية."},"timing":{"step":500,"unit":"ms","signals":[{"name":"Start_PB","wave":"0010000000"},{"name":"Stop_PB","wave":"1111110111"},{"name":"Conveyor_Motor","wave":"0011111000"}]}}],"palette":["NO","NC","OUT","BRANCH"],"tags":["Start_PB","Stop_PB","Conveyor_Motor"],"plant":{"stations":["infeed","filler","exit"],"bottlesPerMin":20},"starter":{"lines":["Start_PB (Conveyor_Motor)"]},"example":{"mode":"completion","title":{"en":"Complete the rung","ar":"كمّل الـ rung"}},"scenarios":[{"id":"L02-start-tap","title":{"en":"A start tap keeps the motor running","ar":"ضغطة {{Start}} بتخلّي المحرك شغّال"},"seed":21,"durationMs":8000,"events":[{"t":500,"press":"Start_PB","ms":300}],"asserts":[{"t":490,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"Before Start the motor must be OFF","ar":"قبل {{Start}} لازم المحرك يكون مطفي"}},{"t":500,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"Start must start the motor","ar":"{{Start}} لازم يشغّل المحرك"}},{"window":[800,8000],"always":{"Conveyor_Motor":true},"msg":{"en":"After you release Start the motor must keep running","ar":"بعد ما تفلت {{Start}} لازم المحرك يضل شغّال"}}]},{"id":"L02-stop-tap","title":{"en":"A stop tap stops the motor","ar":"ضغطة {{Stop}} بتوقف المحرك"},"seed":22,"durationMs":8000,"events":[{"t":500,"press":"Start_PB","ms":300},{"t":3000,"press":"Stop_PB","ms":300}],"asserts":[{"t":2990,"expect":{"Conveyor_Motor":true},"tol":0},{"t":3000,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"Stop must stop the motor in the same scan","ar":"{{Stop}} لازم يوقف المحرك بنفس الـ scan"}},{"window":[3000,8000],"always":{"Conveyor_Motor":false},"msg":{"en":"After Stop the motor must stay OFF","ar":"بعد {{Stop}} لازم المحرك يضل مطفي"}}]},{"id":"L02-stop-wins","title":{"en":"Both pressed: Stop wins","ar":"الاثنين مضغوطين: {{Stop}} بيغلب"},"seed":23,"durationMs":7000,"events":[{"t":500,"press":"Start_PB","ms":300},{"t":2000,"press":"Start_PB","ms":1500},{"t":2000,"press":"Stop_PB","ms":500}],"asserts":[{"t":1990,"expect":{"Conveyor_Motor":true},"tol":0},{"window":[2000,2490],"always":{"Conveyor_Motor":false},"msg":{"en":"While Stop is pressed the motor must be OFF, even if Start is pressed too","ar":"طول ما {{Stop}} مضغوط لازم المحرك يكون مطفي، حتى لو {{Start}} مضغوط"}},{"t":4500,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"Stop was released while Start was held, so the motor runs again and keeps running","ar":"فلتّ {{Stop}} و{{Start}} لسا مضغوط، فالمحرك بيرجع يشتغل وبيضل شغّال"}}]},{"id":"L02-wire-break","title":{"en":"Wire break on the Stop button","ar":"سلك {{Stop}} مقطوع"},"seed":24,"durationMs":9000,"events":[{"t":500,"press":"Start_PB","ms":300},{"t":3000,"set":{"Stop_PB":false}},{"t":5000,"press":"Start_PB","ms":300}],"asserts":[{"t":2990,"expect":{"Conveyor_Motor":true},"tol":0},{"t":3000,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"A broken Stop wire reads 0, like a pressed Stop: the motor must stop","ar":"سلك {{Stop}} مقطوع بيقرا 0 زي الضغط: لازم المحرك يوقف"}},{"window":[5000,9000],"always":{"Conveyor_Motor":false},"msg":{"en":"With the Stop wire broken the motor must not start","ar":"والسلك مقطوع لازم المحرك ما يشتغل"}}]},{"id":"L02-stop-held","title":{"en":"Start while Stop is held","ar":"{{Start}} والـ {{Stop}} ممسوك"},"seed":25,"durationMs":7000,"events":[{"t":0,"set":{"Stop_PB":false}},{"t":500,"press":"Start_PB","ms":300},{"t":2000,"set":{"Stop_PB":true}},{"t":2500,"press":"Start_PB","ms":300}],"asserts":[{"window":[0,1990],"always":{"Conveyor_Motor":false},"msg":{"en":"Start must not work while Stop is held","ar":"{{Start}} ما لازم يشتغل والـ {{Stop}} ممسوك"}},{"t":3000,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"After Stop is released, Start works again","ar":"بعد ما تفلت {{Stop}}، {{Start}} بيشتغل من جديد"}}]}],"hidden":{"count":6,"seedBase":2000,"vary":{"shiftMs":[0,600]}},"diagnostics":["nc_on_nc_stop","no_seal_in","seal_bypasses_stop","nc_on_start","double_coil"],"hints":[{"en":"Open the failed test. Is the motor running when it should stop, or does it stop when it should keep running?","ar":"افتح الفحص اللي فشل. هل المحرك شغّال وهو لازم يوقف، ولا بيوقف وهو لازم يضل شغّال؟"},{"en":"Two questions. (1) What keeps the motor on after you release Start? (2) What is the BIT of Stop_PB when nobody presses it?","ar":"سؤالين. (1) شو اللي بيخلّي المحرك شغّال بعد ما تفلت {{Start}}؟ (2) شو قيمة البت تبع {{Stop_PB}} لما ما حدا بيضغطه؟"},{"en":"The motor feeds itself: put a contact of the motor in parallel with Start. Stop goes in series, after the branch.","ar":"المحرك بيغذّي نفسه: حط {{contact}} للمحرك على التوازي مع {{Start}}. والـ {{Stop}} على التوالي بعد الفرع.","lines":["[Start_PB | Conveyor_Motor]"]}],"glossary":["normally_closed","seal_in","latch","holding_contact","fail_safe","wire_break","momentary","priority"],"glossaryDefs":[{"id":"normally_closed","en":"normally closed (NC)","ar":"مغلق عادةً","ex":{"en":"A normally closed Stop button gives 1 until you press it.","ar":"زر {{Stop}} المغلق عادةً بيعطي 1 لحد ما تضغطه."}},{"id":"seal_in","en":"seal-in","ar":"تثبيت ذاتي","ex":{"en":"A seal-in keeps the motor on after Start is released.","ar":"الـ {{seal-in}} بيخلّي المحرك شغّال بعد ما تفلت {{Start}}."}},{"id":"latch","en":"latch","ar":"قفل (يتذكّر الحالة)","ex":{"en":"A latch remembers that Start was pressed.","ar":"الـ {{latch}} بيتذكّر إنه {{Start}} انضغط."}},{"id":"holding_contact","en":"holding contact","ar":"ملامس التثبيت","ex":{"en":"The holding contact reads the motor output itself.","ar":"{{holding contact}} بيقرا مخرج المحرك نفسه."}},{"id":"fail_safe","en":"fail-safe","ar":"آمن عند الفشل","ex":{"en":"NC wiring is fail-safe: a fault stops the machine.","ar":"توصيل {{NC}} {{fail-safe}}: العطل بيوقف الماكينة."}},{"id":"wire_break","en":"wire break","ar":"قطع السلك","ex":{"en":"A wire break on Stop gives 0, so the motor stops.","ar":"قطع سلك {{Stop}} بيعطي 0 فالمحرك بيوقف."}},{"id":"momentary","en":"momentary","ar":"لحظي","ex":{"en":"A momentary button is on only while you press it.","ar":"الزر اللحظي شغّال بس وإنت بتضغطه."}},{"id":"priority","en":"priority","ar":"أولوية","ex":{"en":"Stop has priority over Start.","ar":"{{Stop}} إله أولوية على {{Start}}."}}],"explain":{"frames":[{"en":"When {input} is pressed, {output} turns ON and keeps running.","ar":"لما {input} ينضغط، {output} بيشتغل وبيضل شغّال."},{"en":"The motor output feeds itself, so it stays ON after the button is released.","ar":"مخرج المحرك بيغذّي نفسه، فبيضل شغّال بعد ما تفلت الزر."},{"en":"When {input2} is pressed, {output} turns OFF, even if Start is pressed.","ar":"لما {input2} ينضغط، {output} بينطفي، حتى لو {{Start}} مضغوط."}]},"badges":[{"id":"lean","maxRungs":1},{"id":"clean","noLint":true}]},{"id":"L03","order":3,"title":{"en":"Interlocks","ar":"القفل الأمني"},"concept":"Permissives, safety feedback, no auto-restart","workOrder":{"en":"The conveyor may run only when the E-stop is healthy and the door is closed. After an E-stop or an open door, the line must not restart by itself. The operator presses Reset, then Start.","ar":"الناقل بيشتغل بس لما زر الطوارئ سليم والباب مسكّر. بعد طوارئ أو باب مفتوح، الخط ما لازم يرجع يشتغل لحاله. المشغّل بيضغط {{Reset}} وبعدين {{Start}}."},"datasheets":[{"id":"safety_relay","title":{"en":"Safety relay and E-stop","ar":"رلاي السلامة وزر الطوارئ"},"rows":[["Tag","EStop_OK  (I0.2)"],["Healthy","bit = 1"],["E-stop pressed or door open","bit = 0"],["Power cut","done by the relay, in hardware"]],"note":{"en":"The safety relay cuts motor power by itself. The PLC only gets the feedback. The PLC must still make sure the line does not restart alone.","ar":"رلاي السلامة بيقطع كهربا المحرك لحاله. الـ {{PLC}} بس بياخد التغذية الراجعة. ولازم الـ {{PLC}} يتأكد إنه الخط ما يرجع يشتغل لحاله."},"timing":{"step":500,"unit":"ms","signals":[{"name":"EStop_OK","wave":"1111000011"},{"name":"Conveyor_Motor","wave":"0111000000"}]}},{"id":"guard_door","title":{"en":"Guard door switch","ar":"مفتاح باب الحماية"},"rows":[["Tag","Door_Closed  (I0.3)"],["Door closed","bit = 1"],["Door open","bit = 0"],["Reset_PB","I1.0, momentary NO"]],"note":{"en":"Closing the door is not enough to restart. The operator must press Reset.","ar":"تسكير الباب مش كفاية. المشغّل لازم يضغط {{Reset}}."}}],"palette":["NO","NC","OUT","BRANCH"],"tags":["Start_PB","Stop_PB","EStop_OK","Door_Closed","Reset_PB","Conveyor_Motor"],"plant":{"stations":["infeed","filler","exit"],"bottlesPerMin":20},"starter":null,"example":{"mode":"none"},"scenarios":[{"id":"L03-normal","title":{"en":"Reset, then Start, then Stop","ar":"{{Reset}} ثم {{Start}} ثم {{Stop}}"},"seed":31,"durationMs":7000,"events":[{"t":500,"press":"Reset_PB","ms":300},{"t":1500,"press":"Start_PB","ms":300},{"t":4000,"press":"Stop_PB","ms":300}],"asserts":[{"window":[0,1490],"always":{"Conveyor_Motor":false},"msg":{"en":"Reset alone must not start the conveyor","ar":"{{Reset}} لحاله ما لازم يشغّل الناقل"}},{"t":1500,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"After Reset, Start must start the conveyor","ar":"بعد {{Reset}}، {{Start}} لازم يشغّل الناقل"}},{"window":[1800,3990],"always":{"Conveyor_Motor":true},"msg":{"en":"The conveyor must keep running after Start is released","ar":"الناقل لازم يضل شغّال بعد ما تفلت {{Start}}"}},{"t":4000,"expect":{"Conveyor_Motor":false},"tol":0,"msg":{"en":"Stop must stop the conveyor","ar":"{{Stop}} لازم يوقف الناقل"}}]},{"id":"L03-estop-mid-run","title":{"en":"E-stop in the middle of a run","ar":"طوارئ أثناء التشغيل"},"seed":32,"durationMs":9000,"events":[{"t":500,"press":"Reset_PB","ms":300},{"t":1500,"press":"Start_PB","ms":300},{"t":4000,"estop":true}],"asserts":[{"t":3990,"expect":{"Conveyor_Motor":true},"tol":0},{"t":4000,"expect":{"Conveyor_Motor":false},"tol":10,"msg":{"en":"E-stop: the PLC output must go OFF within one scan","ar":"طوارئ: مخرج الـ {{PLC}} لازم ينطفي خلال {{scan}} واحد"}},{"window":[4010,9000],"always":{"Conveyor_Motor":false},"msg":{"en":"With the E-stop pressed the conveyor must stay OFF","ar":"وزر الطوارئ مضغوط لازم الناقل يضل مطفي"}}]},{"id":"L03-no-auto-restart","title":{"en":"E-stop released: no restart by itself","ar":"فلتّ الطوارئ: ما في تشغيل تلقائي"},"seed":33,"durationMs":10000,"events":[{"t":500,"press":"Reset_PB","ms":300},{"t":1500,"press":"Start_PB","ms":300},{"t":4000,"estop":true},{"t":6000,"estop":false},{"t":7000,"press":"Start_PB","ms":300}],"asserts":[{"window":[4000,6990],"always":{"Conveyor_Motor":false},"msg":{"en":"When the E-stop is released the conveyor must NOT start by itself","ar":"لما تفلت الطوارئ الناقل ما لازم يشتغل لحاله"}},{"window":[7000,10000],"always":{"Conveyor_Motor":false},"msg":{"en":"Start without Reset must not work after an E-stop","ar":"{{Start}} بدون {{Reset}} ما لازم يشتغل بعد طوارئ"}}]},{"id":"L03-reset-start","title":{"en":"After an E-stop: Reset, then Start","ar":"بعد طوارئ: {{Reset}} ثم {{Start}}"},"seed":34,"durationMs":10000,"events":[{"t":500,"press":"Reset_PB","ms":300},{"t":1500,"press":"Start_PB","ms":300},{"t":4000,"estop":true},{"t":5000,"estop":false},{"t":6000,"press":"Reset_PB","ms":300},{"t":7000,"press":"Start_PB","ms":300}],"asserts":[{"window":[4000,6990],"always":{"Conveyor_Motor":false},"msg":{"en":"Reset alone must not restart the conveyor","ar":"{{Reset}} لحاله ما لازم يرجّع الناقل"}},{"t":7000,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"Reset, then Start: the conveyor must run again","ar":"{{Reset}} ثم {{Start}}: لازم الناقل يرجع يشتغل"}},{"window":[7300,10000],"always":{"Conveyor_Motor":true}}]},{"id":"L03-door-open","title":{"en":"Door opened during the run","ar":"فتح الباب أثناء التشغيل"},"seed":35,"durationMs":12000,"events":[{"t":500,"press":"Reset_PB","ms":300},{"t":1500,"press":"Start_PB","ms":300},{"t":4000,"door":"open"},{"t":6000,"door":"closed"},{"t":6500,"press":"Start_PB","ms":300},{"t":8000,"press":"Reset_PB","ms":300},{"t":9000,"press":"Start_PB","ms":300}],"asserts":[{"t":4000,"expect":{"Conveyor_Motor":false},"tol":10,"msg":{"en":"Door open: the conveyor must stop within one scan","ar":"الباب مفتوح: لازم الناقل يوقف خلال {{scan}} واحد"}},{"window":[4010,8990],"always":{"Conveyor_Motor":false},"msg":{"en":"After the door is closed again the conveyor still needs Reset, then Start","ar":"بعد ما ينسكّر الباب لسا بده {{Reset}} ثم {{Start}}"}},{"t":9000,"expect":{"Conveyor_Motor":true},"tol":0,"msg":{"en":"Reset, then Start: the conveyor runs again","ar":"{{Reset}} ثم {{Start}}: الناقل بيرجع يشتغل"}}]},{"id":"L03-door-during-reset","title":{"en":"Door opens while Reset is held","ar":"الباب بيفتح وزر {{Reset}} ممسوك"},"seed":36,"durationMs":9000,"events":[{"t":500,"press":"Reset_PB","ms":2000},{"t":1000,"door":"open"},{"t":3000,"door":"closed"},{"t":3500,"press":"Start_PB","ms":300}],"asserts":[{"window":[1000,9000],"always":{"Conveyor_Motor":false},"msg":{"en":"Reset must not work while the door is open, and the line stays blocked until a new Reset","ar":"{{Reset}} ما بيشتغل والباب مفتوح، والخط بيضل مقفول لحد {{Reset}} جديد"}}]}],"hidden":{"count":6,"seedBase":3000,"vary":{"shiftMs":[0,500]}},"diagnostics":["nc_on_nc_stop","reset_not_required","auto_restart_latch_not_cleared","reset_starts_motor","door_not_checked","nc_on_start"],"hints":[{"en":"Open the failed test. Is it the E-stop, the door or the Reset step? Compare the motor with the safety bits at that time.","ar":"افتح الفحص اللي فشل. هل هو الطوارئ ولا الباب ولا خطوة {{Reset}}؟ قارن المحرك مع بتات السلامة بهداك الوقت."},{"en":"Where does your program remember that the line is READY? What clears that memory when the E-stop or the door drops?","ar":"وين برنامجك بيتذكّر إنه الخط جاهز ({{READY}})؟ وشو اللي بيمسح هالذاكرة لما الطوارئ أو الباب يسقط؟"},{"en":"Make a READY bit: Reset sets it, and it needs EStop_OK and Door_Closed in series. Then Start needs READY.","ar":"اعمل بت جاهزية ({{READY}}): {{Reset}} بيشغّله، وبده {{EStop_OK}} و{{Door_Closed}} على التوالي. وبعدين {{Start}} بده {{READY}}.","lines":["[Reset_PB | Ready] EStop_OK Door_Closed (Ready)"]}],"glossary":["interlock","emergency_stop","guard_door","safety_relay","reset","permissive","auto_restart","hardwired"],"glossaryDefs":[{"id":"interlock","en":"interlock","ar":"قفل أمني (تعشيق)","ex":{"en":"The door interlock stops the line when the door opens.","ar":"الـ {{interlock}} تبع الباب بيوقف الخط لما الباب يفتح."}},{"id":"emergency_stop","en":"emergency stop (E-stop)","ar":"إيقاف الطوارئ","ex":{"en":"Press the E-stop and everything stops.","ar":"اضغط {{E-stop}} وكل شي بيوقف."}},{"id":"guard_door","en":"guard door","ar":"باب الحماية","ex":{"en":"The guard door must be closed to run.","ar":"باب الحماية لازم يكون مسكّر عشان يشتغل."}},{"id":"safety_relay","en":"safety relay","ar":"رلاي السلامة","ex":{"en":"The safety relay cuts the motor power.","ar":"رلاي السلامة بيقطع كهربا المحرك."}},{"id":"reset","en":"reset","ar":"إعادة ضبط","ex":{"en":"The operator presses Reset after a stop.","ar":"المشغّل بيضغط {{Reset}} بعد الإيقاف."}},{"id":"permissive","en":"permissive","ar":"شرط سماح","ex":{"en":"A permissive is a condition that must be true to run.","ar":"{{permissive}} هو شرط لازم يتحقق عشان يشتغل."}},{"id":"auto_restart","en":"auto-restart","ar":"إعادة التشغيل التلقائي","ex":{"en":"Auto-restart after an E-stop is dangerous.","ar":"{{auto-restart}} بعد طوارئ خطير."}},{"id":"hardwired","en":"hardwired","ar":"موصول بالأسلاك مباشرة","ex":{"en":"The safety circuit is hardwired, not in the PLC.","ar":"دارة السلامة {{hardwired}}، مش جوّا الـ {{PLC}}."}}],"explain":{"frames":[{"en":"The line is READY after {input} is pressed, if {safe1} and {safe2} are ON.","ar":"الخط بيصير جاهز بعد ما {input} ينضغط، إذا {safe1} و{safe2} شغّالين."},{"en":"READY turns OFF when {safe1} or {safe2} goes OFF.","ar":"الجاهزية بتنطفي لما {safe1} أو {safe2} ينطفي."},{"en":"Start works only when the line is READY.","ar":"{{Start}} بيشتغل بس لما الخط جاهز."}]},"badges":[{"id":"lean","maxRungs":3},{"id":"clean","noLint":true}]}]</script>
+<script type="application/json" id="fixtures">{"solutions":{"L01":{"lines":["Start_PB (Conveyor_Motor)"]},"L02":{"lines":["[Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)"]},"L03":{"lines":["[Reset_PB | Ready] EStop_OK Door_Closed (Ready)","[Start_PB | Conveyor_Motor] Stop_PB Ready (Conveyor_Motor)"]}},"wrong":{"L01-always-on":{"level":"L01","diag":"coil_always_powered","note":"coil with no contact in front: motor always runs","lines":["(Conveyor_Motor)"]},"L01-double-coil":{"level":"L01","diag":"double_coil","note":"two rungs write the same coil, the last one (NC) wins","lines":["Start_PB (Conveyor_Motor)","/Start_PB (Conveyor_Motor)"]},"L01-nc-on-start":{"level":"L01","diag":"nc_on_start","note":"NC contact on Start_PB: motor runs when the button is NOT pressed","lines":["/Start_PB (Conveyor_Motor)"]},"L02-nc-on-start":{"level":"L02","diag":"nc_on_start","note":"NC contact on Start","lines":["[/Start_PB | Conveyor_Motor] Stop_PB (Conveyor_Motor)"]},"L02-nc-on-stop":{"level":"L02","diag":"nc_on_nc_stop","note":"NC contact on the NC-wired Stop: the machine never starts","lines":["[Start_PB | Conveyor_Motor] /Stop_PB (Conveyor_Motor)"]},"L02-no-seal-in":{"level":"L02","diag":"no_seal_in","note":"no holding contact: runs only while Start is held","lines":["Start_PB Stop_PB (Conveyor_Motor)"]},"L02-seal-around-stop":{"level":"L02","diag":"seal_bypasses_stop","note":"the holding branch also bypasses Stop: Stop does nothing once running","lines":["[Start_PB Stop_PB | Conveyor_Motor] (Conveyor_Motor)"]},"L03-door-ignored":{"level":"L03","diag":"door_not_checked","note":"the door is never looked at","lines":["[Reset_PB | Ready] EStop_OK (Ready)","[Start_PB | Conveyor_Motor] Stop_PB Ready (Conveyor_Motor)"]},"L03-latch-not-cleared":{"level":"L03","diag":"auto_restart_latch_not_cleared","note":"the safety bits only gate the output; the run latch survives the E-stop and the motor restarts by itself","lines":["[Start_PB | Run] Stop_PB (Run)","Run EStop_OK Door_Closed (Conveyor_Motor)"]},"L03-nc-on-estop":{"level":"L03","diag":"nc_on_nc_stop","note":"NC contact on EStop_OK: runs only while the E-stop is pressed","lines":["[Reset_PB | Ready] /EStop_OK Door_Closed (Ready)","[Start_PB | Conveyor_Motor] Stop_PB Ready (Conveyor_Motor)"]},"L03-no-reset":{"level":"L03","diag":"reset_not_required","note":"interlocks are in the start circuit but Reset is never needed","lines":["[Start_PB | Conveyor_Motor] Stop_PB EStop_OK Door_Closed (Conveyor_Motor)"]},"L03-reset-starts":{"level":"L03","diag":"reset_starts_motor","note":"Reset acts as a second start button","lines":["[Start_PB | Reset_PB | Conveyor_Motor] Stop_PB EStop_OK Door_Closed (Conveyor_Motor)"]}}}</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 <script>
 /* ==== src/core/prng.js ==== */
 /* Namespace + seeded PRNG (mulberry32). No Math.random anywhere in core. */
@@ -491,7 +577,14 @@ code, pre { font-family: var(--mono); }
     };
   }
 
-  SC.dsl = { parseRung, parseProgram, PARAMS };
+  // a program may be given as program JSON or as {lines:[...ladder text...]}
+  function programFrom(x) {
+    if (!x) return { v: 1, rungs: [] };
+    if (x.lines) return parseProgram(x.lines);
+    return x;
+  }
+
+  SC.dsl = { parseRung, parseProgram, programFrom, PARAMS };
 })();
 
 </script>
@@ -595,7 +688,7 @@ code, pre { font-family: var(--mono); }
           if (write) { E('write_to_output_pin', ri, el, `${tok} cannot be written`, `لا يمكن الكتابة على ${tok}`); return null; }
           return { k: 'iq', name: m[1], f: m[2] };
         }
-        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`);
+        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`); errors[errors.length - 1].tok = tok;
         return null;
       }
       if (write && a.arr === 'I') { E('write_to_input', ri, el, `${tok} is an input — you cannot write to it`, `${tok} مدخل — لا يمكن الكتابة عليه`); return null; }
@@ -628,7 +721,7 @@ code, pre { font-family: var(--mono); }
           if (write) { E('write_to_output_pin', ri, el, `${tok} cannot be written`, `لا يمكن الكتابة على ${tok}`); return null; }
           return { k: 'if', name: m[1], f: m[2] };
         }
-        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`);
+        E('unknown_tag', ri, el, `Unknown tag "${tok}"`, `الـ tag "${tok}" غير معروف`); errors[errors.length - 1].tok = tok;
         return null;
       }
       if (write && a.arr === 'IW') { E('write_to_input', ri, el, `${tok} is an input word`, `${tok} مدخل`); return null; }
@@ -1338,7 +1431,7 @@ code, pre { font-family: var(--mono); }
     s.Pump_Home = P.pump.pos <= 0.02 ? 1 : 0;
     s.Pump_Full = P.pump.pos >= 0.98 ? 1 : 0;
     s.Conv_Encoder = !P.enc.mute && P.enc.acc < c.encPitch / 2 ? 1 : 0;
-    s.EStop_OK = P.hw.estop || P.hw.doorOpen ? 0 : 1;
+    s.EStop_OK = P.hw.estop ? 0 : 1; // E-stop chain only; the guard door has its own bit (both open the safety relay)
     s.Door_Closed = P.hw.doorOpen ? 0 : 1;
     return s;
   }
@@ -1552,7 +1645,9 @@ code, pre { font-family: var(--mono); }
     };
   }
 
-  SC.plant = { DEFAULTS, makeCfg, init, stepMut, step, clone, applyEvent, setFault, kpis, isDefective, OUT_NAMES, has };
+  function refreshSensors(P) { P.sens = computeSensors(P); }
+
+  SC.plant = { DEFAULTS, makeCfg, init, stepMut, step, clone, applyEvent, setFault, kpis, isDefective, OUT_NAMES, has, refreshSensors };
 })();
 
 </script>
@@ -1683,7 +1778,9 @@ code, pre { font-family: var(--mono); }
     }
 
     sim.step = (withRec) => {
-      while (sim.evIdx < events.length && events[sim.evIdx].t <= sim.t) applyEvent(events[sim.evIdx++]);
+      let applied = false;
+      while (sim.evIdx < events.length && events[sim.evIdx].t <= sim.t) { applyEvent(events[sim.evIdx++]); applied = true; }
+      if (applied) SC.plant.refreshSensors(P); // a hardwired event (E-stop, door, fault) is visible to this very scan
       // sensor snapshot -> input image
       for (const io of INPUT_IO) {
         const f = sim.forces[io._a.canon];
@@ -1928,6 +2025,247 @@ code, pre { font-family: var(--mono); }
 
 </script>
 <script>
+/* ==== src/core/fixtures.js ==== */
+/* Helpers for hidden fixtures (reference + wrong solutions) and for any program written as ladder text:
+ * unknown names are auto-declared as memory bits / words so authors can write  "[Start | Run] /Stop (Run)"  directly.
+ *
+ * fixture: {lines:[...]} | program JSON, plus optional {userTags:[{name,addr,type}], level, diag, note}
+ */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const A = SC.addr;
+
+  const BIT_FIELDS = { NO: ['a'], NC: ['a'], OUT: ['a'], SET: ['a'], RST: ['a'], POS: ['a'], NEG: ['a'], TONR: ['rs'], CTU: ['rs'], CTD: ['ld'], CTUD: ['rs', 'ld', 'cd'], SHL: ['b'], SHR: ['b'] };
+  const INT_FIELDS = { CMP: ['a', 'b'], MOVE: ['a', 'o'], ADD: ['a', 'b', 'o'], SUB: ['a', 'b', 'o'], CTU: ['pv'], CTD: ['pv'], CTUD: ['pv'], SHL: ['w'], SHR: ['w'] };
+
+  function kindOf(el, tok) {
+    if ((INT_FIELDS[el.t] || []).some((f) => el[f] === tok)) return 'word';
+    return 'bit';
+  }
+
+  // returns the extra user tags needed so that `program` compiles (names -> M bits / MW words)
+  function autoTags(program, level, given) {
+    let tags = SC.mergeTags(SC.levelTags(level), given || []);
+    const made = [];
+    for (let pass = 0; pass < 4; pass++) {
+      const c = SC.compile(program, { tags, palette: null });
+      const unk = c.errors.filter((e) => e.code === 'unknown_tag' && e.tok);
+      if (!unk.length) break;
+      let progress = false;
+      for (const e of unk) {
+        const rg = program.rungs[e.rung];
+        const el = rg && rg.els.find((x) => x.r === e.r && x.c === e.c);
+        if (!el || tags.some((t) => t.name === e.tok)) continue;
+        const kind = kindOf(el, e.tok);
+        const addr = A.nextFreeAddr(tags, kind);
+        if (!addr) continue;
+        const t = { name: e.tok, addr, type: kind === 'bit' ? 'Bool' : 'Int', user: true, src: 'mem' };
+        tags = tags.concat([t]); made.push(t); progress = true;
+      }
+      if (!progress) break;
+    }
+    return made;
+  }
+
+  function prepare(level, fx) {
+    const program = SC.dsl.programFrom(fx);
+    const userTags = (fx.userTags || []).slice();
+    return { program, userTags: userTags.concat(autoTags(program, level, userTags)) };
+  }
+
+  // run a level's scenarios against a fixture; returns {pass, run, program, userTags}
+  function evaluate(level, fx, opts) {
+    opts = opts || {};
+    const p = prepare(level, fx);
+    const lv = Object.assign({}, level, { tags: (level.tags || []).concat(p.userTags) });
+    const run = SC.scenario.runLevel(lv, p.program, { skipHidden: opts.skipHidden, stopAtFirst: opts.stopAtFirst !== false, userTags: p.userTags });
+    return { pass: run.pass, run, program: p.program, userTags: p.userTags, level: lv };
+  }
+
+  SC.fixtures = { prepare, evaluate, autoTags };
+})();
+
+</script>
+<script>
+/* ==== src/core/diagnostics.js ==== */
+/* Diagnostics: recognise classic mistakes from the program (and the failing test) and explain them in one line.
+ *
+ *   SC.diag.add('id', {msg:{en,ar} | (ctx)=>({en,ar}), test:(ctx)=>bool})
+ *   Level files in src/core/diag/Lxx.js add their own. level.diagnostics = [ids] picks which ones to check, in order.
+ *
+ * ctx: {level, program, tags, tagMap, failure, els:[{ri,r,c,e}], ofType(...t), writers(tag), readers(tag), usesTag(tag),
+ *       tag(name), probe(scenario)->result, rungEls(ri), compiled}
+ */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+
+  const reg = Object.create(null);
+  const FIELDS = ['a', 'b', 'o', 'w', 'rs', 'ld', 'cd'];
+
+  function add(id, def) { reg[id] = Object.assign({ id }, def); }
+
+  function buildCtx(level, program, tags, failure) {
+    const tagMap = SC.addr.makeTagMap(tags);
+    const els = [];
+    program.rungs.forEach((rg, ri) => (rg.els || []).forEach((e) => els.push({ ri, r: e.r, c: e.c, e })));
+    const ctx = {
+      level, program, tags, tagMap, failure: failure || null, els,
+      compiled: SC.compile(program, { tags, palette: level.palette || null }),
+      tag: (n) => tagMap.byName[n] || null,
+      ofType: (...ts) => els.filter((x) => ts.indexOf(x.e.t) >= 0),
+      writers: (n) => els.filter((x) => ['OUT', 'SET', 'RST'].indexOf(x.e.t) >= 0 && x.e.a === n),
+      readers: (n) => els.filter((x) => ['NO', 'NC', 'POS', 'NEG'].indexOf(x.e.t) >= 0 && x.e.a === n),
+      usesTag: (n) => els.some((x) => FIELDS.some((f) => x.e[f] === n)),
+      rungEls: (ri) => els.filter((x) => x.ri === ri),
+      find: (pred) => els.find(pred) || null,
+      roleOf: (n) => (tagMap.byName[n] || {}).role,
+      probe: (sc) => SC.scenario.runScenario(level, program, sc, { userTags: tags.filter((t) => t.user) }),
+    };
+    return ctx;
+  }
+
+  // compile-error codes that are themselves a classic mistake
+  const CODE_TO_ID = { bad_time: 'pt_not_time_literal' };
+
+  function run(level, program, opts) {
+    opts = opts || {};
+    const tags = opts.tags || SC.mergeTags(SC.levelTags(level));
+    const ctx = buildCtx(level, program, tags, opts.failure);
+    const out = [];
+    const seen = new Set();
+    const push = (id, msg) => { if (!seen.has(id)) { seen.add(id); out.push({ id, msg }); } };
+    for (const e of ctx.compiled.errors) {
+      const id = CODE_TO_ID[e.code];
+      if (id && reg[id]) push(id, typeof reg[id].msg === 'function' ? reg[id].msg(ctx) : reg[id].msg);
+    }
+    const ids = (level.diagnostics || []).concat(GENERIC);
+    for (const id of ids) {
+      const d = reg[id];
+      if (!d || seen.has(id)) continue;
+      let hit = false;
+      try { hit = !!d.test(ctx); } catch (er) { hit = false; }
+      if (hit) push(id, typeof d.msg === 'function' ? d.msg(ctx) : d.msg);
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- generic diagnostics
+  const GENERIC = ['nc_on_start', 'nc_on_nc_stop', 'double_coil', 'edge_bit_reused', 'shared_instance', 'pt_not_time_literal', 'add_without_edge'];
+
+  add('nc_on_start', {
+    msg: (ctx) => {
+      const x = ctx.find((y) => y.e.t === 'NC' && ['start', 'ack', 'reset', 'release'].indexOf(ctx.roleOf(y.e.a)) >= 0);
+      const n = x ? x.e.a : 'the button';
+      return { en: `You used an NC contact on ${n}. A button that is not pressed has bit 0, and an NC contact passes power when the bit is 0 — so it acts as if the button is pressed all the time.`,
+        ar: `استخدمت NC contact على ${n}. الزر وهو مش مضغوط قيمته 0، والـ NC بيمرّر الـ power لما البت 0 — فبيشتغل وكأن الزر مضغوط طول الوقت.` };
+    },
+    test: (ctx) => !!ctx.find((y) => y.e.t === 'NC' && ['start', 'ack', 'reset', 'release'].indexOf(ctx.roleOf(y.e.a)) >= 0),
+  });
+  add('nc_on_nc_stop', {
+    msg: (ctx) => {
+      const x = ctx.find((y) => y.e.t === 'NC' && ['stop', 'estop'].indexOf(ctx.roleOf(y.e.a)) >= 0 && (ctx.tag(y.e.a) || {}).wiring === 'NC');
+      const n = x ? x.e.a : 'Stop_PB';
+      return { en: `Your Stop contact is NC (-|/|-) but ${n} is wired normally closed. The contact symbol tests the BIT, not the device: the bit is 1 when the button is idle, so use an NO contact.`,
+        ar: `الـ contact تبعك NC (-|/|-) بس ${n} موصول NC. رمز الـ contact بيفحص الـ بت مش الجهاز: البت = 1 لما الزر مش مضغوط، فاستخدم NO contact.` };
+    },
+    test: (ctx) => !!ctx.find((y) => y.e.t === 'NC' && ['stop', 'estop'].indexOf(ctx.roleOf(y.e.a)) >= 0 && (ctx.tag(y.e.a) || {}).wiring === 'NC'),
+  });
+  add('double_coil', {
+    msg: { en: 'Double coil: two coils write the same bit. The last one in the scan wins, so the first one is useless. Use ONE coil and put the conditions in parallel.', ar: 'Double coil: ملفين بيكتبوا على نفس البت. الأخير بالـ scan بيغلب، فالأول ما إله فايدة. استخدم ملف واحد وحط الشروط على التوازي.' },
+    test: (ctx) => SC.lint(ctx.program, ctx.tags).some((l) => l.id === 'double_coil'),
+  });
+  add('edge_bit_reused', {
+    msg: { en: 'Two edge contacts share one memory bit. Every edge contact needs its OWN M bit to remember the last state.', ar: 'اتنين edge contacts بيشاركوا نفس بت الذاكرة. كل edge لازم بت M خاص فيه عشان يتذكر الحالة السابقة.' },
+    test: (ctx) => SC.lint(ctx.program, ctx.tags).some((l) => l.id === 'edge_bit_reused'),
+  });
+  add('shared_instance', {
+    msg: { en: 'Two blocks use the same instance name, so the second one overwrites the first. Give each timer or counter its own name.', ar: 'بلوكين بنفس اسم الـ instance فالثاني بيمسح الأول. اعطي كل مؤقت أو عدّاد اسمه الخاص.' },
+    test: (ctx) => SC.lint(ctx.program, ctx.tags).some((l) => l.id === 'shared_instance'),
+  });
+  add('pt_not_time_literal', {
+    msg: { en: 'The preset time must be a time literal like T#3s. A plain number is not a time.', ar: 'الوقت المحدد لازم يكون بصيغة وقت مثل T#3s. الرقم العادي مش وقت.' },
+    test: (ctx) => ctx.compiled.errors.some((e) => e.code === 'bad_time'),
+  });
+  add('add_without_edge', {
+    msg: { en: 'ADD runs on EVERY scan while it has power, so the value jumps by 100 per second. Put a positive-edge contact in front of it.', ar: 'الـ ADD بينفّذ بكل scan طول ما في power، فالقيمة بتزيد 100 بالثانية. حط positive-edge contact قبله.' },
+    test: (ctx) => SC.lint(ctx.program, ctx.tags).some((l) => l.id === 'add_without_edge'),
+  });
+
+  SC.diag = { add, run, registry: reg, buildCtx, GENERIC };
+})();
+
+</script>
+<script>
+/* ==== src/core/levels.js ==== */
+/* Level loading + structural validation (used by the game, the build checks and the self-test). */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+
+  function loadAll() {
+    try { return JSON.parse(document.getElementById('levels').textContent) || []; } catch (e) { return []; }
+  }
+  function loadFixtures() {
+    const el = typeof document !== 'undefined' && document.getElementById('fixtures');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent); } catch (e) { return null; }
+  }
+
+  // glossary: levels define the terms they introduce in `glossaryDefs`; `glossary` lists ids shown in the level.
+  function glossaryMap(levels) {
+    const map = Object.create(null);
+    for (const L of levels) for (const d of L.glossaryDefs || []) if (!map[d.id]) map[d.id] = Object.assign({ firstLevel: L.id }, d);
+    return map;
+  }
+
+  const wordCount = (s) => (String(s || '').trim().match(/\S+/g) || []).length;
+  const PALETTE_OK = SC.compile.ELEMENTS.concat(['BRANCH']);
+
+  // returns an array of problem strings (empty = structurally fine)
+  function validate(level, gmap) {
+    const bad = [];
+    const need = (cond, msg) => { if (!cond) bad.push(msg); };
+    need(/^L\d\d$/.test(level.id || ''), 'id must look like L05');
+    need(Number.isInteger(level.order), 'order must be an integer');
+    need(level.title && level.title.en && level.title.ar, 'title needs en and ar');
+    need(level.concept, 'concept is missing');
+    need(level.workOrder && level.workOrder.en && level.workOrder.ar, 'workOrder needs en and ar');
+    if (level.workOrder && level.workOrder.en) need(wordCount(level.workOrder.en) <= 60, `work order is ${wordCount(level.workOrder.en)} words (max 60)`);
+    need(Array.isArray(level.palette) && level.palette.every((p) => PALETTE_OK.indexOf(p) >= 0), 'palette must list known instruction ids');
+    try {
+      const tags = SC.levelTags(level);
+      need(tags.length > 0, 'level has no tags');
+      for (const t of tags) need(SC.addr.parseAddr(t.addr), `tag ${t.name} has a bad address ${t.addr}`);
+    } catch (e) { bad.push('tags: ' + e.message); }
+    need(level.plant && typeof level.plant === 'object', 'plant config missing');
+    const scen = level.scenarios || [];
+    need(scen.length >= 3, `needs at least 3 visible scenarios (has ${scen.length})`);
+    const ids = new Set();
+    scen.forEach((s) => {
+      need(s.id && !ids.has(s.id), 'scenario ids must be unique: ' + s.id); ids.add(s.id);
+      need(s.durationMs > 0, `scenario ${s.id}: durationMs`);
+      need((s.asserts || []).length > 0, `scenario ${s.id}: no asserts`);
+      need(s.title && s.title.en && s.title.ar, `scenario ${s.id}: needs a title {en,ar} (shown in the FAT list)`);
+    });
+    need(level.hidden && level.hidden.count >= 3, 'hidden.count must be at least 3');
+    need(Array.isArray(level.hints) && level.hints.length === 3 && level.hints.every((x) => x.en && x.ar), 'needs exactly 3 hints with en and ar');
+    need(Array.isArray(level.datasheets) && level.datasheets.length >= 1 && level.datasheets.every((d) => d.id && d.title && d.title.en), 'needs at least one datasheet card');
+    need(Array.isArray(level.glossary) && level.glossary.length >= 6 && level.glossary.length <= 14, 'glossary should list 6-14 term ids');
+    if (gmap) for (const id of level.glossary || []) need(gmap[id], 'glossary term not defined anywhere: ' + id);
+    for (const d of level.glossaryDefs || []) need(d.id && d.en && d.ar && d.ex && d.ex.en, 'glossaryDefs entry needs id, en, ar and ex.en: ' + (d.id || '?'));
+    for (const id of level.diagnostics || []) need(SC.diag.registry[id], 'diagnostic not registered: ' + id);
+    need(level.explain && Array.isArray(level.explain.frames) && level.explain.frames.length >= 1, 'explain.frames missing');
+    need(level.example && ['full', 'completion', 'none'].indexOf(level.example.mode) >= 0, 'example.mode must be full, completion or none');
+    return bad;
+  }
+
+  SC.levels = { loadAll, loadFixtures, glossaryMap, validate, wordCount };
+})();
+
+</script>
+<script>
 /* ==== src/core/demo.js ==== */
 /* Built-in demo program for the sandbox (a working fill cycle). */
 (function () {
@@ -1946,6 +2284,103 @@ code, pre { font-family: var(--mono); }
       { name: 'Run', addr: 'M0.0', type: 'Bool', user: true }, { name: 'Done', addr: 'M0.1', type: 'Bool', user: true }, { name: 'Busy', addr: 'M0.2', type: 'Bool', user: true },
     ]),
   };
+})();
+
+</script>
+<script>
+/* ==== src/core/diag/L01.js ==== */
+/* L01 diagnostics */
+(function () {
+  'use strict';
+  const D = globalThis.SC.diag;
+  const CONTACTS = ['NO', 'NC', 'POS', 'NEG', 'CMP'];
+
+  D.add('coil_always_powered', {
+    msg: { en: 'The coil has no contact in front of it, so it gets power on every scan. The motor runs all the time.', ar: 'الـ coil ما قدامه أي contact، فبيجيه power كل scan. المحرك بيشتغل طول الوقت.' },
+    test: (ctx) => ctx.program.rungs.some((rg, ri) => {
+      const els = ctx.rungEls(ri);
+      return els.some((x) => x.e.t === 'OUT') && !els.some((x) => CONTACTS.indexOf(x.e.t) >= 0);
+    }),
+  });
+})();
+
+</script>
+<script>
+/* ==== src/core/diag/L02.js ==== */
+/* L02 diagnostics */
+(function () {
+  'use strict';
+  const D = globalThis.SC.diag;
+
+  D.add('no_seal_in', {
+    msg: { en: 'Nothing keeps the motor on after Start is released. Add a contact of the motor itself in parallel with Start (a seal-in).', ar: 'ما في شي بيخلّي المحرك شغّال بعد ما تفلت {{Start}}. زيد contact للمحرك نفسه على التوازي مع {{Start}} (seal-in).'.replace(/\{\{|\}\}/g, '') },
+    test: (ctx) => ctx.writers('Conveyor_Motor').length > 0 && ctx.readers('Conveyor_Motor').length === 0,
+  });
+
+  // The holding contact (motor NO contact in a lower row) sits in the same parallel span as the Stop contact: Stop is bypassed.
+  D.add('seal_bypasses_stop', {
+    msg: { en: 'The seal-in branch skips the Stop contact. Once the motor runs, Stop has no effect. Put Stop in series AFTER the branch.', ar: 'فرع الـ seal-in بيتجاوز {{Stop}}. بعد ما المحرك يشتغل، {{Stop}} ما بيأثّر. حط {{Stop}} على التوالي بعد الفرع.'.replace(/\{\{|\}\}/g, '') },
+    test: (ctx) => {
+      for (let ri = 0; ri < ctx.program.rungs.length; ri++) {
+        const rg = ctx.program.rungs[ri];
+        const seal = ctx.rungEls(ri).find((x) => x.e.t === 'NO' && x.e.a === 'Conveyor_Motor' && x.r > 0);
+        if (!seal) continue;
+        const bars = Array.from(new Set((rg.vb || []).map((b) => b[0]))).sort((a, b) => a - b);
+        const b0 = Math.max(...bars.filter((b) => b <= seal.c), 0);
+        const after = bars.filter((b) => b > seal.c);
+        const b1 = after.length ? Math.min(...after) : rg.cols;
+        const stop = ctx.rungEls(ri).find((x) => (x.e.t === 'NO' || x.e.t === 'NC') && ctx.roleOf(x.e.a) === 'stop');
+        if (stop && stop.c >= b0 && stop.c < b1) return true;
+      }
+      return false;
+    },
+  });
+})();
+
+</script>
+<script>
+/* ==== src/core/diag/L03.js ==== */
+/* L03 diagnostics */
+(function () {
+  'use strict';
+  const D = globalThis.SC.diag;
+
+  D.add('reset_not_required', {
+    msg: { en: 'Reset_PB is not used to make the line ready, so the operator can restart after an E-stop with Start alone. Add a READY bit that only Reset can set.', ar: 'ما استخدمت {{Reset_PB}} لتجهيز الخط، فالمشغّل بيقدر يشغّل بعد الطوارئ بـ {{Start}} لحاله. زيد بت جاهزية ما بيشغّله إلا {{Reset}}.'.replace(/\{\{|\}\}/g, '') },
+    test: (ctx) => !ctx.usesTag('Reset_PB') || (ctx.readers('Reset_PB').length > 0 && !ctx.readers('Reset_PB').some((x) => ctx.writers(x.e.a).length === 0 && false) && !ctx.program.rungs.some((rg, ri) => {
+      // Reset reaches only a coil whose result is used by the motor rung?  (a quick structural test: is the motor rung dependent on anything Reset drives?)
+      const resetCoils = [];
+      ctx.rungEls(ri).forEach((x) => { if (x.e.t === 'OUT' && ctx.rungEls(ri).some((y) => y.e.t === 'NO' && y.e.a === 'Reset_PB')) resetCoils.push(x.e.a); });
+      return resetCoils.some((n) => n !== 'Conveyor_Motor' && ctx.readers(n).length > 0);
+    })),
+  });
+
+  // the latch (a seal-in) exists, but the safety bits are only in a different rung that gates the motor output
+  D.add('auto_restart_latch_not_cleared', {
+    msg: { en: 'The safety bits only block the output. The run latch is still ON, so the motor restarts by itself when the E-stop is released. The E-stop and the door must also clear the latch.', ar: 'بتات السلامة بس بتحجب المخرج. الـ {{latch}} لسا شغّال، فالمحرك بيرجع يشتغل لحاله لما تفلت الطوارئ. الطوارئ والباب لازم يمسحوا الـ {{latch}} كمان.'.replace(/\{\{|\}\}/g, '') },
+    test: (ctx) => {
+      const latchCoils = ctx.program.rungs.map((rg, ri) => ri).filter((ri) => {
+        const els = ctx.rungEls(ri);
+        const out = els.find((x) => x.e.t === 'OUT');
+        return out && els.some((x) => x.e.t === 'NO' && x.e.a === out.e.a) && out.e.a !== 'Conveyor_Motor' && !els.some((x) => (x.e.t === 'NO') && (x.e.a === 'EStop_OK' || x.e.a === 'Door_Closed'));
+      });
+      return latchCoils.length > 0 && ctx.usesTag('EStop_OK');
+    },
+  });
+
+  D.add('reset_starts_motor', {
+    msg: { en: 'Reset_PB is in the start branch of the motor, so pressing Reset alone starts the conveyor. Reset only makes the line ready. Start still has to be pressed.', ar: '{{Reset_PB}} موجود بفرع التشغيل للمحرك، فضغط {{Reset}} لحاله بيشغّل الناقل. {{Reset}} بس بيجهّز الخط. لسا لازم تضغط {{Start}}.'.replace(/\{\{|\}\}/g, '') },
+    test: (ctx) => ctx.program.rungs.some((rg, ri) => {
+      const els = ctx.rungEls(ri);
+      const motor = els.find((x) => x.e.t === 'OUT' && x.e.a === 'Conveyor_Motor');
+      return !!motor && els.some((x) => x.e.t === 'NO' && x.e.a === 'Reset_PB' && x.r > 0 || (x.e.t === 'NO' && x.e.a === 'Reset_PB' && x.c === 0));
+    }),
+  });
+
+  D.add('door_not_checked', {
+    msg: { en: 'The door switch (Door_Closed) is never used. An open door must stop the line and block the restart until Reset.', ar: 'مفتاح الباب ({{Door_Closed}}) ما انستخدم. الباب المفتوح لازم يوقف الخط ويمنع التشغيل لحد {{Reset}}.'.replace(/\{\{|\}\}/g, '') },
+    test: (ctx) => !ctx.usesTag('Door_Closed'),
+  });
 })();
 
 </script>
@@ -2075,6 +2510,279 @@ code, pre { font-family: var(--mono); }
   };
   // both languages stacked (used for work orders)
   U.S = S;
+})();
+
+</script>
+<script>
+/* ==== src/ui/progress.js ==== */
+/* Progress, autosave, glossary boxes (Leitner), explanations. One versioned payload, saved with safe wrappers.
+ * No streaks, no daily rewards, nothing decays: the map just remembers what you did. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+
+  const fresh = () => ({ v: 1, savedAt: 0, levels: {}, gloss: {}, session: 0, seenWO: {}, settings: {} });
+  let data = U.store.get('data', null);
+  if (!data || data.v !== 1 || typeof data.levels !== 'object') data = fresh();
+  data.session = (data.session || 0) + 1;
+  U.data = data;
+
+  let timer = 0;
+  U.save = function (now) {
+    clearTimeout(timer);
+    const doSave = () => {
+      data.savedAt = Date.now();
+      const ok = U.store.set('data', data);
+      U.autosaveOk = ok;
+      const n = document.getElementById('autosave-note');
+      if (n) n.hidden = ok;
+    };
+    if (now) doSave(); else timer = setTimeout(doSave, 500);
+  };
+
+  const LV_DEF = () => ({ stars: 0, solved: false, attempts: 0, fails: 0, hint: 0, hint3: false, explained: false, program: null, userTags: [], explain: {}, best: null, wo: 0 });
+  U.lv = function (id) {
+    if (!data.levels[id]) data.levels[id] = LV_DEF();
+    else for (const k in LV_DEF()) if (!(k in data.levels[id])) data.levels[id][k] = LV_DEF()[k];
+    return data.levels[id];
+  };
+  U.totalStars = () => Object.keys(data.levels).reduce((n, k) => n + (data.levels[k].stars || 0), 0);
+
+  // ---------------------------------------------------------------- export / import
+  U.exportData = function () {
+    const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'scan-cycle-progress.json';
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  U.validateImport = function (o) {
+    if (!o || typeof o !== 'object' || o.v !== 1 || typeof o.levels !== 'object' || o.levels === null) return false;
+    for (const id of Object.keys(o.levels)) {
+      if (!/^L\d\d$/.test(id)) return false;
+      const l = o.levels[id];
+      if (typeof l !== 'object' || l === null) return false;
+      if (l.program && !Array.isArray(l.program.rungs)) return false;
+    }
+    return true;
+  };
+  U.importData = function (text) {
+    let o;
+    try { o = JSON.parse(text); } catch (e) { return false; }
+    if (!U.validateImport(o)) return false;
+    const keepSession = data.session;
+    for (const k of Object.keys(data)) delete data[k];
+    Object.assign(data, fresh(), o);
+    data.session = keepSession;
+    U.save(true);
+    return true;
+  };
+  U.resetData = function () {
+    for (const k of Object.keys(data)) delete data[k];
+    Object.assign(data, fresh(), { session: 1 });
+    U.save(true);
+  };
+})();
+
+</script>
+<script>
+/* ==== src/ui/glossary.js ==== */
+/* Glossary: tappable terms with an Arabic gloss, a 3-choice question on the 2nd encounter, Leitner review. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
+  const INTERVALS = [1, 2, 4, 8, 16]; // sessions, boxes 1..5
+
+  const G = { map: Object.create(null), loaded: false };
+  U.glossary = G;
+
+  G.init = function (levels) {
+    G.map = SC.levels.glossaryMap(levels);
+    G.loaded = true;
+  };
+  G.get = (id) => G.map[id] || null;
+
+  const surfaceForms = (def) => {
+    const forms = new Set();
+    const main = def.en.replace(/\s*\(.*?\)\s*/g, ' ').trim();
+    forms.add(main);
+    const m = /\(([^)]+)\)/.exec(def.en);
+    if (m && m[1].length >= 2) forms.add(m[1].trim());
+    if (def.forms) def.forms.forEach((f) => forms.add(f));
+    return Array.from(forms).filter(Boolean);
+  };
+
+  // append `text` to `el`, wrapping glossary terms (limited to `ids`) in tappable buttons
+  G.linkText = function (el, text, ids) {
+    const forms = [];
+    (ids || []).forEach((id) => { const d = G.get(id); if (d) surfaceForms(d).forEach((f) => forms.push({ id, f })); });
+    forms.sort((a, b) => b.f.length - a.f.length);
+    if (!forms.length) { el.append(text); return; }
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('(?<![A-Za-z0-9_])(' + forms.map((x) => esc(x.f)).join('|') + ')(?![A-Za-z0-9_])', 'gi');
+    let last = 0, m;
+    const seen = new Set();
+    while ((m = re.exec(text))) {
+      const hit = forms.find((x) => x.f.toLowerCase() === m[1].toLowerCase());
+      if (!hit) continue;
+      if (m.index > last) el.append(text.slice(last, m.index));
+      if (seen.has(hit.id)) el.append(m[1]);
+      else { seen.add(hit.id); el.append(termBtn(hit.id, m[1])); }
+      last = m.index + m[1].length;
+    }
+    if (last < text.length) el.append(text.slice(last));
+  };
+
+  function termBtn(id, label) {
+    const b = h('button', { type: 'button', class: 'term', dataset: { term: id }, 'aria-label': 'Term: ' + label }, label);
+    b.addEventListener('click', (e) => { e.preventDefault(); G.popover(id, b); });
+    return b;
+  }
+  G.termBtn = termBtn;
+
+  // ---------------------------------------------------------------- Leitner
+  const rec = (id) => {
+    const g = U.data.gloss;
+    if (!g[id]) g[id] = { seen: 0, quizzed: false, box: 0, due: 0 };
+    return g[id];
+  };
+  function grade(id, ok) {
+    const r = rec(id);
+    r.quizzed = true;
+    if (ok) { r.box = Math.min(5, (r.box || 0) + 1); } else r.box = 1;
+    r.due = U.data.session + INTERVALS[r.box - 1];
+    U.save();
+  }
+  G.dueIds = function (all) {
+    const ids = Object.keys(U.data.gloss).filter((id) => G.map[id] && U.data.gloss[id].box > 0 && U.data.gloss[id].due <= U.data.session);
+    return ids;
+  };
+
+  function distractors(id, n) {
+    const others = Object.keys(G.map).filter((k) => k !== id && G.map[k].ar !== G.map[id].ar);
+    const out = [];
+    while (out.length < n && others.length) out.push(others.splice(Math.floor(Math.random() * others.length), 1)[0]);
+    return out;
+  }
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  // 3-choice question: returns an element; onAnswer(ok) after the player picked
+  function quizEl(id, onAnswer) {
+    const d = G.map[id];
+    const opts = shuffle([id].concat(distractors(id, 2)));
+    const box = h('div', { class: 'quiz' }, h('p', null, h('b', null, tr('Pick the Arabic meaning of', 'اختار المعنى العربي لـ') + ' '), h('span', { lang: 'en' }, d.en)));
+    const row = h('div', { class: 'quiz-opts' });
+    opts.forEach((o) => {
+      const b = h('button', { type: 'button', class: 'btn', lang: 'ar', dir: 'rtl' }, G.map[o].ar);
+      b.addEventListener('click', () => {
+        const ok = o === id;
+        row.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+        b.classList.add(ok ? 'right' : 'wrong');
+        if (!ok) row.querySelectorAll('button').forEach((x) => { if (x.textContent === d.ar) x.classList.add('right'); });
+        box.append(h('p', { class: ok ? 'ok' : 'warn', role: 'status' }, ok ? '✔ ' + tr('Correct', 'صح') : '✖ ' + tr('Not this one. It means:', 'مش هاد. معناه:') + ' ' + d.ar));
+        grade(id, ok);
+        setTimeout(() => onAnswer(ok), ok ? 500 : 1400);
+      });
+      row.append(b);
+    });
+    box.append(row);
+    return box;
+  }
+
+  // ---------------------------------------------------------------- speech
+  const canSpeak = typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined';
+  let voices = [];
+  if (canSpeak) { const lv = () => { voices = speechSynthesis.getVoices(); }; lv(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', lv); }
+  G.speak = function (text) {
+    if (!canSpeak) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const v = voices.find((x) => /^en[-_]US/i.test(x.lang)) || voices.find((x) => /^en/i.test(x.lang));
+      if (v) u.voice = v;
+      u.lang = (v && v.lang) || 'en-US'; u.rate = 0.9;
+      speechSynthesis.speak(u);
+    } catch (e) { /* ignore */ }
+  };
+  G.canSpeak = canSpeak;
+  G.speakBtn = (text) => (canSpeak ? h('button', { type: 'button', class: 'btn small ghost', 'aria-label': 'Listen', title: 'Listen', onclick: () => G.speak(text) }, '🔊') : null);
+
+  // ---------------------------------------------------------------- popover
+  G.popover = function (id, anchor) {
+    closePop();
+    const d = G.get(id);
+    if (!d) return;
+    const r = rec(id);
+    r.seen++;
+    const needQuiz = r.seen >= 2 && !r.quizzed;
+    const pop = h('div', { class: 'termpop', role: 'dialog', 'aria-label': d.en });
+    const reveal = () => {
+      pop.innerHTML = '';
+      pop.append(h('div', { class: 'pal-head' }, h('b', { lang: 'en', class: 'tp-en' }, d.en), h('span', null, G.speakBtn(d.en), h('button', { class: 'btn small ghost', type: 'button', 'aria-label': 'Close', onclick: closePop }, '✕'))),
+        h('p', { class: 'tp-ar', lang: 'ar', dir: 'rtl' }, d.ar),
+        h('p', { class: 'small' }, h('i', { lang: 'en' }, d.ex.en)),
+        d.ex.ar ? h('p', { class: 'small', lang: 'ar', dir: 'rtl', html: U.arHtml(d.ex.ar) }) : null);
+      place();
+    };
+    function place() {
+      const rc = anchor.getBoundingClientRect();
+      const w = pop.offsetWidth, hh = pop.offsetHeight;
+      if (window.innerWidth < 700) { pop.classList.add('sheet'); return; }
+      pop.style.left = Math.min(Math.max(8, rc.left), window.innerWidth - w - 8) + window.scrollX + 'px';
+      let top = rc.bottom + 6;
+      if (top + hh > window.innerHeight - 8) top = Math.max(8, rc.top - hh - 6);
+      pop.style.top = top + window.scrollY + 'px';
+    }
+    document.body.append(pop);
+    if (needQuiz) { pop.append(quizEl(id, () => { U.save(); reveal(); })); place(); }
+    else { reveal(); if (!r.box) { r.box = 1; r.due = U.data.session + INTERVALS[0]; } }
+    U.save();
+    U._termpop = { pop, anchor };
+    setTimeout(() => { document.addEventListener('pointerdown', out, true); document.addEventListener('keydown', esc, true); }, 0);
+    function out(e) { if (!pop.contains(e.target) && e.target !== anchor) closePop(); }
+    function esc(e) { if (e.key === 'Escape') closePop(); }
+    pop._cleanup = () => { document.removeEventListener('pointerdown', out, true); document.removeEventListener('keydown', esc, true); };
+  };
+  function closePop() {
+    const p = U._termpop;
+    if (!p) return;
+    p.pop._cleanup && p.pop._cleanup();
+    p.pop.remove();
+    U._termpop = null;
+  }
+  G.closePop = closePop;
+
+  // ---------------------------------------------------------------- review screen (5-8 due terms)
+  G.review = function (root, onDone) {
+    let ids = G.dueIds();
+    let practice = false;
+    if (!ids.length) {
+      practice = true;
+      ids = Object.keys(U.data.gloss).filter((id) => G.map[id]);
+    }
+    shuffle(ids);
+    ids = ids.slice(0, 8);
+    const wrap = h('div', { class: 'card review' });
+    root.append(wrap);
+    let i = 0, right = 0;
+    function next() {
+      wrap.innerHTML = '';
+      if (i >= ids.length) {
+        wrap.append(h('h3', null, tr('Review finished', 'خلصت المراجعة')), h('p', null, `${right}/${ids.length} ` + tr('correct', 'صح')),
+          h('button', { type: 'button', class: 'btn primary', onclick: () => { wrap.remove(); onDone && onDone(); } }, tr('Back to the map', 'رجوع للخريطة')));
+        return;
+      }
+      wrap.append(h('h3', null, tr('Term review', 'مراجعة المصطلحات') + ` (${i + 1}/${ids.length})`),
+        practice ? h('p', { class: 'muted small' }, tr('Nothing is due. Practice a few terms you met.', 'ما في شي مستحق. تمرّن على كم مصطلح شفتهم.')) : null,
+        quizEl(ids[i], (ok) => { if (ok) right++; i++; next(); }));
+    }
+    if (!ids.length) { wrap.append(h('p', null, tr('You have not met any terms yet. Open a level first.', 'لسا ما شفت أي مصطلح. افتح مستوى أول.')), h('button', { type: 'button', class: 'btn', onclick: () => { wrap.remove(); onDone && onDone(); } }, 'OK')); return; }
+    next();
+  };
 })();
 
 </script>
@@ -2466,6 +3174,13 @@ code, pre { font-family: var(--mono); }
       }
       // line label
       text(c, 't = ' + (sim.t / 1000).toFixed(2) + ' s', W - 10, 272, 10, col.muted, 'right');
+      // replay overlay: ghost marker at the failure point
+      if (sim.replayInfo) {
+        const ri = sim.replayInfo, past = sim.t >= ri.tFail;
+        c.fillStyle = col.surface; c.globalAlpha = .88; rr(c, 8, 106, 300, 24, 4); c.fill(); c.globalAlpha = 1;
+        c.strokeStyle = past ? col.alarm : col.power; c.lineWidth = 2; rr(c, 8, 106, 300, 24, 4); c.stroke();
+        text(c, (past ? '✖ FAILURE POINT PASSED' : '▶ REPLAY') + '  t=' + (sim.t / 1000).toFixed(2) + 's  (fail @ ' + (ri.tFail / 1000).toFixed(2) + 's)', 16, 122, 11, past ? col.alarm : col.power, 'left', 700);
+      }
     };
 
     view.refreshTheme();
@@ -3348,20 +4063,29 @@ code, pre { font-family: var(--mono); }
   U.refreshTags = () => { const b = document.getElementById('tags-mount'); if (b && U.state.level) mountTags(b); };
 
   // ---------------------------------------------------------------- transfer panel
-  function staticRung(rg, labelOf, tags) {
+  // read-only rung. opts: {labelOf(name)->text, rec:{pin,pout,edge} (power flow), addrOf(name)}
+  function staticRung(rg, labelOf, opts) {
+    opts = opts || {};
+    const rec = opts.rec || null;
     const wire = SC.compile.buildWire(rg.rows, rg.cols, new Set(rg.vb.map((b) => b[0] + ',' + b[1]))).wire;
     const W = U.CELL_W, H = U.CELL_H, RAIL = 12;
     const grid = h('div', { class: 'rung-grid static', style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } }, h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
     for (let r = 0; r < rg.rows; r++) for (let c = 0; c < rg.cols; c++) {
       const el = rg.els.find((e) => e.r === r && e.c === c) || null;
-      const lab = el ? U.cellLabels(el, () => '') : { top: '' };
+      const lab = el ? U.cellLabels(el, opts.addrOf || (() => '')) : { top: '', bottom: '' };
       const top = el && lab.top ? labelOf(lab.top) : '';
-      grid.append(h('div', { class: 'cell', style: { left: (RAIL + c * W) + 'px', top: (r * H) + 'px', width: W + 'px', height: H + 'px' },
-        html: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(top)}</text>` : ''}${U.symbolSvg(el, wire[r][c])}</svg>` }));
+      const pin = rec && rec.pin[c] ? rec.pin[c][r] : undefined, pout = rec && rec.pout[c] ? rec.pout[c][r] : undefined;
+      grid.append(h('div', { class: 'cell', dataset: rec ? { pin: pin ? 1 : 0, pout: pout ? 1 : 0 } : null, style: { left: (RAIL + c * W) + 'px', top: (r * H) + 'px', width: W + 'px', height: H + 'px' },
+        html: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(top)}</text>` : ''}${U.symbolSvg(el, wire[r][c])}${el && lab.bottom ? `<text class="c-addr" x="42" y="65" text-anchor="middle">${U.esc(lab.bottom)}</text>` : ''}${el && rec ? `<text class="c-state" x="82" y="65" text-anchor="end">${pout ? 'ON' : 'OFF'}</text>` : ''}</svg>` }));
     }
-    for (const [b, g] of rg.vb) grid.append(h('div', { class: 'vbar', style: { left: (RAIL + b * W - 2) + 'px', top: (g * H + 40) + 'px', height: H + 'px' } }));
-    return h('div', { class: 'rung' }, h('div', { class: 'rung-scroll' }, grid));
+    for (const [b, g] of rg.vb) {
+      let on;
+      if (rec) on = (b < rg.cols ? (rec.pin[b][g] || rec.pin[b][g + 1]) : (rec.edge[g] || rec.edge[g + 1])) ? 1 : 0;
+      grid.append(h('div', { class: 'vbar', dataset: rec ? { on } : null, style: { left: (RAIL + b * W - 2) + 'px', top: (g * H + 40) + 'px', height: H + 'px' } }));
+    }
+    return h('div', { class: 'rung' }, opts.title ? h('div', { class: 'rung-head' }, h('span', { class: 'rung-n' }, opts.title), opts.note ? h('span', { class: 'small muted' }, opts.note) : null) : null, h('div', { class: 'rung-scroll' }, grid));
   }
+  U.staticRung = staticRung;
 
   function codesysDecls(program, tags) {
     const tm = SC.addr.makeTagMap(tags);
@@ -3394,7 +4118,7 @@ code, pre { font-family: var(--mono); }
       out.innerHTML = '';
       tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.m === mode)));
       if (mode === 'tia') {
-        program.rungs.forEach((rg, i) => out.append(h('div', { class: 'small muted' }, 'Network ' + (i + 1) + (rg.note ? ' — ' + rg.note : '')), staticRung(rg, (n) => (DEV[n] ? DEV[n] + ' ' : '') + (DEV[n] ? '' : n), tags)));
+        program.rungs.forEach((rg, i) => out.append(h('div', { class: 'small muted' }, 'Network ' + (i + 1) + (rg.note ? ' — ' + rg.note : '')), staticRung(rg, (n) => (DEV[n] ? DEV[n] : n))));
         out.append(h('p', { class: 'small muted' }, tr('In TIA Portal the symbols show the tag name and the device ID from the schematic (-S1 = push button, -B = sensor, -Q/-Y = actuator).', 'بـ {{TIA Portal}} الرموز بتعرض اسم الـ {{tag}} ورقم الجهاز من المخطط (‎-S1 = زر، ‎-B = حساس، ‎-Q/-Y = مشغّل).').replace(/\{\{|\}\}/g, '')));
       } else {
         out.append(h('pre', { class: 'mono code' }, codesysDecls(program, tags)),
@@ -3413,48 +4137,728 @@ code, pre { font-family: var(--mono); }
 
 </script>
 <script>
-/* ==== src/ui/app-ui.js ==== */
-/* Application shell: station map, level screen, game loop, operator panel, I/O strip, forces. */
+/* ==== src/ui/report.js ==== */
+/* Datasheet timing diagrams and the FAT failure report (timeline + active rungs + self-regulation question + replay). */
 (function () {
   'use strict';
   const SC = globalThis.SC;
   const U = SC.ui;
   const h = U.h;
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
+
+  // ---------------------------------------------------------------- datasheet timing diagram
+  // timing: {step (ms per slot), unit, signals:[{name, wave:'0011'}]}
+  U.timingSvg = function (timing) {
+    const slot = 34, labelW = 104, rowH = 28, n = Math.max(...timing.signals.map((s) => s.wave.length));
+    const W = labelW + n * slot + 8, H = timing.signals.length * rowH + 22;
+    let s = `<svg class="timing" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Timing diagram">`;
+    timing.signals.forEach((sg, i) => {
+      const y0 = i * rowH + 6, hi = y0 + 4, lo = y0 + 18;
+      s += `<text class="tm-l" x="2" y="${y0 + 16}">${U.esc(sg.name)}</text>`;
+      let d = '';
+      let prev = null;
+      for (let k = 0; k < sg.wave.length; k++) {
+        const v = sg.wave[k] === '1' ? 1 : 0, x = labelW + k * slot, y = v ? hi : lo;
+        if (prev === null) d += `M${x} ${y}`;
+        else if (v !== prev) d += `L${x} ${prev ? hi : lo}L${x} ${y}`;
+        d += `L${x + slot} ${y}`;
+        prev = v;
+      }
+      s += `<path class="tm-w" d="${d}" fill="none"/>`;
+      s += `<text class="tm-v" x="${labelW - 6}" y="${hi + 7}" text-anchor="end">1</text><text class="tm-v" x="${labelW - 6}" y="${lo + 4}" text-anchor="end">0</text>`;
+    });
+    const ay = timing.signals.length * rowH + 14;
+    for (let k = 0; k <= n; k += 2) {
+      const x = labelW + k * slot;
+      s += `<path class="tm-g" d="M${x} 2V${ay - 10}"/><text class="tm-v" x="${x}" y="${ay + 4}" text-anchor="middle">${(k * (timing.step || 500) / (timing.unit === 's' ? 1 : 1000)).toFixed(1)}s</text>`;
+    }
+    return s + '</svg>';
+  };
+
+  // ---------------------------------------------------------------- failure timeline
+  const fmtVal = (v) => (v === true || v === 1 ? 'ON' : v === false || v === 0 ? 'OFF' : String(v));
+  const sec = (ms) => (ms / 1000).toFixed(2) + ' s';
+
+  function timelineSvg(sigs, t0, t1, tFail) {
+    const labelW = 120, W = 640, pw = W - labelW - 10, rowH = 26, H = sigs.length * rowH + 28;
+    const X = (t) => labelW + (Math.max(t0, Math.min(t1, t)) - t0) / (t1 - t0) * pw;
+    let s = `<svg class="timing tl" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="I/O timeline before the failure">`;
+    sigs.forEach((sg, i) => {
+      const y0 = i * rowH + 4, hi = y0 + 4, lo = y0 + 18;
+      s += `<text class="tm-l ${sg.key ? 'tm-key' : ''}" x="2" y="${y0 + 16}">${U.esc(sg.name)}</text>`;
+      if (!sg.analog) {
+        let d = '';
+        sg.segs.forEach((seg, k) => {
+          const x = X(seg[0]), y = seg[1] ? hi : lo;
+          if (k === 0) d += `M${x} ${y}`;
+          else d += `L${x} ${sg.segs[k - 1][1] ? hi : lo}L${x} ${y}`;
+        });
+        const last = sg.segs[sg.segs.length - 1];
+        d += `L${X(t1)} ${last[1] ? hi : lo}`;
+        s += `<path class="tm-w" d="${d}" fill="none"/>`;
+      } else {
+        sg.segs.forEach((seg, k) => { const x = X(seg[0]); s += `<text class="tm-v" x="${x + 2}" y="${y0 + 14}">${seg[1]}</text>`; });
+      }
+      if (sg.expect !== undefined && !sg.analog) {
+        const y = (sg.expect === true || sg.expect === 1) ? hi : lo;
+        s += `<circle class="tm-exp" cx="${X(tFail)}" cy="${y}" r="5" fill="none"/>`;
+      }
+    });
+    const ay = sigs.length * rowH + 12;
+    const step = (t1 - t0) > 3000 ? 1000 : 500;
+    for (let t = Math.ceil(t0 / step) * step; t <= t1; t += step) {
+      s += `<path class="tm-g" d="M${X(t)} 2V${ay - 8}"/><text class="tm-v" x="${X(t)}" y="${ay + 6}" text-anchor="middle">${(t / 1000).toFixed(1)}s</text>`;
+    }
+    s += `<path class="tm-fail" d="M${X(tFail)} 0V${ay - 6}"/><text class="tm-failt" x="${X(tFail) - 3}" y="${ay + 6}" text-anchor="end">✖ ${(tFail / 1000).toFixed(2)}s</text>`;
+    return s + '</svg>';
+  }
+
+  // changes of `tag` over the whole trace: [[t, v], ...] sorted
+  function changesOf(trace, tag) { return trace.filter((x) => x.tag === tag).map((x) => [x.t, x.v]); }
+  function segsFor(chg, t0) {
+    let v0 = 0;
+    const inside = [];
+    for (const c of chg) { if (c[0] <= t0) v0 = c[1]; else inside.push(c); }
+    return [[t0, v0]].concat(inside);
+  }
+
+  // ---------------------------------------------------------------- the report
+  // ctx: {level, program, userTags, scenario, failure, hidden, replay(fn)}
+  U.renderReport = function (box, ctx) {
+    box.innerHTML = '';
+    const { level, program, userTags, scenario, failure } = ctx;
+    const tags = SC.mergeTags(SC.levelTags(level), userTags);
+    const lv = Object.assign({}, level, { tags: (level.tags || []).concat(userTags) });
+    const tFail = failure.t;
+    const t0 = Math.max(0, tFail - 2000), t1 = tFail + 150;
+    const title = scenario.title ? (U.lang === 'ar' ? scenario.title.ar : scenario.title.en) : scenario.id;
+    const msg = failure.msg || { en: '', ar: '' };
+
+    // replay up to the failure to get the trace
+    const res = SC.scenario.runScenario(lv, program, scenario, { trace: true, keepSim: true, upTo: t1, userTags });
+    const sim = res.sim;
+    const trace = sim.trace;
+
+    // signals to plot
+    const keyNames = Object.keys(failure.expected || {}).filter((k) => sim.tagByName[k] && sim.tagByName[k]._a);
+    const changed = {};
+    for (const x of trace) if (x.t >= t0 && x.t <= tFail + 10) changed[x.tag] = true;
+    const levelNames = SC.levelTags(level).filter((t) => /^[IQ]/.test(t.addr) && !/^IW|^QW/.test(t.addr)).map((t) => t.name);
+    const others = levelNames.filter((n) => changed[n] && keyNames.indexOf(n) < 0);
+    others.sort((a, b) => (/^Q/.test(sim.tagByName[a].addr) ? 0 : 1) - (/^Q/.test(sim.tagByName[b].addr) ? 0 : 1));
+    const names = keyNames.concat(others).slice(0, 9);
+    const sigs = names.map((n) => ({ name: n, key: keyNames.indexOf(n) >= 0, segs: segsFor(changesOf(trace, n), t0), expect: failure.expected ? failure.expected[n] : undefined }));
+
+    const head = h('div', { class: 'rp-head' }, h('h3', { class: 'warn' }, '✖ ', tr('FAT failed', 'فشل فحص {{FAT}}').replace(/\{\{|\}\}/g, ''), ': ', title, ctx.hidden ? h('small', null, ' · ' + tr('hidden variant', 'نسخة مخفية')) : null));
+    const lines = h('div', { class: 'rp-msg' },
+      h('p', { lang: 'en' }, msg.en),
+      h('p', { lang: 'ar', dir: 'rtl', html: U.arHtml(msg.ar || '') }));
+
+    const exp = failure.expected || {};
+    const act = failure.actual || {};
+    const expTxt = Object.keys(exp).map((k) => `${k} = ${typeof exp[k] === 'object' ? JSON.stringify(exp[k]) : fmtVal(exp[k])}`).join(', ');
+    const actTxt = Object.keys(exp).map((k) => `${k} = ${fmtVal(act[k])}`).join(', ');
+    const where = failure.kind === 'bad_scenario' ? '' : h('p', { class: 'rp-diff mono' },
+      tr('Expected', 'المتوقع'), ' ', h('b', null, expTxt), ' ', tr('at', 'عند'), ' t = ', sec(failure.at !== undefined && failure.kind === 'at' ? failure.at : tFail), h('br'),
+      tr('Actual', 'الفعلي'), ' ', h('b', { class: 'warn' }, actTxt), ' ', tr('at', 'عند'), ' t = ', sec(tFail));
+
+    // timeline + table
+    const tl = h('details', { open: true, class: 'rp-sec' }, h('summary', null, tr('I/O timeline (last 2 seconds)', 'خط زمني للمداخل والمخارج (آخر ثانيتين)')),
+      h('div', { class: 'tl-wrap', html: names.length ? timelineSvg(sigs, t0, t1, tFail) : '' }),
+      h('p', { class: 'small muted' }, tr('Filled line = bit 1, low line = bit 0. The circle marks what the test expected at the failure time.', 'الخط العالي = البت 1، والواطي = 0. الدائرة بتبيّن شو كان متوقع بوقت الفشل.')));
+    const rows = trace.filter((x) => x.t >= t0 && x.t <= tFail + 10 && (names.indexOf(x.tag) >= 0)).slice(-24);
+    if (rows.length) {
+      tl.append(h('table', { class: 'tags small' }, h('thead', null, h('tr', null, h('th', null, 't'), h('th', null, 'tag'), h('th', null, '→'))),
+        h('tbody', null, rows.map((x) => h('tr', null, h('td', { class: 'mono' }, sec(x.t)), h('td', { class: 'mono' }, x.tag), h('td', { class: 'mono' }, fmtVal(x.v)))))));
+    }
+
+    // rungs at the failing scan
+    const sim2 = SC.sim.create({ level: lv, program, scenario, seed: scenario.seed, userTags });
+    sim2.runUntil(tFail);
+    sim2.step(true);
+    const rungsBox = h('details', { open: true, class: 'rp-sec' }, h('summary', null, tr('Your rungs at the failing scan', 'الـ rungs تبعك بلحظة الفشل')));
+    if (sim2.compiled.ok && sim2.rec) {
+      program.rungs.forEach((rg, ri) => {
+        const rec = sim2.rec[ri];
+        if (rec) rungsBox.append(U.staticRung(rg, (n) => n, { rec, title: 'Rung ' + (ri + 1), note: rg.note || '', addrOf: (n) => (sim2.tagByName[n] ? sim2.tagByName[n].addr : '') }));
+      });
+      rungsBox.append(h('p', { class: 'small muted' }, tr('Bold line + filled symbol + ON = power flows. Thin line + hollow + OFF = no power.', 'خط عريض + رمز معبّى + ON = في power. خط رفيع + فاضي + OFF = ما في power.')));
+    } else rungsBox.append(h('p', { class: 'warn' }, tr('The program has errors, so it did not run.', 'البرنامج فيه أخطاء فما اشتغل.')));
+
+    // self-regulation question
+    const q = (() => {
+      const k = keyNames[0];
+      if (!k) return tr('What did you expect to happen at this time, and which rung controls it?', 'شو كنت متوقع يصير بهالوقت، وأي rung بيتحكم فيه؟');
+      const wr = program.rungs.map((rg, ri) => ({ ri, w: rg.els.some((e) => (e.t === 'OUT' || e.t === 'SET' || e.t === 'RST') && e.a === k) })).find((x) => x.w);
+      const want = exp[k];
+      if (wr) return tr(`Which condition in rung ${wr.ri + 1} was ${want === true || want === 1 ? 'FALSE' : 'TRUE'} at t = ${sec(tFail)}? Why?`, `أي شرط بالـ rung ${wr.ri + 1} كان ${want === true || want === 1 ? 'FALSE' : 'TRUE'} عند t = ${sec(tFail)}؟ ليش؟`);
+      return tr(`${k} should be ${typeof exp[k] === 'object' ? 'different' : fmtVal(exp[k])} at t = ${sec(tFail)}. Which rung writes ${k}? What decides it?`, `الـ ${k} لازم يكون ${typeof exp[k] === 'object' ? 'مختلف' : fmtVal(exp[k])} عند t = ${sec(tFail)}. أي rung بيكتب ${k}؟ شو اللي بيقرر؟`);
+    })();
+    const qBox = h('div', { class: 'rp-q' }, h('b', null, '❓ '), q);
+
+    // classic mistakes
+    const diags = SC.diag.run(level, program, { failure, tags });
+    const dBox = diags.length ? h('div', { class: 'rp-diag' }, diags.slice(0, 2).map((d) => h('p', null, h('b', null, '💡 '), h('span', { lang: 'en' }, d.msg.en), h('br'), h('span', { lang: 'ar', dir: 'rtl', html: U.arHtml(d.msg.ar) })))) : null;
+
+    const btns = h('div', { class: 'rp-btns' },
+      h('button', { type: 'button', class: 'btn primary', onclick: () => ctx.replay && ctx.replay(scenario, tFail) }, '▶ ' + tr('Replay to t − 2 s', 'إعادة تشغيل حتى t − 2 s')),
+      h('button', { type: 'button', class: 'btn', onclick: () => { box.innerHTML = ''; } }, tr('Close report', 'سكّر التقرير')));
+
+    box.append(h('div', { class: 'report' }, head, lines, where, qBox, dBox, tl, rungsBox, btns, h('p', { class: 'small muted' }, tr('Your program was not changed. Fix it and run the FAT again.', 'برنامجك ما تغيّر. صلّحه وشغّل الـ {{FAT}} مرة ثانية.').replace(/\{\{|\}\}/g, ''))));
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+})();
+
+</script>
+<script>
+/* ==== src/ui/levelpanel.js ==== */
+/* Left-hand learning panels of a level: work order (EN + AR), datasheets, worked example, FAT list, hints, glossary, stars. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
+  const arPlain = (s) => String(s).replace(/\{\{|\}\}/g, '');
+
+  const stars = (n, max) => '★'.repeat(n) + '☆'.repeat((max || 3) - n);
+
+  // ---------------------------------------------------------------- work order
+  function workOrderCard(L) {
+    const lv = U.lv(L.id);
+    const card = h('section', { class: 'card o-wo' });
+    card.append(h('h3', null, U.tEl('workOrder')), h('p', { class: 'concept small muted' }, tr('New:', 'جديد:') + ' ' + L.concept));
+    const p = h('p', { lang: 'en', dir: 'ltr', class: 'wo-en' });
+    U.glossary.linkText(p, L.workOrder.en, L.glossary);
+    card.append(p);
+    const ar = h('section', { lang: 'ar', dir: 'rtl', class: 'ar-block', html: U.arHtml(L.workOrder.ar) });
+    // Arabic visible on the first open of a level, collapsed afterwards
+    const first = !U.data.seenWO[L.id];
+    U.data.seenWO[L.id] = 1; U.save();
+    ar.hidden = !first;
+    const tog = h('button', { type: 'button', class: 'btn small ghost', 'aria-expanded': String(first), onclick: () => { ar.hidden = !ar.hidden; tog.setAttribute('aria-expanded', String(!ar.hidden)); } }, 'AR · عربي');
+    card.append(h('div', { class: 'wo-tools' }, tog, U.glossary.speakBtn(L.workOrder.en)), ar);
+    return card;
+  }
+
+  // ---------------------------------------------------------------- datasheets + example
+  function datasheetCard(L) {
+    const card = h('section', { class: 'card o-ds' }, h('h3', null, U.tEl('datasheet')));
+    L.datasheets.forEach((d, i) => {
+      const det = h('details', { class: 'ds', open: i === 0 }, h('summary', null, h('b', null, U.lang === 'ar' ? d.title.ar : d.title.en)));
+      det.append(h('table', { class: 'tags small' }, h('tbody', null, d.rows.map((r) => h('tr', null, h('td', { class: 'mono' }, r[0]), h('td', null, r[1]))))));
+      if (d.note) det.append(h('p', { class: 'small' }, h('span', { lang: 'en' }, d.note.en), h('br'), h('span', { lang: 'ar', dir: 'rtl', html: U.arHtml(d.note.ar) })));
+      if (d.timing) det.append(h('div', { class: 'tl-wrap', html: U.timingSvg(d.timing) }));
+      card.append(det);
+    });
+    const ex = L.example;
+    if (ex && ex.mode === 'full' && ex.lines) {
+      const det = h('details', { class: 'ds ex', open: true }, h('summary', null, h('b', null, '📘 ' + (ex.title ? (U.lang === 'ar' ? ex.title.ar : ex.title.en) : tr('Worked example', 'مثال محلول')))));
+      const prog = SC.dsl.parseProgram(ex.lines);
+      prog.rungs.forEach((rg, i) => {
+        det.append(U.staticRung(rg, (n) => n, { title: 'Rung ' + (i + 1) }));
+        const e = (ex.explain || []).find((x) => x.rung === i + 1);
+        if (e) det.append(h('p', { class: 'small' }, h('span', { lang: 'en' }, e.en), h('br'), h('span', { lang: 'ar', dir: 'rtl', html: U.arHtml(e.ar) })));
+      });
+      det.append(h('p', { class: 'small muted' }, tr('This is a DIFFERENT task with other devices. Same idea, your turn.', 'هاي مهمة مختلفة بأجهزة ثانية. نفس الفكرة، والدور عليك.')));
+      card.append(det);
+    } else if (ex && ex.mode === 'completion') {
+      card.append(h('p', { class: 'small ok-note' }, '🧩 ' + tr('Completion exercise: the editor already holds part of the program. Finish it.', 'تمرين إكمال: المحرر فيه جزء من البرنامج. كمّله.')));
+    }
+    return card;
+  }
+
+  // ---------------------------------------------------------------- FAT list + hints + glossary + stars
+  function fatCard(L, api) {
+    const card = h('section', { class: 'card o-fat' });
+    card.append(h('h3', null, 'FAT'));
+    const list = h('ol', { class: 'fatlist' });
+    const items = {};
+    L.scenarios.forEach((s) => {
+      const li = h('li', { dataset: { id: s.id } }, h('span', { class: 'fl-ic', 'aria-hidden': 'true' }, '○'), h('span', { class: 'fl-t', lang: U.lang }, U.lang === 'ar' ? h('span', { lang: 'ar', dir: 'rtl', html: U.arHtml(s.title.ar) }) : s.title.en), h('span', { class: 'fl-s sr-only' }, ''));
+      list.append(li); items[s.id] = li;
+    });
+    const hid = h('li', { class: 'fl-hidden' }, h('span', { class: 'fl-ic', 'aria-hidden': 'true' }, '○'), h('span', null, `${L.hidden.count} ` + tr('hidden variants', 'نسخ مخفية') + ' — ' + tr('random timing and seeds', 'توقيت وبذور عشوائية')));
+    list.append(hid);
+    const runBtn = h('button', { type: 'button', class: 'btn primary fat-btn', onclick: () => api.runFat() }, '▶ ' + tr('Run FAT', 'شغّل فحص FAT'));
+    const status = h('p', { class: 'small', role: 'status', 'aria-live': 'polite' });
+    card.append(runBtn, status, list);
+
+    // hints
+    const hbox = h('div', { class: 'hints' });
+    const hshow = h('div', { class: 'hint-show' });
+    const hbtns = [0, 1, 2].map((i) => h('button', { type: 'button', class: 'btn small', onclick: () => showHint(i) }, tr('Hint ', 'تلميح ') + (i + 1)));
+    function showHint(i) {
+      const lv = U.lv(L.id);
+      if (i === 2 && lv.fails < 2) { U.toast(tr('Hint 3 unlocks after two failed FAT runs.', 'التلميح 3 بينفتح بعد محاولتين فاشلتين.')); return; }
+      const hh = L.hints[i];
+      lv.hint = Math.max(lv.hint, i + 1);
+      if (i === 2) lv.hint3 = true;
+      U.save();
+      hshow.innerHTML = '';
+      hshow.append(h('p', null, h('b', null, tr('Hint ', 'تلميح ') + (i + 1) + ': '), h('span', { lang: 'en' }, hh.en), h('br'), h('span', { lang: 'ar', dir: 'rtl', html: U.arHtml(hh.ar) })));
+      if (hh.lines) { const pr = SC.dsl.parseProgram(hh.lines); pr.rungs.forEach((rg) => hshow.append(U.staticRung(rg, (n) => n, { title: tr('Partial rung', 'rung جزئي') }))); }
+      refreshHints();
+    }
+    function refreshHints() {
+      const lv = U.lv(L.id);
+      hbtns[2].disabled = lv.fails < 2;
+      hbtns[2].title = lv.fails < 2 ? tr('Unlocks after two failed FAT runs', 'بينفتح بعد محاولتين فاشلتين') : '';
+      hbtns.forEach((b, i) => { b.classList.toggle('used', lv.hint > i); });
+      if (lv.hint3) hint3Note.hidden = false;
+    }
+    const hint3Note = h('p', { class: 'small muted', hidden: true }, tr('Hint 3 used: the second star is no longer possible on this level.', 'استخدمت التلميح 3: النجمة الثانية ما عاد ممكنة بهالمستوى.'));
+    hbox.append(h('h4', null, U.tEl('hints')), h('div', { class: 'hint-btns' }, hbtns), hshow, hint3Note);
+    card.append(hbox);
+
+    // glossary chips
+    const gl = h('div', { class: 'gl' }, h('h4', null, tr('Terms in this level', 'مصطلحات هالمستوى')));
+    const chips = h('div', { class: 'chips' });
+    L.glossary.forEach((id) => { const d = U.glossary.get(id); if (d) chips.append(U.glossary.termBtn(id, d.en.replace(/\s*\(.*?\)\s*/g, ' ').trim())); });
+    gl.append(chips);
+    card.append(gl);
+
+    // stars
+    const starBox = h('div', { class: 'starbox' });
+    card.append(starBox);
+    function refreshStars() {
+      const lv = U.lv(L.id);
+      starBox.innerHTML = '';
+      const lean = (L.badges || []).find((b) => b.id === 'lean');
+      starBox.append(h('p', null, h('b', { class: 'stars', 'aria-label': lv.stars + ' of 3 stars' }, stars(lv.stars)), ' ',
+        h('span', { class: 'small muted' }, tr('★ all tests pass · ★★ no lint warnings and no hint 3 · ★★★ + explain your logic', '★ كل الفحوصات نجحت · ★★ بدون تحذيرات وبدون تلميح 3 · ★★★ + اشرح منطقك'))));
+      const b = [];
+      if (lv.best && lean && lv.best.rungs <= lean.maxRungs) b.push('🏅 ' + tr('Lean: ≤ ' + lean.maxRungs + ' rungs', 'مختصر: ≤ ' + lean.maxRungs + ' rungs'));
+      if (lv.best && lv.best.lint === 0) b.push('🏅 ' + tr('Clean: no lint warnings', 'نظيف: بدون تحذيرات'));
+      if (lv.solved && !lv.hint) b.push('🏅 ' + tr('Solved without hints', 'محلول بدون تلميحات'));
+      if (b.length) starBox.append(h('p', { class: 'small' }, b.join('  ')));
+    }
+
+    return {
+      el: card, refreshHints, refreshStars,
+      setStatus(t, cls) { status.textContent = t; status.className = 'small ' + (cls || ''); },
+      setBusy(b) { runBtn.disabled = b; },
+      mark(id, state) { // 'pass' | 'fail' | 'run' | null
+        const li = id === '__hidden' ? hid : items[id];
+        if (!li) return;
+        const ic = li.querySelector('.fl-ic');
+        ic.textContent = state === 'pass' ? '✔' : state === 'fail' ? '✖' : state === 'run' ? '…' : '○';
+        li.classList.toggle('pass', state === 'pass'); li.classList.toggle('fail', state === 'fail');
+        const sr = li.querySelector('.fl-s'); if (sr) sr.textContent = state === 'pass' ? 'passed' : state === 'fail' ? 'failed' : '';
+      },
+      resetMarks() { Object.keys(items).forEach((k) => this.mark(k, null)); this.mark('__hidden', null); },
+    };
+  }
+
+  U.buildLevelPanels = function (L, api) {
+    const wo = workOrderCard(L);
+    const ds = datasheetCard(L);
+    const fat = fatCard(L, api);
+    fat.refreshHints(); fat.refreshStars();
+    return { wo, ds, fat };
+  };
+  U.starsText = stars;
+})();
+
+</script>
+<script>
+/* ==== src/ui/fat.js ==== */
+/* Running the FAT, awarding stars, and the "explain your logic in English" step. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
+  const tick = () => new Promise((r) => setTimeout(r, 0));
+
+  const starsOf = (lv) => (lv.solved ? (lv.cleanPass ? (lv.explained ? 3 : 2) : 1) : 0);
+
+  // env: {L, ladder, sim (live sim), panels, reportBox, replay(fn), onStars()}
+  U.runFat = async function (env) {
+    const { L, ladder, panels, reportBox } = env;
+    const fat = panels.fat;
+    if (env.sim().forcesActive()) {
+      fat.setStatus('⚠ ' + tr('A level cannot pass while forces are active. Clear all forces first.', 'المستوى ما بينجح والـ forces شغّالة. امسحها أول.'), 'warn');
+      const b = document.getElementById('forces-banner');
+      if (b) { b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 1200); }
+      return;
+    }
+    const chk = ladder.check();
+    if (!chk.compiled.ok) {
+      fat.setStatus('✖ ' + tr(`Fix the ${chk.compiled.errors.length} compile error(s) first.`, `صلّح ${chk.compiled.errors.length} خطأ تجميع أول.`), 'warn');
+      const e = chk.compiled.errors[0];
+      if (e && e.rung >= 0) ladder.focus(e.rung, e.r || 0, e.c || 0);
+      return;
+    }
+    fat.setBusy(true); fat.resetMarks(); reportBox.innerHTML = '';
+    fat.setStatus(tr('Running tests…', 'عم بشغّل الفحوصات…'), '');
+    const lv = U.lv(L.id);
+    lv.attempts++;
+    const program = ladder.program, userTags = ladder.userTags;
+    const lvx = Object.assign({}, L, { tags: (L.tags || []).concat(userTags) });
+    let firstFail = null, ran = 0, bpm = 0;
+    for (const sc of L.scenarios) {
+      fat.mark(sc.id, 'run'); await tick();
+      const r = SC.scenario.runScenario(lvx, program, sc, { failFast: true, userTags });
+      ran++;
+      if (r.pass && r.metrics) bpm = Math.max(bpm, r.metrics.bottlesPerMin || 0);
+      fat.mark(sc.id, r.pass ? 'pass' : 'fail');
+      if (!r.pass && !firstFail) firstFail = { r, sc, hidden: false };
+    }
+    if (!firstFail) {
+      fat.mark('__hidden', 'run'); await tick();
+      for (let k = 0; k < L.hidden.count; k++) {
+        const sc = SC.scenario.makeHidden(L, k);
+        if (!sc) continue;
+        const r = SC.scenario.runScenario(lvx, program, sc, { failFast: true, userTags });
+        ran++;
+        if (!r.pass) { firstFail = { r, sc, hidden: true }; break; }
+        if (k % 2 === 1) await tick();
+      }
+      fat.mark('__hidden', firstFail ? 'fail' : 'pass');
+    }
+    fat.setBusy(false);
+    if (firstFail) {
+      lv.fails++; U.save();
+      fat.setStatus('✖ ' + tr('Not yet. Read the report below, then fix your program.', 'لسا. اقرا التقرير تحت وبعدين صلّح برنامجك.'), 'warn');
+      U.renderReport(reportBox, { level: L, program, userTags, scenario: firstFail.sc, failure: firstFail.r.firstFailure, hidden: firstFail.hidden, replay: env.replay });
+      fat.refreshHints();
+      return;
+    }
+    // pass
+    const lint = SC.lint(program, SC.mergeTags(SC.levelTags(L), userTags));
+    const wasSolved = lv.solved;
+    lv.solved = true;
+    const clean = lint.length === 0 && !lv.hint3;
+    if (clean) lv.cleanPass = true;
+    const rungs = program.rungs.filter((r) => r.els.length).length;
+    if (!lv.best || rungs < lv.best.rungs || (lint.length === 0 && lv.best.lint !== 0)) lv.best = { rungs: Math.min(rungs, lv.best ? lv.best.rungs : rungs), lint: lint.length === 0 ? 0 : (lv.best ? lv.best.lint : lint.length) };
+    if (bpm > 0 && lv.best) lv.best.bpm = Math.max(lv.best.bpm || 0, bpm);
+    lv.program = program; lv.userTags = userTags;
+    lv.stars = Math.max(lv.stars || 0, starsOf(lv));
+    U.save(true);
+    fat.setStatus('✔ ' + tr(`All ${ran} tests passed (visible + hidden).`, `نجحت كل الـ ${ran} فحوصات (الظاهرة والمخفية).`), 'ok');
+    fat.refreshStars();
+    if (env.onStars) env.onStars();
+    reportBox.append(successCard(env, lint, !wasSolved));
+  };
+
+  function successCard(env, lint, firstTime) {
+    const { L, ladder } = env;
+    const lv = U.lv(L.id);
+    const card = h('div', { class: 'report success' });
+    card.append(h('h3', { class: 'ok' }, '✔ ' + tr('FAT passed', 'نجح فحص FAT'), ' ', h('span', { class: 'stars' }, U.starsText(lv.stars))));
+    const msgs = [];
+    if (lint.length) msgs.push(tr(`⚠ ${lint.length} lint warning(s) left — fix them for the second star.`, `⚠ بقي ${lint.length} تحذير — صلّحهم للنجمة الثانية.`));
+    if (lv.hint3) msgs.push(tr('Hint 3 was used, so the second star is not possible on this level.', 'استخدمت التلميح 3 فما في نجمة ثانية بهالمستوى.'));
+    msgs.forEach((m) => card.append(h('p', { class: 'warn small' }, m)));
+    if (lv.solved && !lv.explained) card.append(explainPanel(env));
+    else if (lv.explained) card.append(h('p', { class: 'ok' }, '✔ ' + tr('You explained your logic in English.', 'شرحت منطقك بالإنجليزي.')));
+    const levels = U.state.levels;
+    const idx = levels.findIndex((x) => x.id === L.id);
+    const next = levels[idx + 1];
+    card.append(h('div', { class: 'rp-btns' },
+      next ? h('button', { type: 'button', class: 'btn primary', onclick: () => U.openLevel(next) }, tr('Next level', 'المستوى التالي') + ' → ' + next.id) : null,
+      h('button', { type: 'button', class: 'btn', onclick: () => U.showMap() }, tr('Station map', 'خريطة المحطات'))));
+    return card;
+  }
+
+  // ---------------------------------------------------------------- explain your logic
+  function explainPanel(env) {
+    const { L, ladder } = env;
+    const lv = U.lv(L.id);
+    const names = SC.levelTags(L).map((t) => t.name).concat(ladder.userTags.map((t) => t.name));
+    const used = ladder.usedTags();
+    const dropdown = L.order <= 6;
+    const wrap = h('div', { class: 'explain' }, h('h4', null, '★★★ ' + tr('Explain your logic in English', 'اشرح منطقك بالإنجليزي')),
+      h('p', { class: 'small muted' }, dropdown ? tr('Complete each sentence with the dropdown lists.', 'كمّل كل جملة بالقوائم.') : tr('Write one or two sentences for each prompt, in your own words.', 'اكتب جملة أو جملتين لكل سؤال بكلماتك.')));
+    const parts = [];
+    L.explain.frames.forEach((f, i) => {
+      const box = h('div', { class: 'ex-frame' });
+      const getters = [];
+      if (dropdown) {
+        const line = h('p', { class: 'ex-line', lang: 'en' });
+        const re = /\{(\w+)\}/g;
+        let last = 0, m;
+        while ((m = re.exec(f.en))) {
+          line.append(f.en.slice(last, m.index));
+          const key = m[1];
+          if (/^(time|count|value)$/.test(key)) {
+            const inp = h('input', { type: 'text', class: 'ex-in', 'aria-label': key, placeholder: key, size: 8 });
+            line.append(inp); getters.push(() => inp.value.trim());
+          } else {
+            const sel = h('select', { class: 'ex-in', 'aria-label': key }, h('option', { value: '' }, '— ' + key + ' —'), names.map((n) => h('option', { value: n }, n)));
+            line.append(sel); getters.push(() => sel.value);
+          }
+          last = m.index + m[0].length;
+        }
+        line.append(f.en.slice(last));
+        box.append(line);
+        parts.push({
+          compose: () => { let k = 0; return f.en.replace(/\{(\w+)\}/g, () => getters[k++]() || '…'); },
+          ok: () => getters.every((g) => g()),
+          tagsOk: () => { const picked = getters.map((g) => g()).filter((v) => names.indexOf(v) >= 0); return !picked.length || picked.filter((v) => used.has(v)).length * 2 >= picked.length; },
+        });
+      } else {
+        const prompt = f.en.replace(/\{(\w+)\}/g, '…');
+        const ta = h('textarea', { class: 'ex-ta', rows: 2, lang: 'en', 'aria-label': prompt, placeholder: prompt });
+        box.append(h('p', { class: 'ex-line', lang: 'en' }, prompt), ta);
+        parts.push({ ok: () => ta.value.trim().split(/\s+/).filter(Boolean).length >= 4, compose: () => ta.value.trim(), tagsOk: () => true });
+      }
+      wrap.append(box);
+    });
+    const msg = h('p', { class: 'small', role: 'status' });
+    const speak = U.glossary.canSpeak ? h('button', { type: 'button', class: 'btn small ghost', onclick: () => U.glossary.speak(parts.map((p) => p.compose()).join('. ')) }, '🔊 ' + tr('Read it back', 'اسمعها')) : null;
+    const done = h('button', { type: 'button', class: 'btn primary', onclick: () => {
+      const bad = parts.findIndex((p) => !p.ok());
+      if (bad >= 0) { msg.className = 'small warn'; msg.textContent = tr(`Sentence ${bad + 1} is not finished.`, `الجملة ${bad + 1} مش مكتملة.`); return; }
+      const wrong = parts.findIndex((p) => !p.tagsOk());
+      if (wrong >= 0) { msg.className = 'small warn'; msg.textContent = tr(`Sentence ${wrong + 1}: some chosen tags are not in your program. Check them.`, `الجملة ${wrong + 1}: بعض الـ tags اللي اخترتها مش ببرنامجك. راجعها.`); return; }
+      parts.forEach((p, i) => { lv.explain[i] = p.compose(); });
+      lv.explained = true;
+      lv.stars = Math.max(lv.stars || 0, starsOf(lv));
+      U.save(true);
+      msg.className = 'small ok'; msg.textContent = '✔ ' + tr('Saved. Nice English!', 'انحفظت. إنجليزيتك حلوة!');
+      done.disabled = true;
+      if (env.onStars) env.onStars();
+      const sb = document.querySelector('.starbox'); if (sb && env.panels) env.panels.fat.refreshStars();
+    } }, tr('Done', 'تم'));
+    wrap.append(h('div', { class: 'rp-btns' }, done, speak), msg);
+    return wrap;
+  }
+})();
+
+</script>
+<script>
+/* ==== src/ui/share.js ==== */
+/* Share a program as a URL (#p=...) and as a 1200x627 share-card PNG. Solutions are never part of this: only the player's own program. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
+
+  // ---------------------------------------------------------------- compact encoding
+  // element -> [r, c, type, ...params in DSL order]
+  function pack(level, program, userTags) {
+    const rungs = program.rungs.map((rg) => {
+      const o = { e: rg.els.map((e) => [e.r, e.c, e.t].concat((SC.dsl.PARAMS[e.t] || []).map((k) => (e[k] === undefined ? '' : e[k])))) };
+      if (rg.vb && rg.vb.length) o.v = rg.vb;
+      if (rg.note) o.n = rg.note;
+      return o;
+    });
+    const o = { l: level, r: rungs };
+    if (userTags && userTags.length) o.u = userTags.map((t) => [t.name, t.addr]);
+    return o;
+  }
+
+  function unpack(o) {
+    if (!o || typeof o.l !== 'string' || !Array.isArray(o.r)) return null;
+    const rungs = o.r.map((rg) => {
+      const els = (rg.e || []).map((a) => {
+        const el = { r: a[0], c: a[1], t: a[2] };
+        const keys = SC.dsl.PARAMS[a[2]];
+        if (!keys) throw new Error('bad element');
+        keys.forEach((k, i) => { if (a[3 + i] !== '' && a[3 + i] !== undefined) el[k] = a[3 + i]; });
+        return el;
+      });
+      const rung = { rows: 1, cols: 8, els, vb: rg.v || [] };
+      if (rg.n) rung.note = rg.n;
+      return U.ladderNorm(rung);
+    });
+    const userTags = (o.u || []).map((x) => ({ name: x[0], addr: x[1], type: /^MW|^QW|^IW/.test(x[1]) ? 'Int' : 'Bool', user: true, src: 'mem', desc: { en: '', ar: '' } }));
+    return { level: o.l, program: { v: 1, rungs }, userTags };
+  }
+
+  const b64u = {
+    enc(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = ''; bytes.forEach((b) => { bin += String.fromCharCode(b); });
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    },
+    dec(s) {
+      s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '=';
+      const bin = atob(s); const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    },
+  };
+
+  // format byte: 'L' = LZ-string, 'B' = base64url (works offline)
+  function encode(level, program, userTags, forceB64) {
+    const json = JSON.stringify(pack(level, program, userTags));
+    if (!forceB64 && globalThis.LZString) return 'L' + globalThis.LZString.compressToEncodedURIComponent(json);
+    return 'B' + b64u.enc(json);
+  }
+  function decode(code) {
+    try {
+      const f = code[0], body = code.slice(1);
+      let json;
+      if (f === 'L') { if (!globalThis.LZString) return { error: 'needs-lz' }; json = globalThis.LZString.decompressFromEncodedURIComponent(body); }
+      else if (f === 'B') json = b64u.dec(body);
+      else return { error: 'format' };
+      if (!json) return { error: 'empty' };
+      const r = unpack(JSON.parse(json));
+      if (!r) return { error: 'shape' };
+      // validate: compiles structurally (unknown tags are fine, they come from user tags)
+      for (const rg of r.program.rungs) for (const e of rg.els) if (SC.compile.ELEMENTS.indexOf(e.t) < 0) return { error: 'element' };
+      return r;
+    } catch (e) { return { error: 'parse' }; }
+  }
+  U.share = { pack, unpack, encode, decode, MAX_URL: 2000 };
+
+  U.shareUrl = function (levelId, program, userTags, forceB64) {
+    const base = location.href.split('#')[0].split('?')[0];
+    return base + '#p=' + encode(levelId, program, userTags, forceB64);
+  };
+
+  // read #p= on load; returns {level, program, userTags} or null
+  U.readShareHash = function () {
+    const m = /^#p=(.+)$/.exec(location.hash);
+    if (!m) return null;
+    const r = decode(m[1]);
+    return r && !r.error ? r : r;
+  };
+
+  // ---------------------------------------------------------------- share card
+  function ladderThumb(c, program, x0, y0, w, hMax) {
+    const rungs = program.rungs.filter((r) => r.els.length).slice(0, 6);
+    if (!rungs.length) return;
+    const rowH = Math.min(46, hMax / Math.max(1, rungs.reduce((n, r) => n + r.rows, 0) + rungs.length * 0.3));
+    let y = y0;
+    const colW = Math.min(52, (w - 20) / 10);
+    c.lineWidth = 2;
+    for (const rg of rungs) {
+      const hgt = rg.rows * rowH;
+      c.strokeStyle = '#14262D'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(x0, y); c.lineTo(x0, y + hgt); c.moveTo(x0 + w, y); c.lineTo(x0 + w, y + hgt); c.stroke();
+      c.lineWidth = 1.5;
+      for (let r = 0; r < rg.rows; r++) {
+        const yy = y + r * rowH + rowH / 2;
+        c.strokeStyle = '#5E7279';
+        c.beginPath(); c.moveTo(x0, yy); c.lineTo(x0 + (r === 0 ? w : 0), yy); c.stroke();
+      }
+      for (const e of rg.els) {
+        const cx = x0 + 14 + e.c * colW + colW / 2, cy = y + e.r * rowH + rowH / 2;
+        c.strokeStyle = '#14262D'; c.fillStyle = '#14262D'; c.lineWidth = 2;
+        if (e.t === 'NO' || e.t === 'NC' || e.t === 'POS' || e.t === 'NEG') {
+          c.beginPath(); c.moveTo(cx - 6, cy - 9); c.lineTo(cx - 6, cy + 9); c.moveTo(cx + 6, cy - 9); c.lineTo(cx + 6, cy + 9); if (e.t === 'NC') { c.moveTo(cx - 9, cy + 10); c.lineTo(cx + 9, cy - 10); } c.stroke();
+        } else if (e.t === 'OUT' || e.t === 'SET' || e.t === 'RST') {
+          c.beginPath(); c.arc(cx - 10, cy, 10, -1.2, 1.2); c.moveTo(cx + 10 + 4, cy - 9); c.arc(cx + 10, cy, 10, 3.14 - 1.2, 3.14 + 1.2, false); c.stroke();
+          if (e.t !== 'OUT') { c.font = '700 12px monospace'; c.textAlign = 'center'; c.fillText(e.t === 'SET' ? 'S' : 'R', cx, cy + 4); }
+        } else {
+          c.fillStyle = '#F7F8F8'; c.fillRect(cx - colW / 2 + 3, cy - rowH / 2 + 4, colW - 6, rowH - 8);
+          c.strokeRect(cx - colW / 2 + 3, cy - rowH / 2 + 4, colW - 6, rowH - 8);
+          c.fillStyle = '#14262D'; c.font = '700 11px monospace'; c.textAlign = 'center'; c.fillText(e.t, cx, cy + 4);
+        }
+      }
+      for (const [b, g] of rg.vb || []) { c.strokeStyle = '#5E7279'; c.lineWidth = 2; const bx = x0 + 14 + b * colW; c.beginPath(); c.moveTo(bx, y + g * rowH + rowH / 2); c.lineTo(bx, y + (g + 1) * rowH + rowH / 2); c.stroke(); }
+      y += hgt + rowH * 0.3;
+    }
+  }
+
+  U.drawShareCard = function (canvas, L, lv, program) {
+    const W = 1200, H = 627;
+    canvas.width = W; canvas.height = H;
+    const c = canvas.getContext('2d');
+    c.fillStyle = '#E9ECEC'; c.fillRect(0, 0, W, H);
+    c.fillStyle = '#F7F8F8'; c.fillRect(30, 30, W - 60, H - 60);
+    c.strokeStyle = '#C6D0D2'; c.lineWidth = 2; c.strokeRect(30, 30, W - 60, H - 60);
+    c.fillStyle = '#0B6E78'; c.fillRect(30, 30, 14, H - 60);
+    c.fillStyle = '#14262D'; c.textAlign = 'left';
+    c.font = '700 54px system-ui, "Segoe UI", sans-serif'; c.fillText('Scan Cycle', 76, 110);
+    c.font = '500 24px system-ui, sans-serif'; c.fillStyle = '#5E7279'; c.fillText('Real PLC ladder logic on a bottling line', 76, 148);
+    c.fillStyle = '#14262D'; c.font = '700 40px system-ui, sans-serif'; c.fillText(`${L.id} · ${L.title.en}`, 76, 230);
+    c.direction = 'rtl'; c.textAlign = 'right'; c.font = '600 40px "IBM Plex Sans Arabic", "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif';
+    c.fillText(L.title.ar, W - 76, 290); c.direction = 'ltr'; c.textAlign = 'left';
+    const n = lv ? lv.stars : 0;
+    c.font = '700 72px system-ui, sans-serif'; c.fillStyle = '#9A6B12'; c.fillText('★'.repeat(n) + '☆'.repeat(3 - n), 76, 380);
+    c.font = '600 28px system-ui, sans-serif'; c.fillStyle = '#14262D';
+    const rungs = program.rungs.filter((r) => r.els.length).length;
+    const bpm = lv && lv.best && lv.best.bpm ? lv.best.bpm.toFixed(1) : '—';
+    c.fillText(`Bottles/min: ${bpm}`, 76, 450);
+    c.fillText(`Rungs: ${rungs}`, 76, 494);
+    c.font = '500 22px system-ui, sans-serif'; c.fillStyle = '#5E7279';
+    c.fillText('Verified by hidden FAT scenarios — my logic, my test log.', 76, 560);
+    ladderThumb(c, program, 560, 330, 560, 230);
+    c.fillStyle = '#5E7279'; c.font = '500 18px system-ui, sans-serif'; c.textAlign = 'right';
+    c.fillText('itsak7m.github.io/scan-cycle', W - 60, H - 48);
+  };
+
+  // ---------------------------------------------------------------- share dialog
+  U.openShare = function (L, program, userTags) {
+    const lv = L.sandbox ? { stars: 0 } : U.lv(L.id);
+    const url = U.shareUrl(L.id, program, userTags, !globalThis.LZString);
+    const tooLong = url.length > U.share.MAX_URL;
+    const json = JSON.stringify({ level: L.id, program, userTags });
+    const canvas = h('canvas', { class: 'share-canvas', width: 1200, height: 627, 'aria-label': 'Share card preview' });
+    U.drawShareCard(canvas, L, lv, program);
+    const urlBox = h('input', { type: 'text', readonly: true, value: tooLong ? '' : url, 'aria-label': 'Share link' });
+    const copy = (text, msg) => { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => U.toast(msg), () => { try { urlBox.value = text; urlBox.select(); document.execCommand('copy'); U.toast(msg); } catch (e) { U.toast(tr('Copy failed — select the text and copy it.', 'فشل النسخ — حدد النص وانسخه.')); } }); };
+    const body = h('div', { class: 'share' },
+      tooLong ? h('p', { class: 'warn small' }, tr(`The link would be ${url.length} characters (over ${U.share.MAX_URL}). Copy the JSON instead.`, `الرابط ${url.length} حرف (أكثر من ${U.share.MAX_URL}). انسخ الـ JSON بدالو.`)) : h('p', { class: 'small muted' }, `${url.length} ` + tr('characters', 'حرف')),
+      h('div', { class: 'maptools' },
+        tooLong ? null : h('button', { class: 'btn', type: 'button', onclick: () => copy(url, tr('Link copied', 'اننسخ الرابط')) }, '🔗 ' + tr('Copy link', 'انسخ الرابط')),
+        h('button', { class: 'btn', type: 'button', onclick: () => copy(json, tr('JSON copied', 'اننسخ الـ JSON')) }, '{ } ' + tr('Copy JSON', 'انسخ JSON'))),
+      tooLong ? null : urlBox,
+      h('div', { class: 'canvas-wrap' }, canvas),
+      h('div', { class: 'maptools' },
+        h('button', { class: 'btn primary', type: 'button', onclick: () => canvas.toBlob((b) => {
+          const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `scan-cycle-${L.id}.png`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }, 'image/png') }, '⬇ ' + tr('Download PNG', 'نزّل PNG')),
+        (navigator.canShare && typeof File !== 'undefined') ? h('button', { class: 'btn', type: 'button', onclick: () => canvas.toBlob(async (b) => {
+          try { const f = new File([b], `scan-cycle-${L.id}.png`, { type: 'image/png' }); if (navigator.canShare({ files: [f] })) await navigator.share({ files: [f], title: 'Scan Cycle ' + L.id }); else U.toast(tr('Sharing files is not supported here.', 'مشاركة الملفات غير مدعومة هون.')); } catch (e) { /* cancelled */ }
+        }, 'image/png') }, '↗ ' + tr('Share…', 'شارك…')) : null));
+    U.modal(tr('Share your program', 'شارك برنامجك'), body, (close) => [h('button', { class: 'btn', type: 'button', onclick: () => close(null) }, tr('Close', 'سكّر'))], { enterSubmits: false });
+  };
+})();
+
+</script>
+<script>
+/* ==== src/ui/app-ui.js ==== */
+/* Application shell: station map, level screen, game loop, operator panel, I/O strip, forces, replay. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+  const tr = (en, ar) => (U.lang === 'ar' ? ar : en);
 
   const ST = {
     levels: [], level: null, sim: null, view: null, speed: 1, paused: false, acc: 0, last: 0,
-    program: { v: 1, rungs: [] }, userTags: [], root: null, raf: 0, ioState: Object.create(null),
-    fatResult: null, listeners: [],
+    program: { v: 1, rungs: [] }, userTags: [], root: null, raf: 0, ladder: null, replay: null, panels: null, lastPaint: 0,
   };
   U.state = ST;
+  let ledEls = null, lastIO = 0;
 
   // ---------------------------------------------------------------- levels
-  function loadLevels() {
-    try { return JSON.parse(document.getElementById('levels').textContent) || []; } catch (e) { return []; }
-  }
-
   function sandboxLevel() {
     return {
-      id: 'SBX', order: 0, sandbox: true,
+      id: 'SBX', order: 0, sandbox: true, concept: 'free play',
       title: { en: 'Sandbox', ar: 'ساحة التجربة' },
       workOrder: {
         en: 'Free play. All instructions are unlocked and the whole line is installed. Build anything, force inputs, press the E-stop.',
         ar: 'لعب حر. كل التعليمات مفتوحة والخط كامل. ابني أي شي، اعمل {{force}} للمداخل، واضغط زر الطوارئ.',
       },
       palette: null,
-      tags: SC.IO.map((t) => t.name).concat([{ name: 'Run', addr: 'M0.0', type: 'Bool', user: true }, { name: 'Done', addr: 'M0.1', type: 'Bool', user: true }, { name: 'Busy', addr: 'M0.2', type: 'Bool', user: true }]),
+      tags: SC.IO.map((t) => t.name).concat(SC.demo.tags.filter((t) => typeof t === 'object')),
       plant: { stations: ['infeed', 'filler', 'stopper', 'capper', 'sealer', 'labeler', 'reject', 'exit', 'tank', 'backup'], bottlesPerMin: 24, startLevelPct: 80 },
-      starter: SC.dsl.parseProgram(SC.demo ? SC.demo.lines : []),
-      scenarios: [],
+      starter: SC.dsl.parseProgram(SC.demo.lines),
+      scenarios: [], datasheets: [], glossary: [], hints: [],
     };
   }
 
   // ---------------------------------------------------------------- sim lifecycle
+  function levelWithTags() { return Object.assign({}, ST.level, { tags: (ST.level.tags || []).concat(ST.userTags.filter((t) => !(ST.level.tags || []).some((x) => x.name === t.name))) }); }
+
   function newSim() {
-    const L = ST.level;
-    ST.sim = SC.sim.create({ level: L, program: ST.program, seed: 1, scenario: {}, userTags: ST.userTags });
-    ST.acc = 0;
+    ST.sim = SC.sim.create({ level: ST.level, program: ST.program, seed: 1, scenario: {}, userTags: ST.userTags });
+    ST.acc = 0; ST.replay = null;
     if (ST.view) ST.view.setSim(ST.sim);
+    const bar = document.getElementById('replay-bar'); if (bar) bar.hidden = true;
+    document.body.classList.remove('replaying');
   }
 
   // hot-swap the program into the running sim (memory kept)
@@ -3464,8 +4868,33 @@ code, pre { font-family: var(--mono); }
     if (!ST.sim) return;
     const tags = SC.mergeTags(SC.levelTags(ST.level), ST.userTags);
     ST.sim.compiled = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
-    ST.listeners.forEach((f) => f());
+    for (const t of ST.userTags) if (!ST.sim.tagByName[t.name]) ST.sim.tagByName[t.name] = Object.assign({ _a: SC.addr.parseAddr(t.addr) }, t);
   };
+
+  function persistProgram(p, u) {
+    if (!ST.level) return;
+    if (ST.level.sandbox) { U.data.sandbox = { program: p, userTags: u }; }
+    else { const lv = U.lv(ST.level.id); lv.program = p; lv.userTags = u; }
+    U.save();
+  }
+
+  // ---------------------------------------------------------------- replay
+  function startReplay(sc, tFail) {
+    const ed = ST.ladder;
+    const sim = SC.sim.create({ level: levelWithTags(), program: ed.program, scenario: sc, seed: sc.seed, userTags: ed.userTags });
+    sim.runUntil(Math.max(0, tFail - 2000));
+    sim.replayInfo = { title: sc.title ? (U.lang === 'ar' ? sc.title.ar : sc.title.en) : sc.id, tFail };
+    ST.sim = sim; ST.view.setSim(sim);
+    ST.replay = { sc, tFail, tEnd: tFail + 1500 };
+    ST.paused = false; ST.speed = 1; ST.acc = 0;
+    document.body.classList.add('replaying');
+    const bar = document.getElementById('replay-bar');
+    bar.hidden = false;
+    bar.querySelector('.rb-t').textContent = tr('REPLAY: ', 'إعادة: ') + sim.replayInfo.title + ' — ' + tr('failure at', 'الفشل عند') + ' t = ' + (tFail / 1000).toFixed(2) + ' s';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function stopReplay() { newSim(); ST.paused = false; }
 
   // ---------------------------------------------------------------- main loop
   function frame(ts) {
@@ -3479,33 +4908,22 @@ code, pre { font-family: var(--mono); }
       for (let i = 0; i < n; i++) ST.sim.step(i === n - 1);
       ST.acc -= n * SC.SCAN_MS;
       if (n >= 400) ST.acc = 0;
+      if (ST.replay && ST.sim.t >= ST.replay.tEnd) { ST.paused = true; const t = document.querySelector('#replay-bar .rb-t'); if (t) t.textContent += ' — ' + tr('replay finished', 'انتهت الإعادة'); }
     }
     ST.view.draw(ST.paused ? 0 : ST.acc / SC.SCAN_MS);
     updateIO(ts);
-    if (ST.ladder && ts - (ST.lastPaint || 0) > 90) { ST.lastPaint = ts; ST.ladder.paint(ST.sim); }
+    if (ST.ladder && ts - ST.lastPaint > 90) { ST.lastPaint = ts; ST.ladder.paint(ST.sim); }
   }
 
   // ---------------------------------------------------------------- I/O strip + panel
-  let ledEls = null, lastIO = 0, panelEls = null;
-
-  function tagsForLevel() {
-    return SC.levelTags(ST.level);
-  }
-
   function buildIO(box) {
-    const L = ST.level, sim = ST.sim;
     ledEls = [];
-    const tags = tagsForLevel();
+    const tags = SC.levelTags(ST.level);
     const ins = tags.filter((t) => /^I/.test(t.addr)), outs = tags.filter((t) => /^Q/.test(t.addr));
     const mk = (t) => {
-      const b = h('button', { class: 'led', type: 'button', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}`, 'aria-label': t.name,
-        onclick: () => cycleForce(t) },
-        h('span', { class: 'led-dot', 'aria-hidden': 'true' }),
-        h('span', { class: 'led-name' }, t.name),
-        h('span', { class: 'led-addr' }, U.useCodesys ? SC.addr.toCodesys(t.addr) : t.addr),
-        h('span', { class: 'led-val' }, '0'),
-        h('span', { class: 'led-lock', 'aria-hidden': 'true' }, '🔒'));
-      if (!/^I/.test(t.addr)) b.classList.add('led-out');
+      const b = h('button', { class: 'led' + (/^I/.test(t.addr) ? '' : ' led-out'), type: 'button', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}`, 'aria-label': t.name, onclick: () => cycleForce(t) },
+        h('span', { class: 'led-dot', 'aria-hidden': 'true' }), h('span', { class: 'led-name' }, t.name),
+        h('span', { class: 'led-addr' }, U.useCodesys ? SC.addr.toCodesys(t.addr) : t.addr), h('span', { class: 'led-val' }, '0'), h('span', { class: 'led-lock', 'aria-hidden': 'true' }, '🔒'));
       ledEls.push({ tag: t, el: b, val: null, forced: null });
       return b;
     };
@@ -3516,24 +4934,18 @@ code, pre { font-family: var(--mono); }
   }
 
   function cycleForce(t) {
-    if (!/^I/.test(t.addr)) return;
-    const sim = ST.sim;
+    if (!/^I/.test(t.addr) || ST.replay) return;
     const a = SC.addr.parseAddr(t.addr);
-    const cur = sim.forces[a.canon];
     if (a.kind === 'word') return;
-    if (cur === undefined) sim.force(t.name, 1);
-    else if (cur === 1) sim.force(t.name, 0);
-    else sim.force(t.name, null);
+    const cur = ST.sim.forces[a.canon];
+    if (cur === undefined) ST.sim.force(t.name, 1); else if (cur === 1) ST.sim.force(t.name, 0); else ST.sim.force(t.name, null);
     updateForcesBanner();
   }
 
   function updateForcesBanner() {
     const n = Object.keys(ST.sim.forces).length;
     const b = document.getElementById('forces-banner');
-    if (b) {
-      b.hidden = n === 0;
-      b.querySelector('.fb-n').textContent = n;
-    }
+    if (b) { b.hidden = n === 0; b.querySelector('.fb-n').textContent = n; }
   }
 
   function updateIO(ts) {
@@ -3546,28 +4958,24 @@ code, pre { font-family: var(--mono); }
       const f = a.arr === 'I' || a.arr === 'IW' ? sim.forces[a.canon] : undefined;
       if (L.val !== v || L.forced !== f) {
         L.val = v; L.forced = f;
-        L.el.classList.toggle('on', !!v);
-        L.el.classList.toggle('forced', f !== undefined);
+        L.el.classList.toggle('on', !!v); L.el.classList.toggle('forced', f !== undefined);
         L.el.querySelector('.led-val').textContent = a.kind === 'word' ? String(v) : (v ? '1' : '0');
       }
     }
   }
 
   function buildPanel(box) {
-    const L = ST.level;
-    const tags = tagsForLevel().filter((t) => t.src === 'panel' && !/^IW/.test(t.addr));
-    panelEls = [];
+    const tags = SC.levelTags(ST.level).filter((t) => t.src === 'panel' && !/^IW/.test(t.addr));
+    const btns = [];
     for (const t of tags) {
       const io = SC.ioByName[t.name];
       const idle = io ? io.def : 0;
       const momentary = io && ['start', 'stop', 'ack', 'reset', 'release', 'setpoint'].indexOf(io.role) >= 0;
-      const btn = h('button', { class: 'pbtn' + (t.role === 'stop' || t.name === 'Stop_PB' ? ' pb-stop' : ''), type: 'button', 'aria-pressed': 'false', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}` },
-        h('span', { class: 'pb-name' }, t.name.replace(/_/g, ' ')),
-        h('span', { class: 'pb-sub' }, momentary ? (idle ? 'NC · hold' : 'NO · hold') : 'switch'));
+      const btn = h('button', { class: 'pbtn' + (t.name === 'Stop_PB' ? ' pb-stop' : ''), type: 'button', 'aria-pressed': 'false', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}` },
+        h('span', { class: 'pb-name' }, t.name.replace(/_/g, ' ')), h('span', { class: 'pb-sub' }, momentary ? (idle ? 'NC · hold' : 'NO · hold') : 'switch'));
       const setP = (pressed) => {
         ST.sim.setPanel(t.name, momentary ? (pressed ? (idle ? 0 : 1) : idle) : pressed);
-        btn.setAttribute('aria-pressed', String(!!pressed));
-        btn.classList.toggle('down', !!pressed);
+        btn.setAttribute('aria-pressed', String(!!pressed)); btn.classList.toggle('down', !!pressed);
       };
       if (momentary) {
         let startSteps = 0, releasing = false;
@@ -3592,35 +5000,26 @@ code, pre { font-family: var(--mono); }
         btn.addEventListener('click', () => { on = !on; setP(on); });
         if (idle) setP(true);
       }
-      panelEls.push(btn);
+      btns.push(btn);
     }
-    const estop = h('button', { class: 'pbtn pb-estop', type: 'button', 'aria-pressed': 'false', title: U.S.estopNote.en },
-      h('span', { class: 'pb-name' }, '⏻ ', U.t('estop')), h('span', { class: 'pb-sub' }, 'latching'));
-    estop.addEventListener('click', () => {
-      const on = !ST.sim.P.hw.estop;
-      ST.sim.P.hw.estop = on;
-      estop.setAttribute('aria-pressed', String(on)); estop.classList.toggle('down', on);
-    });
-    const door = h('button', { class: 'pbtn', type: 'button', 'aria-pressed': 'false', title: 'Guard door' },
-      h('span', { class: 'pb-name' }, U.t('door')), h('span', { class: 'pb-sub' }, U.t('doorClosed')));
-    door.addEventListener('click', () => {
-      const open = !ST.sim.P.hw.doorOpen;
-      ST.sim.P.hw.doorOpen = open;
-      door.setAttribute('aria-pressed', String(open)); door.classList.toggle('down', open);
-      door.querySelector('.pb-sub').textContent = open ? U.t('doorOpen') : U.t('doorClosed');
-    });
-    box.append(h('div', { class: 'pbtns' }, panelEls, estop, door), h('p', { class: 'muted small' }, U.tEl('estopNote')));
+    const estop = h('button', { class: 'pbtn pb-estop', type: 'button', 'aria-pressed': 'false', title: U.S.estopNote.en }, h('span', { class: 'pb-name' }, '⏻ ', U.t('estop')), h('span', { class: 'pb-sub' }, 'latching'));
+    estop.addEventListener('click', () => { const on = !ST.sim.P.hw.estop; ST.sim.P.hw.estop = on; estop.setAttribute('aria-pressed', String(on)); estop.classList.toggle('down', on); });
+    const door = h('button', { class: 'pbtn', type: 'button', 'aria-pressed': 'false', title: 'Guard door' }, h('span', { class: 'pb-name' }, U.t('door')), h('span', { class: 'pb-sub' }, U.t('doorClosed')));
+    door.addEventListener('click', () => { const open = !ST.sim.P.hw.doorOpen; ST.sim.P.hw.doorOpen = open; door.setAttribute('aria-pressed', String(open)); door.classList.toggle('down', open); door.querySelector('.pb-sub').textContent = open ? U.t('doorOpen') : U.t('doorClosed'); });
+    box.append(h('div', { class: 'pbtns' }, btns, estop, door), h('p', { class: 'muted small' }, U.tEl('estopNote')));
   }
 
   // ---------------------------------------------------------------- level screen
-  function openLevel(L) {
+  function openLevel(L, override) {
     cancelAnimationFrame(ST.raf);
-    ST.level = L;
-    ST.ladder = null;
-    ST.userTags = (L.tags || []).filter((t) => typeof t === 'object' && t.user).map((t) => SC.util.clone(t));
-    ST.program = SC.util.clone(L.starter || { v: 1, rungs: [] });
-    ST.fatResult = null;
+    ST.level = L; ST.ladder = null; ST.replay = null;
     ST.paused = false; ST.speed = 1;
+    let saved = null, savedTags = null;
+    if (L.sandbox) { saved = U.data.sandbox && U.data.sandbox.program; savedTags = U.data.sandbox && U.data.sandbox.userTags; }
+    else { const lv = U.lv(L.id); saved = lv.program; savedTags = lv.userTags; }
+    ST.userTags = savedTags && savedTags.length ? SC.util.clone(savedTags) : (L.tags || []).filter((t) => typeof t === 'object' && t.user).map((t) => SC.util.clone(t));
+    ST.program = saved && saved.rungs ? SC.util.clone(saved) : SC.util.clone(SC.dsl.programFrom(L.starter) || { v: 1, rungs: [] });
+    if (override) { ST.program = override.program; ST.userTags = override.userTags; persistProgram(ST.program, ST.userTags); }
     renderLevel();
   }
 
@@ -3628,7 +5027,6 @@ code, pre { font-family: var(--mono); }
     const L = ST.level;
     const root = ST.root;
     root.innerHTML = '';
-    ST.listeners = [];
 
     const canvas = h('canvas', { id: 'plant', class: 'plant', role: 'img', 'aria-label': 'Side view of the bottling line' });
     const speedBtns = [0.25, 0.5, 1, 2, 4, 8].map((s) => h('button', { type: 'button', class: 'spd' + (s === ST.speed ? ' sel' : ''), 'aria-pressed': String(s === ST.speed),
@@ -3636,35 +5034,44 @@ code, pre { font-family: var(--mono); }
     const runBtn = h('button', { type: 'button', class: 'btn', onclick: () => { ST.paused = !ST.paused; runBtn.textContent = ST.paused ? '▶ ' + U.t('run') : '⏸ ' + U.t('pause'); stepBtn.disabled = !ST.paused; } }, '⏸ ' + U.t('pause'));
     const stepBtn = h('button', { type: 'button', class: 'btn', disabled: true, onclick: () => { ST.sim.step(true); if (ST.ladder) ST.ladder.paint(ST.sim); } }, '⏭ ' + U.t('step'));
     const restartBtn = h('button', { type: 'button', class: 'btn', onclick: () => { newSim(); buildAll(); } }, '↻ ' + U.t('restart'));
-    const ioBox = h('div', { class: 'io' });
-    const panelBox = h('div', { class: 'panelbox' });
-    const ladderBox = h('div', { id: 'ladder-mount', class: 'ladder-mount' });
+    const ioBox = h('div', { class: 'io' }), panelBox = h('div', { class: 'panelbox' }), ladderBox = h('div', { id: 'ladder-mount', class: 'ladder-mount' });
+    const reportBox = h('div', { id: 'report-mount', class: 'o-report' });
+    const lv = L.sandbox ? null : U.lv(L.id);
 
     const header = h('header', { class: 'top' },
       h('button', { class: 'btn ghost', type: 'button', onclick: () => showMap() }, U.t('back')),
       h('div', { class: 'ttl' }, h('b', null, L.sandbox ? '' : L.id + ' · '), U.lang === 'ar' ? U.arEl(L.title.ar) : U.enEl(L.title.en)),
+      lv ? h('span', { class: 'stars hstars', id: 'hdr-stars', 'aria-label': lv.stars + ' of 3 stars' }, U.starsText(lv.stars)) : null,
       h('div', { class: 'grow' }),
       h('div', { id: 'forces-banner', class: 'forces', hidden: true, role: 'status' }, '⚠ ', U.tEl('forcesActive'), ' (', h('span', { class: 'fb-n' }, '0'), ') ',
         h('button', { class: 'btn small', type: 'button', onclick: () => { ST.sim.clearForces(); updateForcesBanner(); } }, U.t('clearForces'))),
       langBtn(), themeBtn());
 
-    const wo = h('aside', { class: 'card workorder' },
-      h('h3', null, U.tEl('workOrder')),
-      h('p', { lang: 'en', dir: 'ltr' }, L.workOrder.en),
-      h('section', { lang: 'ar', dir: 'rtl', class: 'ar-block', html: U.arHtml(L.workOrder.ar) }));
+    const replayBar = h('div', { id: 'replay-bar', class: 'replay-bar', hidden: true, role: 'status' }, h('span', { class: 'rb-t' }), h('button', { class: 'btn small', type: 'button', onclick: stopReplay }, '■ ' + tr('Stop replay', 'أوقف الإعادة')));
 
-    const stage = h('main', { class: 'stage' },
-      h('section', { class: 'card' }, canvas,
-        h('div', { class: 'ctrls' }, runBtn, stepBtn, restartBtn, h('span', { class: 'sp' }), h('span', { class: 'muted small' }, U.t('speed') + ':'), speedBtns),
-        h('p', { id: 'fastwarn', class: 'warn small', hidden: true }, '⚠ ', U.tEl('fastWarn'))),
-      h('section', { class: 'card' }, h('h3', null, U.tEl('panel')), panelBox),
-      h('section', { class: 'card' }, h('h3', null, 'I/O'), ioBox),
-      h('section', { class: 'card' }, h('h3', null, U.tEl('ladder')), ladderBox),
-      h('section', { class: 'card' }, h('h3', null, U.tEl('tags')), h('div', { id: 'tags-mount' })),
-      h('details', { class: 'card', ontoggle: (e) => { if (e.target.open) U.mountTransfer(document.getElementById('xfer-mount')); } },
-        h('summary', null, h('b', null, U.tEl('transfer'))), h('div', { id: 'xfer-mount' })));
+    const plantCard = h('section', { class: 'card o-plant' }, canvas,
+      h('div', { class: 'ctrls' }, runBtn, stepBtn, restartBtn, h('span', { class: 'sp' }), h('span', { class: 'muted small' }, U.t('speed') + ':'), speedBtns),
+      h('p', { id: 'fastwarn', class: 'warn small', hidden: true }, '⚠ ', U.tEl('fastWarn')));
+    const panelCard = h('section', { class: 'card o-panel' }, h('h3', null, U.tEl('panel')), panelBox);
+    const ioCard = h('section', { class: 'card o-io' }, h('h3', null, 'I/O'), ioBox);
+    const ladderCard = h('section', { class: 'card o-ladder' }, h('div', { class: 'card-h' }, h('h3', null, U.tEl('ladder')), h('button', { class: 'btn small', type: 'button', onclick: () => U.openShare(L, ST.ladder.program, ST.ladder.userTags) }, '↗ ' + tr('Share', 'شارك'))), ladderBox, h('p', { id: 'autosave-note', class: 'warn small', hidden: U.autosaveOk !== false }, tr('Autosave is unavailable in this browser — use Export on the map.', 'الحفظ التلقائي مش متاح بهالمتصفح — استخدم التصدير من الخريطة.')));
+    const tagsCard = h('section', { class: 'card o-tags' }, h('h3', null, U.tEl('tags')), h('div', { id: 'tags-mount' }));
+    const xferCard = h('details', { class: 'card o-xfer', ontoggle: (e) => { if (e.target.open) U.mountTransfer(document.getElementById('xfer-mount')); } }, h('summary', null, h('b', null, U.tEl('transfer'))), h('div', { id: 'xfer-mount' }));
 
-    root.append(header, h('div', { class: 'level-grid' }, wo, stage));
+    let left;
+    if (L.sandbox) {
+      left = [h('section', { class: 'card o-wo' }, h('h3', null, U.tEl('workOrder')), h('p', { lang: 'en' }, L.workOrder.en), h('section', { lang: 'ar', dir: 'rtl', class: 'ar-block', html: U.arHtml(L.workOrder.ar) }))];
+      ST.panels = null;
+    } else {
+      const env = { L, ladder: null, panels: null, reportBox, sim: () => ST.sim, replay: startReplay, onStars: () => { const s = document.getElementById('hdr-stars'); if (s) s.textContent = U.starsText(U.lv(L.id).stars); } };
+      const panels = U.buildLevelPanels(L, { runFat: () => { env.ladder = ST.ladder; U.runFat(env); } });
+      env.panels = panels; ST.panels = panels; ST.env = env;
+      left = [panels.wo, panels.ds, panels.fat.el];
+    }
+
+    root.append(header, replayBar, h('div', { class: 'level-grid' },
+      h('div', { class: 'col-left' }, left),
+      h('div', { class: 'col-right' }, plantCard, panelCard, ioCard, ladderCard, reportBox, tagsCard, xferCard)));
 
     ST.view = SC.ui.PlantView(canvas);
     function buildAll() {
@@ -3686,18 +5093,12 @@ code, pre { font-family: var(--mono); }
       program: ST.program, userTags: ST.userTags,
       baseTags: () => SC.levelTags(L).filter((t) => !t.user),
       palette: () => (L.palette ? L.palette : null),
-      setProgram: (p, u, initial) => { U.setProgram(p, u); if (!initial && U.onProgramChanged) U.onProgramChanged(p, u); },
+      setProgram: (p, u, initial) => { U.setProgram(p, u); if (!initial) { persistProgram(p, u); U.onProgramChanged(p, u); } },
     };
     ST.ladder = U.Ladder(box, host);
   }
 
-  function programText() {
-    return ST.program.rungs.map((r, i) => `Rung ${i + 1}: ` + r.els.map((e) => e.t + (e.a ? '(' + e.a + ')' : '')).join(' ')).join('\n');
-  }
-
-  function langBtn() {
-    return h('button', { class: 'btn ghost', type: 'button', onclick: () => { U.setLang(U.lang === 'ar' ? 'en' : 'ar'); rerender(); } }, U.t('langBtn'));
-  }
+  function langBtn() { return h('button', { class: 'btn ghost', type: 'button', onclick: () => { U.setLang(U.lang === 'ar' ? 'en' : 'ar'); rerender(); } }, U.t('langBtn')); }
   function themeBtn() {
     return h('button', { class: 'btn ghost', type: 'button', 'aria-label': 'Toggle dark mode', onclick: () => {
       const cur = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -3706,34 +5107,67 @@ code, pre { font-family: var(--mono); }
       if (ST.view) ST.view.refreshTheme();
     } }, '◐');
   }
-
-  function rerender() { if (ST.level) { const keep = ST.program; renderLevel(); } else showMap(); }
+  function rerender() { if (ST.level) { const keep = ST.level; openLevel(keep); } else showMap(); }
 
   // ---------------------------------------------------------------- map
   function showMap() {
     cancelAnimationFrame(ST.raf);
-    ST.level = null; ST.sim = null; ledEls = null;
+    ST.level = null; ST.sim = null; ST.ladder = null; ledEls = null; ST.replay = null;
+    document.body.classList.remove('replaying');
     const root = ST.root;
     root.innerHTML = '';
-    const cards = ST.levels.map((L) => h('button', { class: 'lvl', type: 'button', onclick: () => openLevel(L) },
-      h('b', null, L.id), h('span', null, U.lang === 'ar' ? L.title.ar : L.title.en)));
-    cards.unshift(h('button', { class: 'lvl sbx', type: 'button', onclick: () => openLevel(sandboxLevel()) },
-      h('b', null, '∞'), h('span', null, U.t('sandbox')), h('small', null, U.t('sandboxDesc'))));
+    const nextIdx = ST.levels.findIndex((L) => !U.lv(L.id).solved);
+    const cards = ST.levels.map((L, i) => {
+      const lv = U.lv(L.id);
+      return h('button', { class: 'lvl' + (i === nextIdx ? ' next' : '') + (lv.solved ? ' done' : ''), type: 'button', onclick: () => openLevel(L), 'aria-label': `${L.id} ${L.title.en}, ${lv.stars} stars` },
+        h('b', null, L.id), h('span', null, U.lang === 'ar' ? L.title.ar : L.title.en),
+        h('span', { class: 'stars small' }, U.starsText(lv.stars)), i === nextIdx ? h('small', { class: 'nextmark' }, '▶ ' + tr('next', 'التالي')) : null);
+    });
+    cards.unshift(h('button', { class: 'lvl sbx', type: 'button', onclick: () => openLevel(sandboxLevel()) }, h('b', null, '∞'), h('span', null, U.t('sandbox')), h('small', null, U.t('sandboxDesc'))));
+    const due = U.glossary.dueIds().length;
+    const importInput = h('input', { type: 'file', accept: 'application/json', hidden: true, onchange: async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      const ok = U.importData(await f.text());
+      U.toast(ok ? tr('Progress imported.', 'انستوردت البيانات.') : tr('That file is not a valid Scan Cycle save.', 'الملف هاد مش حفظ صالح.'));
+      if (ok) showMap();
+    } });
+    const review = h('div', { id: 'review-mount' });
     root.append(
       h('header', { class: 'top' }, h('div', { class: 'ttl' }, h('b', null, 'Scan Cycle')), h('div', { class: 'grow' }), langBtn(), themeBtn()),
       h('main', { class: 'mapwrap' },
         h('h1', null, U.tEl('app')), h('p', { class: 'lead' }, U.tEl('tagline')),
+        h('div', { class: 'maptools' },
+          h('button', { class: 'btn', type: 'button', onclick: () => { review.innerHTML = ''; U.glossary.review(review, showMap); review.scrollIntoView({ behavior: 'smooth' }); } }, '🔤 ' + tr('Term review', 'مراجعة المصطلحات') + (due ? ` (${due} ${tr('due', 'مستحق')})` : '')),
+          h('span', { class: 'stars' }, '★ ' + U.totalStars() + '/' + (ST.levels.length * 3))),
+        review,
         h('div', { class: 'levelmap' }, cards),
+        h('details', { class: 'card' }, h('summary', null, tr('Save, share and reset', 'حفظ ومشاركة وتصفير')),
+          h('div', { class: 'maptools' },
+            h('button', { class: 'btn', type: 'button', onclick: () => U.exportData() }, '⬇ ' + tr('Export progress', 'صدّر التقدم')),
+            h('button', { class: 'btn', type: 'button', onclick: () => importInput.click() }, '⬆ ' + tr('Import progress', 'استورد التقدم')), importInput,
+            h('button', { class: 'btn', type: 'button', onclick: () => { if (confirm(tr('Delete ALL progress in this browser?', 'تحذف كل التقدم بهالمتصفح؟'))) { U.resetData(); showMap(); } } }, tr('Reset progress', 'صفّر التقدم'))),
+          h('p', { class: 'muted small', hidden: U.autosaveOk !== false }, tr('Autosave is unavailable — use Export.', 'الحفظ التلقائي مش متاح — استخدم التصدير.'))),
         h('p', { class: 'muted small' }, U.tEl('offlineNote'))));
   }
 
   // ---------------------------------------------------------------- boot
   U.start = function () {
     ST.root = document.getElementById('app');
-    ST.levels = loadLevels();
+    ST.levels = SC.levels.loadAll();
+    U.glossary.init(ST.levels);
+    U.useCodesys = !!U.store.get('codesys', false);
     const th = U.store.get('theme', null);
     if (th) document.documentElement.setAttribute('data-theme', th);
+    const q = new URLSearchParams(location.search);
+    const open = q.get('level') || (location.hash.indexOf('#level=') === 0 ? location.hash.slice(7) : '');
+    const sh = U.readShareHash();
+    if (sh && sh.error) U.toast(tr('Could not read the shared link.', 'ما قدرت أقرا الرابط المشارك.'));
+    if (sh && !sh.error) {
+      const L = sh.level === 'SBX' ? sandboxLevel() : ST.levels.find((l) => l.id === sh.level);
+      if (L) { openLevel(L, { program: sh.program, userTags: sh.userTags }); U.toast(tr('Shared program loaded.', 'انحمّل البرنامج المشارك.')); history.replaceState(null, '', location.href.split('#')[0]); return; }
+    }
     if (location.hash === '#sandbox') openLevel(sandboxLevel());
+    else if (open && ST.levels.find((l) => l.id === open)) openLevel(ST.levels.find((l) => l.id === open));
     else showMap();
   };
   U.onProgramChanged = () => { clearTimeout(U._refT); U._refT = setTimeout(() => { U.refreshTags(); U.refreshTransfer(); }, 150); };
@@ -3776,7 +5210,7 @@ code, pre { font-family: var(--mono); }
     const t0 = Date.now();
     const rows = [];
     for (const s of suites) {
-      if (only && !s.name.includes(only)) continue;
+      if (only && !s.name.includes(only) && s.name.indexOf('levels') !== 0) continue;
       const ctx = mkCtx(rows, s.name);
       try { s.fn(ctx); } catch (e) { rows.push({ suite: s.name, name: '(suite crashed)', ok: false, detail: String(e && e.stack || e) }); }
     }
@@ -4181,7 +5615,7 @@ code, pre { font-family: var(--mono); }
     t.eq(s.read('EStop_OK'), 1, 'released: relay closes again (auto reset) — the PLC must prevent the restart');
     SC.plant.applyEvent(s.P, { door: 'open' });
     s.step(); s.step();
-    t.eq([s.read('Door_Closed'), s.read('EStop_OK')], [0, 0], 'door open: Door_Closed = 0 and the relay opens');
+    t.eq([s.read('Door_Closed'), s.read('EStop_OK'), s.P.relayOpen], [0, 1, true], 'door open: Door_Closed = 0, EStop_OK stays 1, but the relay still cuts motor power');
   });
 
   T.suite('plant: stopper, filler, level', (t) => {
@@ -4425,6 +5859,123 @@ code, pre { font-family: var(--mono); }
     ed.renameTag('Seal', 'Latch');
     t.ok(ed.program.rungs[0].els.some((e) => e.a === 'Latch') && !ed.program.rungs[0].els.some((e) => e.a === 'Seal'), 'rename tag updates every reference');
     t.eq(ed.deleteTag('Latch'), false, 'a tag in use cannot be deleted');
+  });
+})();
+
+</script>
+<script>
+/* ==== src/selftest/40-levels.js ==== */
+/* Level self-test: structure of every level, then (selftest.html only) every reference solution against every
+ * scenario + hidden variants, and every documented wrong solution must FAIL with the right diagnostic. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const T = SC.test;
+  const lines = [];
+
+  T.summary = () => lines.join('\n');
+
+  T.suite('levels: structure', (t) => {
+    const levels = SC.levels.loadAll();
+    const gmap = SC.levels.glossaryMap(levels);
+    t.ok(true, `${levels.length} level(s) embedded`);
+    const only = new URLSearchParams(location.search).get('only') || '';
+    for (const L of levels) {
+      if (only && L.id.indexOf(only) < 0 && only !== 'levels') continue;
+      const bad = SC.levels.validate(L, gmap);
+      t.ok(bad.length === 0, `${L.id} structure`, bad.join('; '));
+    }
+  });
+
+  const fx = SC.levels.loadFixtures();
+  T.suite('levels: reference solutions & wrong solutions', (t) => {
+    const levels = SC.levels.loadAll();
+    if (!fx) { t.ok(true, 'fixtures are only embedded in selftest.html (skipped here)'); return; }
+    const only = new URLSearchParams(location.search).get('only') || '';
+    for (const L of levels) {
+      if (only && L.id.indexOf(only) < 0 && only !== 'levels') continue;
+      const t0 = Date.now();
+      const sol = fx.solutions[L.id];
+      if (!sol) { t.ok(false, `${L.id} has a reference solution`, `levels/solutions/${L.id}.json is missing`); continue; }
+      const ev = SC.fixtures.evaluate(L, sol, { stopAtFirst: false });
+      const fails = ev.run.results.filter((r) => !r.pass);
+      const first = fails[0];
+      t.ok(ev.pass, `${L.id} reference solution passes all ${ev.run.results.length} scenarios (visible + hidden)`,
+        first ? `${first.scenario.id}: ${(first.firstFailure.msg.en)} @ ${first.firstFailure.t} ms, expected ${JSON.stringify(first.firstFailure.expected)} got ${JSON.stringify(first.firstFailure.actual)}` : '');
+      const cmp = SC.compile(ev.program, { tags: SC.mergeTags(SC.levelTags(L), ev.userTags), palette: L.palette });
+      t.ok(cmp.ok, `${L.id} reference solution compiles inside the level palette`, JSON.stringify(cmp.errors.slice(0, 2)));
+      const warn = SC.lint(ev.program, SC.mergeTags(SC.levelTags(L), ev.userTags));
+      t.ok(warn.length === 0, `${L.id} reference solution has no lint warnings (two-star possible)`, warn.map((w) => w.id).join(','));
+      const lean = (L.badges || []).find((b) => b.id === 'lean');
+      if (lean) t.ok(ev.program.rungs.length <= lean.maxRungs, `${L.id} reference meets the "lean" badge (${lean.maxRungs} rungs)`, `has ${ev.program.rungs.length}`);
+
+      const wrongs = Object.keys(fx.wrong).filter((k) => fx.wrong[k].level === L.id || k.indexOf(L.id + '-') === 0);
+      t.ok(wrongs.length >= 3, `${L.id} has at least 3 documented wrong solutions`, `has ${wrongs.length}`);
+      let ok = 0;
+      for (const k of wrongs) {
+        const w = fx.wrong[k];
+        const e2 = SC.fixtures.evaluate(L, w, { stopAtFirst: true });
+        const ff = e2.run.firstFail ? e2.run.firstFail.firstFailure : null;
+        const diags = SC.diag.run(L, e2.program, { failure: ff, tags: SC.mergeTags(SC.levelTags(L), e2.userTags) });
+        const ids = diags.map((d) => d.id);
+        const good = !e2.pass && (!w.diag || ids.indexOf(w.diag) >= 0);
+        if (good) ok++;
+        t.ok(!e2.pass, `${k} fails the FAT (it is a wrong solution)`, w.note || '');
+        if (w.diag) t.ok(ids.indexOf(w.diag) >= 0, `${k} is diagnosed as "${w.diag}"`, `got [${ids.join(', ')}]`);
+      }
+      lines.push(`${L.id}: ${ev.run.results.length} scenarios pass, wrong solutions ${ok}/${wrongs.length} fail as expected  (${Date.now() - t0} ms)`);
+    }
+  });
+})();
+
+</script>
+<script>
+/* ==== src/selftest/50-ui-share.js ==== */
+/* Share link encoding: round trip + size budget. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const T = SC.test;
+
+  T.suite('share: link encoding', (t) => {
+    const lines = [
+      '[Reset_PB | Ready] EStop_OK Door_Closed (Ready)',
+      '[Start_PB | Conveyor_Motor] Stop_PB Ready (Conveyor_Motor)',
+      'Conveyor_Motor PE_Fill /Filled Fill_Valve_Req',
+      'Fill_Valve_Req TON(DB_Fill,T#3s) (S:Filled)',
+      '/PE_Fill (R:Filled)',
+      'PE_Exit POS(Edge_1) CTU(DB_Batch,12,Reset_PB) (Batch_Lamp)',
+      'Level_OK /Level_OK PE_Reject POS(Edge_2) TP(DB_Rej,T#500ms) (Reject_Pusher)',
+      '[Start_PB | Run] Stop_PB (Run)',
+      'Run CMP(>=,Step,2) MOVE(3,Step)',
+      'Run Tank_LSLL (Alarm_Lamp)',
+    ];
+    const prog = SC.dsl.parseProgram(lines);
+    const tags = [{ name: 'Ready', addr: 'M0.0' }, { name: 'Filled', addr: 'M0.1' }, { name: 'Fill_Valve_Req', addr: 'M0.2' }, { name: 'Run', addr: 'M0.3' }];
+    const code = SC.ui.share.encode('L03', prog, tags, true);
+    t.ok(code[0] === 'B', 'offline format uses the B (base64url) prefix');
+    const dec = SC.ui.share.decode(code);
+    t.ok(!dec.error, 'decodes without error', JSON.stringify(dec.error));
+    t.eq(dec.level, 'L03', 'level id survives');
+    t.eq(dec.program.rungs.map((r) => r.els.length), prog.rungs.map((r) => r.els.length), 'same number of elements per rung');
+    t.eq(JSON.stringify(dec.program.rungs.map((r) => r.els.map((e) => [e.r, e.c, e.t, e.a, e.i, e.pt]))), JSON.stringify(prog.rungs.map((r) => r.els.map((e) => [e.r, e.c, e.t, e.a, e.i, e.pt]))), 'element positions and parameters survive');
+    t.eq(JSON.stringify(dec.program.rungs[1].vb), JSON.stringify(prog.rungs[1].vb), 'branch bars survive');
+    const url = 'https://itsak7m.github.io/scan-cycle/#p=' + code;
+    t.ok(url.length < 2000, 'a 10-rung program fits in a 2000 character URL even without LZ-string', 'length ' + url.length);
+    t.ok(SC.ui.share.decode('Zgarbage').error, 'garbage is rejected');
+    t.ok(SC.ui.share.decode('B' + 'not valid base64 !!').error, 'broken base64 is rejected');
+    t.ok(SC.ui.share.decode('B' + btoa('{"l":"L01","r":"x"}').replace(/=/g, '')).error, 'wrong shape is rejected');
+    const evil = SC.ui.share.decode('B' + btoa(JSON.stringify({ l: 'L01', r: [{ e: [[0, 0, 'EVAL', 'x']] }] })).replace(/=/g, ''));
+    t.ok(evil.error, 'unknown instruction types are rejected');
+  });
+
+  T.suite('progress: export / import validation', (t) => {
+    const U = SC.ui;
+    t.ok(!U.validateImport(null), 'null is not a save');
+    t.ok(!U.validateImport({ v: 2, levels: {} }), 'wrong version is rejected');
+    t.ok(!U.validateImport({ v: 1, levels: { x: {} } }), 'bad level id is rejected');
+    t.ok(!U.validateImport({ v: 1, levels: { L01: { program: { rungs: 5 } } } }), 'bad program shape is rejected');
+    t.ok(U.validateImport({ v: 1, levels: { L01: { stars: 2, program: { rungs: [] } } } }), 'a valid save is accepted');
   });
 })();
 

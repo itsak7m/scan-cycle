@@ -83,3 +83,8 @@ table.tags tr.user td:first-child input { font-family: var(--mono); font-weight:
 details > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; }
 .rung-grid.static .cell { cursor: default; }
 .rung-grid.static .cell:hover { background: none; }
+
+.card-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.card-h h3 { margin: 0 0 8px; }
+.share-canvas { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+.share input[type=text] { width: 100%; min-height: 44px; margin: 6px 0; border: 1.5px solid var(--ink); border-radius: 6px; padding: 0 8px; font-family: var(--mono); background: var(--surface); color: var(--ink); }

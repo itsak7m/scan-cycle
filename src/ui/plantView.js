@@ -279,6 +279,13 @@
       }
       // line label
       text(c, 't = ' + (sim.t / 1000).toFixed(2) + ' s', W - 10, 272, 10, col.muted, 'right');
+      // replay overlay: ghost marker at the failure point
+      if (sim.replayInfo) {
+        const ri = sim.replayInfo, past = sim.t >= ri.tFail;
+        c.fillStyle = col.surface; c.globalAlpha = .88; rr(c, 8, 106, 300, 24, 4); c.fill(); c.globalAlpha = 1;
+        c.strokeStyle = past ? col.alarm : col.power; c.lineWidth = 2; rr(c, 8, 106, 300, 24, 4); c.stroke();
+        text(c, (past ? '✖ FAILURE POINT PASSED' : '▶ REPLAY') + '  t=' + (sim.t / 1000).toFixed(2) + 's  (fail @ ' + (ri.tFail / 1000).toFixed(2) + 's)', 16, 122, 11, past ? col.alarm : col.power, 'left', 700);
+      }
     };
 
     view.refreshTheme();

@@ -20,7 +20,7 @@ CORE_ORDER = [
     "iolist", "plant", "sim", "scenario", "fixtures", "diagnostics", "levels", "demo",
 ]
 UI_ORDER = [
-    "dom", "i18n", "glossary", "symbols", "plantView", "palette", "grid", "tagtable", "report", "share", "app-ui",
+    "dom", "i18n", "progress", "glossary", "symbols", "plantView", "palette", "grid", "tagtable", "report", "levelpanel", "fat", "share", "app-ui",
 ]
 
 

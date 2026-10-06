@@ -67,20 +67,29 @@
   U.refreshTags = () => { const b = document.getElementById('tags-mount'); if (b && U.state.level) mountTags(b); };
 
   // ---------------------------------------------------------------- transfer panel
-  function staticRung(rg, labelOf, tags) {
+  // read-only rung. opts: {labelOf(name)->text, rec:{pin,pout,edge} (power flow), addrOf(name)}
+  function staticRung(rg, labelOf, opts) {
+    opts = opts || {};
+    const rec = opts.rec || null;
     const wire = SC.compile.buildWire(rg.rows, rg.cols, new Set(rg.vb.map((b) => b[0] + ',' + b[1]))).wire;
     const W = U.CELL_W, H = U.CELL_H, RAIL = 12;
     const grid = h('div', { class: 'rung-grid static', style: { width: (RAIL * 2 + rg.cols * W) + 'px', height: (rg.rows * H) + 'px' } }, h('div', { class: 'rail left' }), h('div', { class: 'rail right' }));
     for (let r = 0; r < rg.rows; r++) for (let c = 0; c < rg.cols; c++) {
       const el = rg.els.find((e) => e.r === r && e.c === c) || null;
-      const lab = el ? U.cellLabels(el, () => '') : { top: '' };
+      const lab = el ? U.cellLabels(el, opts.addrOf || (() => '')) : { top: '', bottom: '' };
       const top = el && lab.top ? labelOf(lab.top) : '';
-      grid.append(h('div', { class: 'cell', style: { left: (RAIL + c * W) + 'px', top: (r * H) + 'px', width: W + 'px', height: H + 'px' },
-        html: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(top)}</text>` : ''}${U.symbolSvg(el, wire[r][c])}</svg>` }));
+      const pin = rec && rec.pin[c] ? rec.pin[c][r] : undefined, pout = rec && rec.pout[c] ? rec.pout[c][r] : undefined;
+      grid.append(h('div', { class: 'cell', dataset: rec ? { pin: pin ? 1 : 0, pout: pout ? 1 : 0 } : null, style: { left: (RAIL + c * W) + 'px', top: (r * H) + 'px', width: W + 'px', height: H + 'px' },
+        html: `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${top ? `<text class="c-tag" x="42" y="11" text-anchor="middle">${U.esc(top)}</text>` : ''}${U.symbolSvg(el, wire[r][c])}${el && lab.bottom ? `<text class="c-addr" x="42" y="65" text-anchor="middle">${U.esc(lab.bottom)}</text>` : ''}${el && rec ? `<text class="c-state" x="82" y="65" text-anchor="end">${pout ? 'ON' : 'OFF'}</text>` : ''}</svg>` }));
     }
-    for (const [b, g] of rg.vb) grid.append(h('div', { class: 'vbar', style: { left: (RAIL + b * W - 2) + 'px', top: (g * H + 40) + 'px', height: H + 'px' } }));
-    return h('div', { class: 'rung' }, h('div', { class: 'rung-scroll' }, grid));
+    for (const [b, g] of rg.vb) {
+      let on;
+      if (rec) on = (b < rg.cols ? (rec.pin[b][g] || rec.pin[b][g + 1]) : (rec.edge[g] || rec.edge[g + 1])) ? 1 : 0;
+      grid.append(h('div', { class: 'vbar', dataset: rec ? { on } : null, style: { left: (RAIL + b * W - 2) + 'px', top: (g * H + 40) + 'px', height: H + 'px' } }));
+    }
+    return h('div', { class: 'rung' }, opts.title ? h('div', { class: 'rung-head' }, h('span', { class: 'rung-n' }, opts.title), opts.note ? h('span', { class: 'small muted' }, opts.note) : null) : null, h('div', { class: 'rung-scroll' }, grid));
   }
+  U.staticRung = staticRung;
 
   function codesysDecls(program, tags) {
     const tm = SC.addr.makeTagMap(tags);
@@ -113,7 +122,7 @@
       out.innerHTML = '';
       tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.m === mode)));
       if (mode === 'tia') {
-        program.rungs.forEach((rg, i) => out.append(h('div', { class: 'small muted' }, 'Network ' + (i + 1) + (rg.note ? ' — ' + rg.note : '')), staticRung(rg, (n) => (DEV[n] ? DEV[n] + ' ' : '') + (DEV[n] ? '' : n), tags)));
+        program.rungs.forEach((rg, i) => out.append(h('div', { class: 'small muted' }, 'Network ' + (i + 1) + (rg.note ? ' — ' + rg.note : '')), staticRung(rg, (n) => (DEV[n] ? DEV[n] : n))));
         out.append(h('p', { class: 'small muted' }, tr('In TIA Portal the symbols show the tag name and the device ID from the schematic (-S1 = push button, -B = sensor, -Q/-Y = actuator).', 'بـ {{TIA Portal}} الرموز بتعرض اسم الـ {{tag}} ورقم الجهاز من المخطط (‎-S1 = زر، ‎-B = حساس، ‎-Q/-Y = مشغّل).').replace(/\{\{|\}\}/g, '')));
       } else {
         out.append(h('pre', { class: 'mono code' }, codesysDecls(program, tags)),
