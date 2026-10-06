@@ -17,10 +17,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CORE_ORDER = [
     "prng", "addr", "dsl", "compile", "blocks", "scan", "lint",
-    "iolist", "plant", "sim", "scenario", "diagnostics",
+    "iolist", "plant", "sim", "scenario", "diagnostics", "demo",
 ]
 UI_ORDER = [
-    "i18n", "glossary", "plantView", "grid", "palette", "report", "share", "store", "app-ui",
+    "dom", "i18n", "glossary", "plantView", "grid", "palette", "report", "share", "app-ui",
 ]
 
 

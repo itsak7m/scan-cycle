@@ -6,6 +6,76 @@
 <meta name="description" content="Scan Cycle — a game that teaches PLC ladder logic on a bottling line.">
 <title>Scan Cycle</title>
 <style>
+[hidden] { display: none !important; }
+/* ---------- layout ---------- */
+button { font: inherit; color: inherit; }
+.top { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; }
+.top .ttl { font-size: 1.05rem; }
+.grow { flex: 1; }
+.btn { min-height: 44px; min-width: 44px; padding: 0 14px; border: 1.5px solid var(--ink); background: var(--surface); border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn:hover:not(:disabled) { background: var(--ground); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.ghost { border-color: var(--line); font-weight: 500; }
+.btn.small { min-height: 32px; padding: 0 10px; font-size: .85rem; }
+.btn.primary { background: var(--power); color: var(--surface); border-color: var(--power); }
+:focus-visible { outline: 3px solid var(--power); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+.card h3 { margin: 0 0 8px; font-size: .95rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.card h4 { margin: 8px 0 6px; font-size: .85rem; color: var(--muted); }
+.muted { color: var(--muted); } .small { font-size: .82rem; } .warn { color: var(--alarm); }
+.level-grid { display: grid; grid-template-columns: minmax(270px, 340px) 1fr; gap: 12px; padding: 12px; max-width: 1500px; margin: 0 auto; align-items: start; }
+.workorder { position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow: auto; }
+.ar-block { margin-top: 10px; padding: 10px; background: var(--ground); border-radius: 6px; line-height: 1.7; }
+@media (max-width: 920px) {
+  .level-grid { grid-template-columns: 1fr; padding: 8px; }
+  .workorder { position: static; max-height: none; order: 2; }
+  .stage { order: 1; }
+}
+.plant { width: 100%; aspect-ratio: 960 / 280; display: block; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); }
+.ctrls { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ctrls .sp { flex: 1; }
+.spd { min-height: 44px; min-width: 44px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; font-family: var(--mono); }
+.spd.sel { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.forces { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--alarm); color: #fff; border-radius: 6px; font-weight: 700; }
+.forces .btn { color: var(--ink); }
+
+/* ---------- operator panel ---------- */
+.pbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+.pbtn { min-height: 52px; min-width: 96px; padding: 4px 12px; border: 2px solid var(--ink); border-radius: 8px; background: var(--surface); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: none; user-select: none; }
+.pbtn .pb-name { font-weight: 700; font-size: .9rem; }
+.pbtn .pb-sub { font-size: .7rem; color: var(--muted); font-family: var(--mono); }
+.pbtn.down { background: var(--ink); color: var(--surface); }
+.pbtn.down .pb-sub { color: var(--surface); }
+.pb-estop { border-color: var(--alarm); border-width: 3px; }
+.pb-estop.down { background: var(--alarm); border-color: var(--alarm); }
+
+/* ---------- I/O LED strip ---------- */
+.leds { display: flex; flex-wrap: wrap; gap: 6px; }
+.led { position: relative; min-height: 44px; padding: 2px 8px 2px 26px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: default; display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: center; text-align: left; font-family: var(--mono); font-size: .74rem; }
+.led:not(.led-out) { cursor: pointer; }
+.led .led-dot { position: absolute; left: 7px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border: 2px solid var(--muted); border-radius: 2px; }
+.led .led-name { font-weight: 700; grid-column: 1; }
+.led .led-addr { color: var(--muted); grid-column: 1; font-size: .66rem; }
+.led .led-val { grid-column: 2; grid-row: 1 / span 2; font-weight: 700; font-size: .9rem; }
+.led.on { border-color: var(--power); }
+.led.on .led-dot { background: var(--power); border-color: var(--power); }
+.led.on .led-val { color: var(--power); }
+.led .led-lock { display: none; position: absolute; right: 2px; top: 0; font-size: .7rem; }
+.led.forced { border-width: 3px; border-color: var(--alarm); }
+.led.forced .led-lock { display: block; }
+.io-group { margin-bottom: 6px; }
+
+/* ---------- map ---------- */
+.mapwrap { max-width: 1000px; margin: 0 auto; padding: 18px 14px 40px; }
+.mapwrap h1 { margin: 6px 0 4px; }
+.lead { margin: 0 0 18px; font-size: 1.05rem; color: var(--muted); }
+.levelmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.lvl { min-height: 92px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 4px; }
+.lvl:hover { border-color: var(--ink); }
+.lvl b { font-family: var(--mono); font-size: 1.1rem; }
+.lvl.sbx { border-style: dashed; }
+.prog-text { font-family: var(--mono); font-size: .8rem; white-space: pre-wrap; margin: 0; }
+
 :root {
   --ground: #E9ECEC; --surface: #F7F8F8; --ink: #14262D; --muted: #5E7279; --line: #C6D0D2;
   --power: #0B6E78; --alarm: #B3461E; --ok: #2F6B4C; --amber: #9A6B12;
@@ -922,6 +992,1593 @@ code, pre { font-family: var(--mono); }
 
 </script>
 <script>
+/* ==== src/core/iolist.js ==== */
+/* Master I/O list for the bottling line (addresses stay stable across levels).
+ * src: 'panel' = operator/process input driven by the player or the scenario,
+ *      'plant' = sensor computed by the plant model, 'out' = PLC output,
+ *      'hw' = hardwired safety layer.
+ * def: idle value of a panel input.  wiring/role feed the lint + diagnostics.
+ */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+
+  const T = (name, addr, type, src, wiring, role, en, ar, def) => ({ name, addr, type, src, wiring, role, desc: { en, ar }, def: def || 0 });
+
+  const IO = [
+    // ---- inputs
+    T('Start_PB', 'I0.0', 'Bool', 'panel', 'NO', 'start', 'Start push button (momentary)', 'زر تشغيل لحظي'),
+    T('Stop_PB', 'I0.1', 'Bool', 'panel', 'NC', 'stop', 'Stop push button (wired normally closed)', 'زر إيقاف موصول NC', 1),
+    T('EStop_OK', 'I0.2', 'Bool', 'hw', 'NC', 'estop', 'Safety relay feedback, 1 = healthy', 'تغذية راجعة من رلاي السلامة'),
+    T('Door_Closed', 'I0.3', 'Bool', 'hw', 'NC', 'guard', 'Guard door closed = 1', 'باب الحماية مغلق'),
+    T('PE_Infeed', 'I0.4', 'Bool', 'plant', 'NO', 'sensor', 'Photo-eye, bottle at infeed', 'عين ضوئية عند المدخل'),
+    T('PE_Fill', 'I0.5', 'Bool', 'plant', 'NO', 'sensor', 'Photo-eye, bottle at filler', 'عين ضوئية عند الحشّاء'),
+    T('Level_OK', 'I0.6', 'Bool', 'plant', 'NO', 'sensor', 'Through-beam, fill level reached', 'حساس مستوى التعبئة'),
+    T('Ack_PB', 'I0.7', 'Bool', 'panel', 'NO', 'ack', 'Alarm acknowledge', 'إقرار الإنذار'),
+    T('Reset_PB', 'I1.0', 'Bool', 'panel', 'NO', 'reset', 'Reset after safety stop / batch', 'إعادة ضبط'),
+    T('PE_Cap', 'I1.1', 'Bool', 'plant', 'NO', 'sensor', 'Photo-eye at capper', 'عين ضوئية عند الغطّاء'),
+    T('PE_Reject', 'I1.2', 'Bool', 'plant', 'NO', 'sensor', 'Photo-eye at reject station', 'عين ضوئية عند الرفض'),
+    T('PE_Exit', 'I1.3', 'Bool', 'plant', 'NO', 'sensor', 'Photo-eye at outfeed (counting)', 'عين ضوئية عند المخرج'),
+    T('Release_PB', 'I1.4', 'Bool', 'panel', 'NO', 'release', 'Manual release', 'تحرير يدوي'),
+    T('PE_Backup', 'I1.5', 'Bool', 'plant', 'NO', 'sensor', 'Downstream back-up (blocked)', 'تراكم المصبّ'),
+    T('Cap_Present', 'I1.6', 'Bool', 'plant', 'NO', 'sensor', 'Cap detected after capper', 'غطاء موجود'),
+    T('Foil_Present', 'I1.7', 'Bool', 'plant', 'NO', 'sensor', 'Induction foil detected', 'رقاقة الختم موجودة'),
+    T('Stopper_Ext', 'I2.0', 'Bool', 'plant', 'NO', 'feedback', 'Stopper cylinder extended (reed switch)', 'المصدّ ممدود'),
+    T('Stopper_Ret', 'I2.1', 'Bool', 'plant', 'NO', 'feedback', 'Stopper cylinder retracted (reed switch)', 'المصدّ مسحوب'),
+    T('Air_OK', 'I2.2', 'Bool', 'plant', 'NO', 'feedback', 'Air pressure OK (pressure switch)', 'ضغط الهواء سليم'),
+    T('Tank_LSL', 'I2.3', 'Bool', 'plant', 'NO', 'alarm', 'Tank low level, 1 = alarm', 'مستوى الخزان منخفض'),
+    T('Tank_LSLL', 'I2.4', 'Bool', 'plant', 'NO', 'alarm', 'Tank low-low level, 1 = alarm', 'مستوى الخزان منخفض جدًا'),
+    T('Pump_Home', 'I2.5', 'Bool', 'plant', 'NO', 'feedback', 'Piston pump at home (proximity)', 'المضخة في البداية'),
+    T('Pump_Full', 'I2.6', 'Bool', 'plant', 'NO', 'feedback', 'Piston pump at full stroke (proximity)', 'المضخة في النهاية'),
+    T('Conv_Encoder', 'I2.7', 'Bool', 'plant', 'NO', 'encoder', 'Encoder: one pulse per bottle pitch', 'نبضة لكل خطوة'),
+    T('Clear_Sign1', 'I3.0', 'Bool', 'panel', 'NO', 'key', 'Line-clearance sign-off 1', 'توقيع تنظيف الخط ١'),
+    T('Clear_Sign2', 'I3.1', 'Bool', 'panel', 'NO', 'key', 'Line-clearance sign-off 2', 'توقيع تنظيف الخط ٢'),
+    T('Supervisor_Key', 'I3.2', 'Bool', 'panel', 'NO', 'key', 'Supervisor key for setpoints', 'مفتاح المشرف'),
+    T('Challenge_Bottle', 'I3.3', 'Bool', 'plant', 'NO', 'sensor', 'Marked test bottle present at the reject station', 'قارورة اختبار الرفض موجودة'),
+    T('CIP_Mode', 'I3.4', 'Bool', 'panel', 'NO', 'process', 'CIP mode selector', 'مفتاح وضع التنظيف CIP'),
+    T('CIP_Temp_OK', 'I3.5', 'Bool', 'panel', 'NO', 'process', 'CIP temperature OK', 'حرارة التنظيف سليمة'),
+    T('CIP_Cond_OK', 'I3.6', 'Bool', 'panel', 'NO', 'process', 'CIP conductivity OK', 'الموصلية سليمة'),
+    T('CIP_Flow_OK', 'I3.7', 'Bool', 'panel', 'NO', 'process', 'CIP flow OK', 'التدفق سليم'),
+    T('Mode_Auto', 'I4.0', 'Bool', 'panel', 'NO', 'mode', 'Auto mode selected', 'الوضع الأوتوماتيكي', 1),
+    T('SP_Request', 'I4.1', 'Bool', 'panel', 'NO', 'setpoint', 'Operator requests a setpoint change', 'طلب تغيير قيمة ضبط'),
+    T('Tank_Level', 'IW64', 'Int', 'plant', 'NO', 'analog', 'Tank level 4–20 mA scaled 0–27648 (display only)', 'مستوى الخزان التناظري'),
+    T('SP_Entry', 'IW66', 'Int', 'panel', 'NO', 'setpoint', 'Operator-entered setpoint (ms)', 'القيمة اللي دخّلها المشغّل'),
+    // ---- outputs
+    T('Conveyor_Motor', 'Q0.0', 'Bool', 'out', null, 'actuator', 'Conveyor contactor', 'محرك الناقل'),
+    T('Fill_Valve', 'Q0.1', 'Bool', 'out', null, 'actuator', 'Fill solenoid valve', 'صمام التعبئة'),
+    T('Stopper_SOL', 'Q0.2', 'Bool', 'out', null, 'actuator', 'Stopper cylinder solenoid (1 = extend)', 'صمام أسطوانة المصدّ'),
+    T('Capper_Run', 'Q0.3', 'Bool', 'out', null, 'actuator', 'Capper (rising edge = one capping stroke)', 'الكابّر'),
+    T('Sealer_Enable', 'Q0.4', 'Bool', 'out', null, 'actuator', 'Induction sealer enable', 'تفعيل ختم الحث'),
+    T('Labeler_Trig', 'Q0.5', 'Bool', 'out', null, 'actuator', 'Labeler trigger (rising edge)', 'تشغيل الملصق'),
+    T('Reject_Pusher', 'Q0.6', 'Bool', 'out', null, 'actuator', 'Reject pusher solenoid', 'دافع الرفض'),
+    T('Alarm_Lamp', 'Q0.7', 'Bool', 'out', null, 'signal', 'Alarm lamp', 'مصباح الإنذار'),
+    T('Horn', 'Q1.0', 'Bool', 'out', null, 'signal', 'Horn', 'البوق'),
+    T('Stack_Green', 'Q1.1', 'Bool', 'out', null, 'signal', 'Stack light green', 'عمود الإشارة أخضر'),
+    T('Stack_Amber', 'Q1.2', 'Bool', 'out', null, 'signal', 'Stack light amber', 'عمود الإشارة كهرماني'),
+    T('Stack_Red', 'Q1.3', 'Bool', 'out', null, 'signal', 'Stack light red', 'عمود الإشارة أحمر'),
+    T('Pump_Fwd', 'Q1.4', 'Bool', 'out', null, 'actuator', 'Piston pump dispense', 'المضخة دفع'),
+    T('Pump_Rev', 'Q1.5', 'Bool', 'out', null, 'actuator', 'Piston pump draw', 'المضخة سحب'),
+    T('Batch_Lamp', 'Q1.6', 'Bool', 'out', null, 'signal', 'Batch complete lamp', 'مصباح اكتمال الدفعة'),
+    T('CIP_Pump', 'Q2.0', 'Bool', 'out', null, 'actuator', 'CIP pump', 'مضخة التنظيف'),
+    T('CIP_Caustic_Valve', 'Q2.1', 'Bool', 'out', null, 'actuator', 'CIP caustic valve', 'صمام القلوي'),
+    T('CIP_Rinse_Valve', 'Q2.2', 'Bool', 'out', null, 'actuator', 'CIP rinse valve', 'صمام الشطف'),
+    T('CIP_Drain_Valve', 'Q2.3', 'Bool', 'out', null, 'actuator', 'CIP drain valve', 'صمام التصريف'),
+    T('CIP_Done', 'Q2.4', 'Bool', 'out', null, 'signal', 'CIP done', 'انتهى التنظيف'),
+  ];
+
+  const byName = Object.create(null);
+  IO.forEach((t) => { byName[t.name] = t; });
+
+  // A level lists tags either as a name (-> master entry) or as a full object (override / new).
+  function levelTags(level) {
+    const out = [];
+    for (const t of level.tags || []) {
+      if (typeof t === 'string') {
+        if (!byName[t]) throw new Error('unknown master tag ' + t);
+        out.push(Object.assign({}, byName[t]));
+      } else if (byName[t.name]) out.push(Object.assign({}, byName[t.name], t));
+      else out.push(Object.assign({ src: 'mem' }, t));
+    }
+    return out;
+  }
+
+  SC.IO = IO;
+  SC.ioByName = byName;
+  SC.levelTags = levelTags;
+})();
+
+</script>
+<script>
+/* ==== src/core/plant.js ==== */
+/* Plant model: the oral-syrup bottling line. Deterministic (seeded PRNG kept in the state), 10 ms steps.
+ *
+ * Units: mm along the conveyor, ms of simulated time. Numbers are "game values", chosen for playability.
+ * Hardwired layer: when the E-stop is pressed or the guard door is open, motor / valve / solenoid power
+ * is cut regardless of what the ladder does. The PLC only receives EStop_OK and is graded on its own outputs.
+ *
+ * Bottle slots are numbered 0,1,2... in generation order (cfg.badIdx etc. refer to those numbers).
+ */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const prng = SC.prng;
+
+  const DEFAULTS = {
+    stations: ['infeed', 'filler', 'exit'],
+    convLen: 1850, v: 150, speedPct: 100,
+    bottlesPerMin: 24, jitterMs: 200, genDelayMs: 0, genOn: true,
+    R: 30, minGap: 100, spawnX: 0, beam: 3,
+    x: { infeed: 150, nozzle: 500, stopper: 530, fillPE: 530, level: 500, cap: 760, capCheck: 860, foil: 900, seal: 1000, label: 1180, reject: 1320, exit: 1700, backup: 1760, blockX: 1800 },
+    capacity: 1.0, target: 0.9, okLevel: 0.88, fillSeconds: 3.0, nozzleTol: 40, fillMode: 'timed',
+    stopperTravelMs: 400, pusherTravelMs: 150, pusherReach: 40, pumpTravelMs: 1500,
+    capperStrokeMs: 300, capperTol: 35, labelerTol: 40, sealExposureMs: 300, meltMs: 2000,
+    encPitch: 50,
+    tankPct: 80, tankPerFillPct: 0.5,
+    badIdx: [], badFlow: 0.6, missingCapIdx: [], noFoilIdx: [], challengeIdx: [], missingBottleIdx: [], doubleIdx: [], fallenIdx: [],
+    preload: [],
+  };
+
+  const OUT_NAMES = ['Conveyor_Motor', 'Fill_Valve', 'Stopper_SOL', 'Capper_Run', 'Sealer_Enable', 'Labeler_Trig', 'Reject_Pusher', 'Pump_Fwd', 'Pump_Rev'];
+
+  function makeCfg(over) {
+    const cfg = JSON.parse(JSON.stringify(DEFAULTS));
+    over = over || {};
+    for (const k in over) {
+      if (k === 'x' || k === 'layout') Object.assign(cfg.x, over[k]);
+      else if (k === 'startLevelPct') cfg.tankPct = over[k];
+      else cfg[k] = JSON.parse(JSON.stringify(over[k]));
+    }
+    return cfg;
+  }
+
+  const has = (cfg, s) => cfg.stations.indexOf(s) >= 0;
+
+  function init(over, seed) {
+    const cfg = makeCfg(over);
+    const P = {
+      cfg, t: 0, rng: prng.seedOf(seed | 0), nextId: 1, seq: 0,
+      nextSpawn: cfg.genDelayMs, pendingDouble: false,
+      bottles: [],
+      hw: { estop: false, doorOpen: false }, relayOpen: false,
+      stopper: { pos: 0 }, pusher: { pos: 0, hit: false }, pump: { pos: 0 },
+      tank: { pct: cfg.tankPct },
+      faults: { peStuckOn: {}, peStuckOff: {}, peMisaligned: {}, peChatter: {}, valveWornSeal: false, airLow: false, airLost: false, capFeederEmpty: false, encoderSlip: false },
+      flags: { outfeedBlocked: false, genOn: cfg.genOn !== false },
+      enc: { acc: cfg.encPitch / 2, n: 0, mute: false },
+      capper: { prev: 0, timer: -1, applied: false }, labeler: { prev: 0 }, fill: { dryOpen: false },
+      counts: { spawned: 0, out: 0, good: 0, rejected: 0, spills: 0, wastedCaps: 0, wastedLabels: 0, goodLost: 0, melted: 0, badShipped: 0, filled: 0, runMs: 0, stopMs: 0, dist: 0 },
+      outs: {}, sens: {},
+    };
+    for (const pb of cfg.preload) {
+      P.bottles.push(newBottle(P, -1, Object.assign({ level: 0 }, pb)));
+    }
+    P.bottles.sort((a, b) => b.x - a.x);
+    P.sens = computeSensors(P);
+    return P;
+  }
+
+  function newBottle(P, k, over) {
+    const c = P.cfg;
+    const bad = c.badIdx.indexOf(k) >= 0;
+    const b = {
+      id: P.nextId++, seq: k, x: c.spawnX, level: 0, capped: false, sealed: false, labeled: false,
+      bad, flowMul: bad ? c.badFlow : 1, noCap: c.missingCapIdx.indexOf(k) >= 0, noFoil: c.noFoilIdx.indexOf(k) >= 0,
+      challenge: c.challengeIdx.indexOf(k) >= 0, fallen: c.fallenIdx.indexOf(k) >= 0,
+      sealMs: 0, melted: false, spilled: false, filledFlag: false, miss: {}, px: c.spawnX,
+    };
+    if (b.challenge) b.bad = true;
+    Object.assign(b, over || {});
+    if (over && over.x !== undefined) b.px = over.x;
+    return b;
+  }
+
+  function isDefective(P, b) {
+    const c = P.cfg;
+    if (b.challenge || b.fallen || b.melted) return true;
+    if (has(c, 'filler') && (b.level < c.okLevel - 1e-9)) return true;
+    if (has(c, 'capper') && !b.capped) return true;
+    if (has(c, 'sealer') && !b.sealed) return true;
+    if (has(c, 'labeler') && !b.labeled) return true;
+    return false;
+  }
+
+  // ------------------------------------------------------------------ sensors
+  function eyeBlocked(P, name, ex) {
+    const c = P.cfg;
+    const reach = c.R + c.beam;
+    let blocked = false;
+    for (const b of P.bottles) {
+      if (Math.abs(b.x - ex) > reach) continue;
+      if (P.faults.peMisaligned[name]) {
+        if (b.miss[name] === undefined) b.miss[name] = prng.next(P) < 0.3;
+        if (b.miss[name]) continue;
+      }
+      blocked = true;
+      break;
+    }
+    if (P.faults.peStuckOn[name]) return 1;
+    if (P.faults.peStuckOff[name]) return 0;
+    if (P.faults.peChatter[name]) return prng.next(P) < 0.5 ? 1 : 0;
+    return blocked ? 1 : 0;
+  }
+
+  function near(P, x, tol, pred) {
+    let best = null, bd = 1e9;
+    for (const b of P.bottles) {
+      const d = Math.abs(b.x - x);
+      if (d <= tol && d < bd && (!pred || pred(b))) { best = b; bd = d; }
+    }
+    return best;
+  }
+
+  function computeSensors(P) {
+    const c = P.cfg, x = c.x, s = {};
+    s.PE_Infeed = eyeBlocked(P, 'PE_Infeed', x.infeed);
+    s.PE_Fill = eyeBlocked(P, 'PE_Fill', x.fillPE);
+    s.PE_Cap = eyeBlocked(P, 'PE_Cap', x.cap);
+    s.PE_Reject = eyeBlocked(P, 'PE_Reject', x.reject);
+    s.PE_Exit = eyeBlocked(P, 'PE_Exit', x.exit);
+    s.PE_Backup = eyeBlocked(P, 'PE_Backup', x.backup);
+    s.Level_OK = near(P, x.level, 40, (b) => b.level >= c.okLevel) ? 1 : 0;
+    s.Cap_Present = near(P, x.capCheck, 35, (b) => b.capped) ? 1 : 0;
+    s.Foil_Present = near(P, x.foil, 35, (b) => b.capped && !b.noFoil) ? 1 : 0;
+    s.Challenge_Bottle = near(P, x.reject, 40, (b) => b.challenge) ? 1 : 0;
+    s.Stopper_Ext = P.stopper.pos >= 0.97 ? 1 : 0;
+    s.Stopper_Ret = P.stopper.pos <= 0.03 ? 1 : 0;
+    s.Air_OK = P.faults.airLost ? 0 : 1;
+    s.Tank_LSL = P.tank.pct < 15 ? 1 : 0;
+    s.Tank_LSLL = P.tank.pct < 5 ? 1 : 0;
+    s.Tank_Level = Math.round(Math.max(0, Math.min(100, P.tank.pct)) * 276.48);
+    s.Pump_Home = P.pump.pos <= 0.02 ? 1 : 0;
+    s.Pump_Full = P.pump.pos >= 0.98 ? 1 : 0;
+    s.Conv_Encoder = !P.enc.mute && P.enc.acc < c.encPitch / 2 ? 1 : 0;
+    s.EStop_OK = P.hw.estop || P.hw.doorOpen ? 0 : 1;
+    s.Door_Closed = P.hw.doorOpen ? 0 : 1;
+    return s;
+  }
+
+  // ------------------------------------------------------------------ step
+  function pushOff(P, b) {
+    const i = P.bottles.indexOf(b);
+    if (i >= 0) P.bottles.splice(i, 1);
+  }
+
+  function addFill(P, b, amount) {
+    const c = P.cfg;
+    if (b.fallen) { if (!b.spilled) { b.spilled = true; P.counts.spills++; } return; }
+    b.level += amount;
+    if (b.level > c.capacity) {
+      b.level = c.capacity;
+      if (!b.spilled) { b.spilled = true; P.counts.spills++; }
+    }
+    if (!b.filledFlag && b.level >= c.okLevel) {
+      b.filledFlag = true;
+      P.counts.filled++;
+      P.tank.pct = Math.max(0, P.tank.pct - c.tankPerFillPct);
+    }
+  }
+
+  function stepMut(P, out, dt) {
+    const c = P.cfg, x = c.x;
+    P.t += dt;
+    P.relayOpen = P.hw.estop || P.hw.doorOpen;
+    const pw = !P.relayOpen;
+    const o = {};
+    for (const n of OUT_NAMES) o[n] = pw && out && out[n] ? 1 : 0;
+    P.outs = {};
+    if (out) for (const k in out) P.outs[k] = out[k] ? 1 : 0;
+
+    // ---- generator
+    if (P.flags.genOn !== false) {
+      const last = P.bottles.length ? P.bottles[P.bottles.length - 1] : null; // lowest x
+      const gapOk = !last || last.x >= c.minGap;
+      if (P.pendingDouble && gapOk) {
+        P.pendingDouble = false;
+        P.bottles.push(newBottle(P, P.seq - 1, { seq: P.seq - 1, double: true }));
+        P.counts.spawned++;
+      } else if (P.t >= P.nextSpawn && gapOk) {
+        const k = P.seq++;
+        const period = 60000 / Math.max(1, c.bottlesPerMin);
+        P.nextSpawn += Math.max(period * 0.5, period + prng.range(P, -c.jitterMs, c.jitterMs));
+        if (c.missingBottleIdx.indexOf(k) < 0) {
+          P.bottles.push(newBottle(P, k));
+          P.counts.spawned++;
+          if (c.doubleIdx.indexOf(k) >= 0) P.pendingDouble = true;
+        }
+      }
+    }
+
+    // ---- air / cylinders
+    const air = !P.faults.airLost;
+    const slow = P.faults.airLow ? 3 : 1;
+    if (air) {
+      const sd = dt / (c.stopperTravelMs * slow);
+      P.stopper.pos = Math.max(0, Math.min(1, P.stopper.pos + (o.Stopper_SOL ? sd : -sd)));
+      const pd = dt / (c.pusherTravelMs * slow);
+      P.pusher.pos = Math.max(0, Math.min(1, P.pusher.pos + (o.Reject_Pusher ? pd : -pd)));
+    }
+    if (P.pusher.pos < 0.2) P.pusher.hit = false;
+    if (P.pusher.pos >= 0.8 && !P.pusher.hit) {
+      const b = near(P, x.reject, c.pusherReach);
+      if (b) {
+        P.pusher.hit = true;
+        pushOff(P, b);
+        P.counts.rejected++;
+        if (!isDefective(P, b)) P.counts.goodLost++;
+      }
+    }
+
+    // ---- conveyor
+    const dx = o.Conveyor_Motor ? (c.v * c.speedPct / 100) * dt / 1000 : 0;
+    if (o.Conveyor_Motor) { P.counts.runMs += dt; P.counts.dist += dx; } else P.counts.stopMs += dt;
+    const holdX = x.stopper - c.R;
+    P.bottles.sort((a, b) => b.x - a.x);
+    let ahead = null;
+    const gone = [];
+    for (const b of P.bottles) {
+      b.px = b.x; // previous position, for smooth rendering
+      let nx = b.x + dx;
+      if (ahead) nx = Math.min(nx, ahead.x - c.minGap);
+      if (P.stopper.pos > 0.5 && b.x <= holdX + 1e-9) nx = Math.min(nx, holdX);
+      if (P.flags.outfeedBlocked) nx = Math.min(nx, x.blockX);
+      b.x = Math.max(b.x, nx);
+      ahead = b;
+      if (b.x > c.convLen) gone.push(b);
+    }
+    for (const b of gone) {
+      pushOff(P, b);
+      P.counts.out++;
+      if (isDefective(P, b)) P.counts.badShipped++; else P.counts.good++;
+    }
+
+    // ---- encoder
+    P.enc.acc += dx;
+    while (P.enc.acc >= c.encPitch) {
+      P.enc.acc -= c.encPitch;
+      P.enc.n++;
+      P.enc.mute = P.faults.encoderSlip && P.enc.n % 50 === 49;
+    }
+
+    // ---- filling
+    const under = near(P, x.nozzle, c.nozzleTol);
+    if (c.fillMode === 'timed') {
+      if (o.Fill_Valve) {
+        if (under) {
+          let flow = c.target / c.fillSeconds * under.flowMul * (P.faults.valveWornSeal ? 0.75 : 1);
+          if (P.tank.pct <= 0) flow = 0;
+          addFill(P, under, flow * dt / 1000);
+        } else if (!P.fill.dryOpen) { P.fill.dryOpen = true; P.counts.spills++; }
+      } else P.fill.dryOpen = false;
+    } else {
+      // piston filler: the pump moves the product, the valve routes it to the nozzle
+      const pf = o.Pump_Fwd, pr = o.Pump_Rev;
+      const pd = dt / c.pumpTravelMs;
+      if (pr && !pf) P.pump.pos = Math.min(1, P.pump.pos + pd);
+      else if (pf && !pr) {
+        const d = Math.min(P.pump.pos, pd);
+        P.pump.pos -= d;
+        if (o.Fill_Valve && d > 0) {
+          if (under) addFill(P, under, d * c.target * under.flowMul);
+          else if (!P.fill.dryOpen) { P.fill.dryOpen = true; P.counts.spills++; }
+        }
+      }
+      if (!o.Fill_Valve) P.fill.dryOpen = false;
+    }
+
+    // ---- capper (rising edge = one stroke)
+    const cr = o.Capper_Run;
+    if (cr && !P.capper.prev && P.capper.timer < 0) { P.capper.timer = 0; P.capper.applied = false; }
+    P.capper.prev = cr;
+    if (P.capper.timer >= 0) {
+      P.capper.timer += dt;
+      if (!P.capper.applied && P.capper.timer >= c.capperStrokeMs / 2) {
+        P.capper.applied = true;
+        const b = near(P, x.cap, c.capperTol);
+        if (b) { if (!(b.noCap || P.faults.capFeederEmpty)) b.capped = true; }
+        else P.counts.wastedCaps++;
+      }
+      if (P.capper.timer >= c.capperStrokeMs) P.capper.timer = -1;
+    }
+
+    // ---- sealer
+    for (const b of P.bottles) {
+      if (Math.abs(b.x - x.seal) <= 40 && o.Sealer_Enable && b.capped) {
+        b.sealMs += dt;
+        if (b.sealMs >= c.sealExposureMs && !b.noFoil && !b.melted) b.sealed = true;
+        if (b.sealMs > c.meltMs && !b.melted) { b.melted = true; b.sealed = false; P.counts.melted++; }
+      }
+    }
+
+    // ---- labeler (rising edge)
+    const lt = o.Labeler_Trig;
+    if (lt && !P.labeler.prev) {
+      const b = near(P, x.label, c.labelerTol);
+      if (b) b.labeled = true; else P.counts.wastedLabels++;
+    }
+    P.labeler.prev = lt;
+
+    P.sens = computeSensors(P);
+  }
+
+  function clone(P) { return JSON.parse(JSON.stringify(P)); }
+  function step(P, out, dt) { const n = clone(P); stepMut(n, out, dt); return n; }
+
+  // ------------------------------------------------------------------ events / faults
+  function applyEvent(P, ev) {
+    if (ev.estop !== undefined) P.hw.estop = !!ev.estop;
+    if (ev.door !== undefined) P.hw.doorOpen = ev.door === 'open' || ev.door === true;
+    if (ev.fault) setFault(P, ev.fault, ev.arg, true);
+    if (ev.clear) setFault(P, ev.clear, ev.arg, false);
+    if (ev.plantSet) {
+      for (const k in ev.plantSet) {
+        const v = ev.plantSet[k];
+        if (k === 'tankPct') P.tank.pct = v;
+        else if (k === 'outfeedBlocked') P.flags.outfeedBlocked = !!v;
+        else if (k === 'genOn') P.flags.genOn = !!v;
+        else if (k === 'bottlesPerMin' || k === 'speedPct' || k === 'jitterMs' || k === 'fillSeconds') P.cfg[k] = v;
+        else if (k === 'pumpTravelMs' || k === 'stopperTravelMs') P.cfg[k] = v;
+        else if (k === 'spawnBottle') P.bottles.push(newBottle(P, -1, typeof v === 'object' ? v : {}));
+      }
+    }
+  }
+
+  function setFault(P, name, arg, on) {
+    const f = P.faults;
+    if (['peStuckOn', 'peStuckOff', 'peMisaligned', 'peChatter'].indexOf(name) >= 0) {
+      if (on) f[name][arg] = true; else delete f[name][arg];
+    } else if (name in f) f[name] = !!on;
+  }
+
+  // ------------------------------------------------------------------ KPIs
+  function kpis(P) {
+    const c = P.cfg, n = P.counts;
+    const tmin = Math.max(P.t, 1) / 60000;
+    const runS = n.runMs / 1000;
+    const availability = P.t > 0 ? n.runMs / P.t : 0;
+    const performance = runS > 0 ? Math.min(1, n.dist / (c.v * runS)) : 0;
+    const total = n.out + n.rejected;
+    const quality = total > 0 ? n.good / total : 1;
+    return {
+      out: n.out, good: n.good, rejected: n.rejected, spills: n.spills, wastedCaps: n.wastedCaps, goodLost: n.goodLost,
+      melted: n.melted, badShipped: n.badShipped, filledCount: n.filled, bottlesPerMin: n.out / tmin,
+      availability, performance, quality, oee: availability * performance * quality,
+      overflow: n.spills > 0,
+    };
+  }
+
+  SC.plant = { DEFAULTS, makeCfg, init, stepMut, step, clone, applyEvent, setFault, kpis, isDefective, OUT_NAMES, has };
+})();
+
+</script>
+<script>
+/* ==== src/core/sim.js ==== */
+/* Simulation = PLC (compiled program + memory) + plant + operator panel + forces + scenario events.
+ * The same object drives the interactive game loop and the headless FAT runner, so replays are identical.
+ *
+ * One step():  events -> sensor snapshot into the input image -> scan -> outputs to plant -> plant step.
+ */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const A = SC.addr;
+
+  const INPUT_IO = SC.IO.filter((t) => t.addr[0] === 'I').map((t) => Object.assign({ _a: A.parseAddr(t.addr) }, t));
+  const OUTPUT_IO = SC.IO.filter((t) => t.src === 'out').map((t) => Object.assign({ _a: A.parseAddr(t.addr) }, t));
+
+  // press events -> set events (NC buttons idle at 1)
+  function prepareEvents(events) {
+    const out = [];
+    for (const ev of events || []) {
+      if (ev.press) {
+        const io = SC.ioByName[ev.press];
+        const idle = io ? io.def : 0;
+        out.push({ t: ev.t, set: { [ev.press]: idle ? 0 : 1 } });
+        out.push({ t: ev.t + (ev.ms || 200), set: { [ev.press]: idle } });
+      } else out.push(ev);
+    }
+    return out.map((e, i) => Object.assign({ _i: i }, e)).sort((a, b) => a.t - b.t || a._i - b._i);
+  }
+
+  const METRIC_KEYS = ['out', 'good', 'rejected', 'spills', 'wastedCaps', 'goodLost', 'melted', 'badShipped', 'filledCount', 'overflow', 'bottlesPerMin', 'availability', 'performance', 'quality', 'oee', 'wastedLabels', 'spawned', 'estopTrips'];
+
+  function create(opts) {
+    const level = opts.level || {};
+    const scenario = opts.scenario || {};
+    const seed = opts.seed !== undefined ? opts.seed : (scenario.seed || 1);
+    const tags = SC.levelTags(level).concat(opts.userTags || []);
+    const allTags = SC.IO.map((t) => t).concat(tags.filter((t) => !SC.ioByName[t.name]));
+    const tagByName = Object.create(null);
+    for (const t of allTags) tagByName[t.name] = Object.assign({ _a: A.parseAddr(t.addr) }, t);
+    for (const t of tags) tagByName[t.name] = Object.assign({ _a: A.parseAddr(t.addr) }, tagByName[t.name] || {}, t);
+
+    const compiled = SC.compile(opts.program || { v: 1, rungs: [] }, { tags, palette: level.palette || null });
+    const st = SC.newState();
+    for (const addr in level.init || {}) {
+      const a = A.parseAddr(addr);
+      if (a) st[a.arr][a.idx] = level.init[addr];
+    }
+    const plantCfg = Object.assign({}, level.plant || {}, scenario.plant || {});
+    const P = SC.plant.init(plantCfg, seed);
+
+    const panel = Object.create(null);
+    for (const io of INPUT_IO) if (io.src === 'panel') panel[io.name] = io.def | 0;
+    const events = prepareEvents(scenario.events);
+
+    const sim = {
+      level, scenario, compiled, st, P, panel, forces: Object.create(null), events, evIdx: 0,
+      t: 0, dt: SC.SCAN_MS, trace: null, prevVals: null, tagByName, rec: null, steps: 0, audit: [], watch: {},
+    };
+    if (opts.trace) { sim.trace = []; sim.prevVals = Object.create(null); }
+    for (const nm of level.watchLog || []) sim.watch[nm] = undefined;
+
+    function resolveInput(key) {
+      if (SC.ioByName[key] && SC.ioByName[key].addr[0] === 'I') return SC.ioByName[key];
+      const a = A.parseAddr(key);
+      if (a) return INPUT_IO.find((io) => io._a.canon === a.canon) || null;
+      return null;
+    }
+    sim.resolveInput = resolveInput;
+
+    function applyEvent(ev) {
+      if (ev.set) {
+        for (const k in ev.set) {
+          const io = resolveInput(k);
+          if (io) panel[io.name] = ev.set[k] === true ? 1 : ev.set[k] === false ? 0 : ev.set[k];
+        }
+      }
+      SC.plant.applyEvent(P, ev);
+      if (ev.audit) sim.audit.push({ t: sim.t, note: ev.audit });
+    }
+
+    sim.setPanel = (name, v) => {
+      const io = resolveInput(name);
+      if (io && io.src === 'panel') panel[io.name] = v === true ? 1 : v === false ? 0 : v;
+    };
+
+    sim.force = (key, v) => {
+      const a = A.parseAddr(SC.ioByName[key] ? SC.ioByName[key].addr : key);
+      if (!a || a.arr !== 'I' && a.arr !== 'IW') return false;
+      if (v === null || v === undefined) delete sim.forces[a.canon];
+      else sim.forces[a.canon] = v === true ? 1 : v === false ? 0 : v;
+      return true;
+    };
+    sim.forcesActive = () => Object.keys(sim.forces).length > 0;
+    sim.clearForces = () => { sim.forces = Object.create(null); };
+
+    sim.read = (key) => {
+      const t = tagByName[key];
+      let a = t ? t._a : A.parseAddr(key);
+      if (a) return st[a.arr][a.idx];
+      const m = /^([A-Za-z_]\w*)\.(Q|QU|QD|ET|CV|PT)$/.exec(key);
+      if (m) { const s = st.inst[m[1]]; return s ? s[m[2]] : 0; }
+      return sim.metric(key);
+    };
+
+    sim.metric = (key) => {
+      const n = P.counts;
+      switch (key) {
+        case 'out': case 'good': case 'rejected': case 'spills': case 'wastedCaps': case 'goodLost': case 'melted': case 'badShipped': case 'wastedLabels': case 'spawned': return n[key];
+        case 'filledCount': return n.filled;
+        case 'overflow': return n.spills > 0 ? 1 : 0;
+        case 'bottlesPerMin': case 'availability': case 'performance': case 'quality': case 'oee': return SC.plant.kpis(P)[key];
+      }
+      return undefined;
+    };
+    sim.isKnownKey = (key) => !!(tagByName[key] || A.parseAddr(key) || /^([A-Za-z_]\w*)\.(Q|QU|QD|ET|CV|PT)$/.test(key) || METRIC_KEYS.indexOf(key) >= 0);
+
+    function recordTrace() {
+      const cur = sim.prevVals;
+      for (const nm in tagByName) {
+        const t = tagByName[nm];
+        if (!t._a) continue;
+        const v = st[t._a.arr][t._a.idx];
+        if (cur[nm] !== v) { cur[nm] = v; sim.trace.push({ t: sim.t, tag: nm, v }); }
+      }
+    }
+
+    sim.step = (withRec) => {
+      while (sim.evIdx < events.length && events[sim.evIdx].t <= sim.t) applyEvent(events[sim.evIdx++]);
+      // sensor snapshot -> input image
+      for (const io of INPUT_IO) {
+        const f = sim.forces[io._a.canon];
+        let v;
+        if (f !== undefined) v = f;
+        else if (io.src === 'panel') v = panel[io.name];
+        else v = P.sens[io.name];
+        if (v === undefined) v = 0;
+        if (io._a.kind === 'bit') st.I[io._a.idx] = v ? 1 : 0;
+        else st[io._a.arr][io._a.idx] = v | 0;
+      }
+      if (compiled.ok) {
+        if (withRec) { sim.rec = []; SC.scanMut(compiled, st, sim.dt, sim.rec); } else SC.scanMut(compiled, st, sim.dt);
+      } else { st.t += sim.dt; st.scans++; }
+      const out = {};
+      for (const io of OUTPUT_IO) out[io.name] = st.Q[io._a.idx];
+      for (const nm in sim.watch) {
+        const v = sim.read(nm);
+        if (sim.watch[nm] !== undefined && sim.watch[nm] !== v) sim.audit.push({ t: sim.t, tag: nm, from: sim.watch[nm], to: v, key: panel.Supervisor_Key ? 1 : 0 });
+        sim.watch[nm] = v;
+      }
+      if (sim.trace) recordTrace();
+      SC.plant.stepMut(P, out, sim.dt);
+      sim.t += sim.dt;
+      sim.steps++;
+    };
+
+    sim.runUntil = (ms) => { while (sim.t < ms) sim.step(); };
+    return sim;
+  }
+
+  SC.sim = { create, INPUT_IO, OUTPUT_IO, prepareEvents, METRIC_KEYS };
+})();
+
+</script>
+<script>
+/* ==== src/core/scenario.js ==== */
+/* FAT scenario runner: runs a scenario against a program and checks the assertions.
+ *
+ * scenario: {id, seed, durationMs, plant?:{...}, events:[...], asserts:[...], title?:{en,ar}}
+ *   events:  {t, set:{tag:value}} | {t, press:"Start_PB", ms} | {t, estop:bool} | {t, door:"open"|"closed"}
+ *            {t, fault:name, arg} | {t, clear:name, arg} | {t, plantSet:{...}}
+ *   asserts: {t, expect:{key:value}, tol?, msg?}          value must hold at some sample in [t-tol, t+tol]
+ *            {window:[a,b], never:{...}} / {window:[a,b], always:{...}}
+ *            {when:{...}, within:ms, expect:{...}, tol?}  after every rising edge of `when`
+ *   keys: tag names, addresses (Q0.0), instance fields (DB_T.ET), plant metrics (filledCount, spills, ...)
+ *   values: true/false/number or {gte,gt,lte,lt,eq,ne}
+ * Sample time = the time at which the scan read its inputs; outputs are the result of that scan.
+ */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const DEFAULT_TOL = 20;
+
+  function matchVal(v, exp) {
+    if (v === undefined) return false;
+    if (typeof exp === 'boolean') return (v ? true : false) === exp;
+    if (typeof exp === 'number') return v === exp;
+    if (exp && typeof exp === 'object') {
+      for (const op in exp) {
+        const e = exp[op];
+        if (op === 'gte' && !(v >= e)) return false;
+        if (op === 'gt' && !(v > e)) return false;
+        if (op === 'lte' && !(v <= e)) return false;
+        if (op === 'lt' && !(v < e)) return false;
+        if (op === 'eq' && !(v === e)) return false;
+        if (op === 'ne' && !(v !== e)) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function matchCond(sim, cond) {
+    for (const k in cond) if (!matchVal(sim.read(k), cond[k])) return false;
+    return true;
+  }
+
+  function actualOf(sim, cond) {
+    const o = {};
+    for (const k in cond) { const v = sim.read(k); o[k] = typeof v === 'number' && !Number.isInteger(v) ? Math.round(v * 1000) / 1000 : v; }
+    return o;
+  }
+
+  const fmtVal = (e) => (typeof e === 'boolean' ? (e ? 'ON' : 'OFF') : typeof e === 'object' ? Object.keys(e).map((k) => `${k} ${e[k]}`).join(', ') : String(e));
+  const fmtCond = (c) => Object.keys(c).map((k) => `${k} = ${fmtVal(c[k])}`).join(' and ');
+  const sec = (ms) => (ms / 1000).toFixed(2) + ' s';
+
+  function defaultMsg(a, kind) {
+    if (kind === 'at') return { en: `Expected ${fmtCond(a.expect)} at t = ${sec(a.t)}`, ar: `المتوقع ${fmtCond(a.expect)} عند t = ${sec(a.t)}` };
+    if (kind === 'never') return { en: `${fmtCond(a.never)} must never happen between ${sec(a.window[0])} and ${sec(a.window[1])}`, ar: `ممنوع يصير ${fmtCond(a.never)} بين ${sec(a.window[0])} و ${sec(a.window[1])}` };
+    if (kind === 'always') return { en: `${fmtCond(a.always)} must hold between ${sec(a.window[0])} and ${sec(a.window[1])}`, ar: `لازم يضل ${fmtCond(a.always)} بين ${sec(a.window[0])} و ${sec(a.window[1])}` };
+    return { en: `After ${fmtCond(a.when)}, expected ${fmtCond(a.expect)} within ${a.within} ms`, ar: `بعد ${fmtCond(a.when)} المتوقع ${fmtCond(a.expect)} خلال ${a.within} ms` };
+  }
+
+  // opts: {seed, failFast, trace, forces, userTags, upTo (ms, stop early), rec}
+  function runScenario(level, program, scenario, opts) {
+    opts = opts || {};
+    const t0 = Date.now();
+    const sim = SC.sim.create({ level, program, scenario, seed: opts.seed !== undefined ? opts.seed : scenario.seed, trace: !!opts.trace, userTags: opts.userTags });
+    if (opts.forces) for (const k in opts.forces) sim.force(k, opts.forces[k]);
+    const dur = scenario.durationMs || 10000;
+    const asserts = (scenario.asserts || []).map((a, i) => {
+      const kind = a.never ? 'never' : a.always ? 'always' : a.when ? 'within' : 'at';
+      const tol = a.tol === undefined ? DEFAULT_TOL : a.tol;
+      const o = { a, i, kind, tol, done: false, ok: false, obligations: [], prevWhen: false };
+      if (kind === 'at') { o.from = a.t - tol; o.to = a.t + tol; }
+      return o;
+    });
+    const failures = [];
+    const fail = (o, tFail, extra) => {
+      const a = o.a;
+      const cond = o.kind === 'never' ? a.never : o.kind === 'always' ? a.always : a.expect;
+      failures.push(Object.assign({
+        idx: o.i, kind: o.kind, t: tFail, at: a.t !== undefined ? a.t : (a.window ? a.window[0] : tFail),
+        msg: a.msg || defaultMsg(a, o.kind), expected: cond, actual: actualOf(sim, cond), assertId: a.id || ('#' + (o.i + 1)),
+      }, extra || {}));
+    };
+    const unknownKeys = [];
+    for (const o of asserts) {
+      const a = o.a;
+      for (const c of [a.expect, a.never, a.always, a.when]) if (c) for (const k in c) if (!sim.isKnownKey(k)) unknownKeys.push(k);
+    }
+    if (unknownKeys.length) failures.push({ idx: -1, kind: 'bad_scenario', t: 0, at: 0, msg: { en: 'Scenario uses unknown key ' + unknownKeys[0], ar: 'السيناريو فيه مفتاح غير معروف' }, expected: {}, actual: {}, assertId: 'scenario' });
+
+    const stopAt = opts.upTo !== undefined ? opts.upTo : dur;
+    while (sim.t < stopAt) {
+      sim.step();
+      const ts = sim.t - sim.dt;
+      for (const o of asserts) {
+        if (o.done) continue;
+        const a = o.a;
+        if (o.kind === 'at') {
+          if (ts >= o.from && ts <= o.to) {
+            if (!o.ok && matchCond(sim, a.expect)) o.ok = true;
+            if (ts >= o.to && !o.ok) { o.done = true; fail(o, ts); }
+          }
+          if (ts >= o.to) o.done = true;
+        } else if (o.kind === 'never' || o.kind === 'always') {
+          if (ts >= a.window[0] && ts <= a.window[1]) {
+            const m = matchCond(sim, o.kind === 'never' ? a.never : a.always);
+            if ((o.kind === 'never' && m) || (o.kind === 'always' && !m)) { o.done = true; fail(o, ts); }
+          }
+          if (ts > a.window[1]) o.done = true;
+        } else {
+          const w = matchCond(sim, a.when);
+          if (w && !o.prevWhen) o.obligations.push({ t0: ts, deadline: ts + (a.within || 0) + o.tol });
+          o.prevWhen = w;
+          if (o.obligations.length) {
+            const ok = matchCond(sim, a.expect);
+            const keep = [];
+            for (const ob of o.obligations) {
+              if (ok) continue;
+              if (ts >= ob.deadline) { fail(o, ts, { at: ob.t0 }); o.done = true; break; }
+              keep.push(ob);
+            }
+            o.obligations = keep;
+          }
+        }
+      }
+      if (opts.failFast && failures.length) break;
+    }
+    // flush obligations whose deadline is inside the run but never evaluated (end of run)
+    if (stopAt >= dur) {
+      for (const o of asserts) {
+        if (o.done) continue;
+        if (o.kind === 'at' && !o.ok && o.to <= dur) fail(o, dur);
+        if (o.kind === 'within') for (const ob of o.obligations) if (ob.deadline <= dur) { fail(o, dur, { at: ob.t0 }); break; }
+      }
+    }
+    failures.sort((x, y) => x.t - y.t || x.idx - y.idx);
+    return {
+      id: scenario.id, pass: failures.length === 0, failures, firstFailure: failures[0] || null,
+      metrics: SC.plant.kpis(sim.P), audit: sim.audit, sim: opts.keepSim ? sim : null, ms: Date.now() - t0, forcesActive: sim.forcesActive(),
+    };
+  }
+
+  // ------------------------------------------------------------------ hidden variants
+  // level.hidden = {count, seedBase, base?:[scenarioIds], vary:{plant:{key:[loPct,hiPct]}, jitterMs:[lo,hi], shiftMs:[lo,hi], bottlesPerMinPct:[lo,hi]}}
+  function makeHidden(level, k) {
+    const h = level.hidden || {};
+    const vis = (level.scenarios || []).filter((s) => !h.base || h.base.indexOf(s.id) >= 0);
+    if (!vis.length) return null;
+    const base = vis[k % vis.length];
+    const seed = (h.seedBase || 1000) + k;
+    const o = { rng: SC.prng.seedOf(seed * 7919 + 13) };
+    const sc = SC.util.clone(base);
+    sc.id = `${base.id}~h${k}`;
+    sc.seed = seed;
+    sc.hidden = true;
+    const v = h.vary || {};
+    sc.plant = sc.plant || {};
+    if (v.jitterMs) sc.plant.jitterMs = Math.round(SC.prng.range(o, v.jitterMs[0], v.jitterMs[1]));
+    if (v.genDelayMs) sc.plant.genDelayMs = Math.round(SC.prng.range(o, v.genDelayMs[0], v.genDelayMs[1]));
+    if (v.bottlesPerMinPct) {
+      const b = sc.plant.bottlesPerMin || (level.plant && level.plant.bottlesPerMin) || SC.plant.DEFAULTS.bottlesPerMin;
+      sc.plant.bottlesPerMin = Math.round(b * (1 + SC.prng.range(o, v.bottlesPerMinPct[0], v.bottlesPerMinPct[1]) / 100) * 10) / 10;
+    }
+    for (const key in v.plant || {}) {
+      const range = v.plant[key];
+      const baseV = sc.plant[key] !== undefined ? sc.plant[key] : (level.plant && level.plant[key] !== undefined ? level.plant[key] : SC.plant.DEFAULTS[key]);
+      if (typeof baseV === 'number') sc.plant[key] = Math.round(baseV * (1 + SC.prng.range(o, range[0], range[1]) / 100) * 1000) / 1000;
+    }
+    if (v.shiftMs) {
+      const sh = Math.round(SC.prng.range(o, v.shiftMs[0], v.shiftMs[1]) / 10) * 10;
+      for (const e of sc.events || []) e.t += sh;
+      for (const a of sc.asserts || []) {
+        if (a.t !== undefined) a.t += sh;
+        if (a.window) a.window = [a.window[0] + sh, a.window[1] + sh];
+      }
+      sc.durationMs += sh;
+    }
+    return sc;
+  }
+
+  // runs visible scenarios, then hidden variants. opts: {failFast, skipHidden, userTags, forces}
+  function runLevel(level, program, opts) {
+    opts = opts || {};
+    const results = [];
+    let firstFail = null;
+    const push = (sc, hidden) => {
+      const r = runScenario(level, program, sc, { failFast: true, userTags: opts.userTags, forces: opts.forces });
+      r.hidden = !!hidden;
+      r.scenario = sc;
+      results.push(r);
+      if (!r.pass && !firstFail) firstFail = r;
+      return r.pass;
+    };
+    for (const sc of level.scenarios || []) { if (!push(sc, false) && opts.stopAtFirst) break; }
+    if (!opts.skipHidden && !(opts.stopAtFirst && firstFail)) {
+      const n = (level.hidden && level.hidden.count) || 0;
+      for (let k = 0; k < n; k++) {
+        const sc = makeHidden(level, k);
+        if (sc && !push(sc, true) && opts.stopAtFirst) break;
+      }
+    }
+    return { pass: results.every((r) => r.pass) && !(opts.forces && Object.keys(opts.forces).length), results, firstFail };
+  }
+
+  SC.scenario = { runScenario, runLevel, makeHidden, matchCond, DEFAULT_TOL };
+})();
+
+</script>
+<script>
+/* ==== src/core/demo.js ==== */
+/* Built-in demo program for the sandbox (a working fill cycle). */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  SC.demo = {
+    lines: [
+      '[Start_PB | Run] Stop_PB EStop_OK (Run)',
+      'Run PE_Fill /Done (Busy)',
+      'Busy TON(DB_Fill,T#3s) (S:Done)',
+      '/PE_Fill (R:Done)',
+      'Run /Busy (Conveyor_Motor)',
+      'Busy (Fill_Valve)',
+    ],
+    tags: ['Start_PB', 'Stop_PB', 'EStop_OK', 'PE_Fill', 'Conveyor_Motor', 'Fill_Valve'].concat([
+      { name: 'Run', addr: 'M0.0', type: 'Bool', user: true }, { name: 'Done', addr: 'M0.1', type: 'Bool', user: true }, { name: 'Busy', addr: 'M0.2', type: 'Bool', user: true },
+    ]),
+  };
+})();
+
+</script>
+<script>
+/* ==== src/ui/dom.js ==== */
+/* Tiny DOM helpers + bilingual text helpers + safe storage. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  SC.ui = SC.ui || {};
+
+  // h('div', {class:'a', onclick:fn, dataset:{x:1}}, child, 'text', [more])
+  function h(tag, attrs) {
+    const el = document.createElement(tag);
+    if (attrs) {
+      for (const k in attrs) {
+        const v = attrs[k];
+        if (v === null || v === undefined || v === false) continue;
+        if (k === 'class') el.className = v;
+        else if (k === 'dataset') for (const d in v) el.dataset[d] = v[d];
+        else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+        else if (k === 'html') el.innerHTML = v;
+        else if (k.slice(0, 2) === 'on' && typeof v === 'function') el.addEventListener(k.slice(2), v);
+        else if (v === true) el.setAttribute(k, '');
+        else el.setAttribute(k, v);
+      }
+    }
+    for (let i = 2; i < arguments.length; i++) add(el, arguments[i]);
+    return el;
+  }
+  function add(el, c) {
+    if (c === null || c === undefined || c === false) return;
+    if (Array.isArray(c)) c.forEach((x) => add(el, x));
+    else if (c instanceof Node) el.appendChild(c);
+    else el.appendChild(document.createTextNode(String(c)));
+  }
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // Arabic text may contain {{English terms}} -> <bdi lang="en">
+  function arHtml(s) { return esc(s).replace(/\{\{(.+?)\}\}/g, '<bdi lang="en">$1</bdi>'); }
+  function arEl(s, tag) { return h(tag || 'span', { lang: 'ar', dir: 'rtl', html: arHtml(s) }); }
+  function enEl(s, tag) { return h(tag || 'span', { lang: 'en', dir: 'ltr' }, s); }
+
+  // storage that never throws
+  const store = {
+    mem: Object.create(null),
+    get(k, def) {
+      try { const v = globalThis.localStorage.getItem('scancycle.' + k); return v === null ? (k in store.mem ? store.mem[k] : def) : JSON.parse(v); } catch (e) { return k in store.mem ? store.mem[k] : def; }
+    },
+    set(k, v) {
+      store.mem[k] = v;
+      try { globalThis.localStorage.setItem('scancycle.' + k, JSON.stringify(v)); return true; } catch (e) { store.failed = true; return false; }
+    },
+    failed: false,
+  };
+
+  SC.ui.h = h;
+  SC.ui.esc = esc;
+  SC.ui.arHtml = arHtml;
+  SC.ui.arEl = arEl;
+  SC.ui.enEl = enEl;
+  SC.ui.store = store;
+})();
+
+</script>
+<script>
+/* ==== src/ui/i18n.js ==== */
+/* UI strings (EN + AR). Arabic strings may contain {{English terms}} which become <bdi lang="en">. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+
+  const S = {
+    app: { en: 'Scan Cycle', ar: 'دورة المسح' },
+    tagline: { en: 'Write real PLC ladder logic. Run a bottling line. Pass the FAT.', ar: 'اكتب {{ladder logic}} حقيقي، شغّل خط تعبئة، وانجح بفحص {{FAT}}.' },
+    map: { en: 'Station map', ar: 'خريطة المحطات' },
+    sandbox: { en: 'Sandbox', ar: 'ساحة التجربة' },
+    sandboxDesc: { en: 'Every instruction, the whole line. No work order — just play.', ar: 'كل التعليمات وكل الخط. ما في أمر شغل — جرّب براحتك.' },
+    back: { en: '← Map', ar: '← الخريطة' },
+    workOrder: { en: 'Work order', ar: 'أمر الشغل' },
+    datasheet: { en: 'Datasheet', ar: 'ورقة البيانات' },
+    hints: { en: 'Hints', ar: 'تلميحات' },
+    run: { en: 'Run', ar: 'تشغيل' },
+    pause: { en: 'Pause', ar: 'إيقاف مؤقت' },
+    step: { en: 'Next scan', ar: 'الـ scan التالي' },
+    restart: { en: 'Restart line', ar: 'إعادة تشغيل الخط' },
+    speed: { en: 'Speed', ar: 'السرعة' },
+    fastWarn: { en: 'Fast-forward can make sensors miss bottles — that is a real scan-time lesson.', ar: 'التسريع ممكن يخلّي الحساسات تفوّت القناني — هاد درس حقيقي عن زمن الـ {{scan}}.' },
+    estop: { en: 'E-STOP', ar: 'طوارئ' },
+    estopNote: { en: 'Hardwired: the safety relay cuts motor, valve and solenoid power. The PLC only sees EStop_OK.', ar: 'موصول بالأسلاك: رلاي السلامة بيقطع الكهربا عن المحرك والصمامات. الـ {{PLC}} بس بيشوف {{EStop_OK}}.' },
+    door: { en: 'Guard door', ar: 'باب الحماية' },
+    doorOpen: { en: 'Open', ar: 'مفتوح' },
+    doorClosed: { en: 'Closed', ar: 'مغلق' },
+    panel: { en: 'Operator panel', ar: 'لوحة المشغّل' },
+    hold: { en: 'hold to press', ar: 'اضغط وثبّت' },
+    inputs: { en: 'Inputs', ar: 'المداخل' },
+    outputs: { en: 'Outputs', ar: 'المخارج' },
+    forcesActive: { en: 'FORCES ACTIVE', ar: 'في {{forces}} شغّالة' },
+    clearForces: { en: 'Clear all forces', ar: 'امسح كل الـ {{forces}}' },
+    forceHint: { en: 'Click an input to force it: auto → 1 → 0 → auto. A level cannot pass while forces are active.', ar: 'اضغط على أي مدخل لعمل {{force}}: تلقائي ← 1 ← 0 ← تلقائي. المستوى ما بينجح والـ {{forces}} شغّالة.' },
+    ladder: { en: 'Ladder program', ar: 'برنامج الـ {{Ladder}}' },
+    tags: { en: 'Tag table', ar: 'جدول الـ {{Tags}}' },
+    runFat: { en: 'Run FAT', ar: 'شغّل فحص {{FAT}}' },
+    langBtn: { en: 'عربي', ar: 'English' },
+    theme: { en: 'Theme', ar: 'المظهر' },
+    soon: { en: 'Coming soon', ar: 'قريبًا' },
+    locked: { en: 'Locked', ar: 'مقفل' },
+    offlineNote: { en: 'Works offline. Your progress is saved in this browser.', ar: 'بيشتغل بدون إنترنت. تقدمك محفوظ بهاد المتصفح.' },
+  };
+
+  U.lang = U.store.get('lang', 'en');
+  U.setLang = (l) => { U.lang = l; U.store.set('lang', l); document.documentElement.lang = 'en'; };
+
+  // text node (current language)
+  U.t = (key) => {
+    const s = S[key];
+    if (!s) return key;
+    return U.lang === 'ar' ? s.ar : s.en;
+  };
+  // element: bilingual element with proper lang/dir
+  U.tEl = (key, tag) => {
+    const s = S[key];
+    if (!s) return U.h(tag || 'span', null, key);
+    return U.lang === 'ar' ? U.arEl(s.ar, tag) : U.enEl(s.en, tag);
+  };
+  // both languages stacked (used for work orders)
+  U.S = S;
+})();
+
+</script>
+<script>
+/* ==== src/ui/plantView.js ==== */
+/* Canvas 2D side view of the bottling line. Reads sim.P, never changes it. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  SC.ui = SC.ui || {};
+
+  const W = 960, H = 280, X0 = 10, K = 0.5;       // px = X0 + mm * K
+  const BELT_Y = 206, BELT_H = 12;               // top of the belt = bottle base
+  const BW = 28, BH = 40, NECK_H = 11;           // bottle drawing size (px)
+  const px = (x) => X0 + x * K;
+
+  function PlantView(canvas) {
+    const ctx = canvas.getContext('2d');
+    const stat = document.createElement('canvas');
+    const view = { canvas, sim: null, colors: {}, reduced: false, ghosts: [], seen: Object.create(null), lastReject: 0, dpr: 1 };
+    const mq = globalThis.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+    view.reduced = !!(mq && mq.matches);
+
+    function cssVar(n, fb) { const v = getComputedStyle(document.documentElement).getPropertyValue(n).trim(); return v || fb; }
+    view.refreshTheme = function () {
+      view.colors = {
+        ground: cssVar('--ground', '#E9ECEC'), surface: cssVar('--surface', '#F7F8F8'), ink: cssVar('--ink', '#14262D'),
+        muted: cssVar('--muted', '#5E7279'), line: cssVar('--line', '#C6D0D2'), power: cssVar('--power', '#0B6E78'),
+        alarm: cssVar('--alarm', '#B3461E'), ok: cssVar('--ok', '#2F6B4C'), amber: cssVar('--amber', '#9A6B12'),
+      };
+      view.staticDirty = true;
+    };
+    view.setSim = function (sim) { view.sim = sim; view.ghosts = []; view.seen = Object.create(null); view.staticDirty = true; };
+
+    view.resize = function () {
+      const cssW = Math.max(320, canvas.clientWidth || W);
+      const dpr = Math.min(3, globalThis.devicePixelRatio || 1);
+      view.dpr = dpr;
+      view.scale = cssW / W;
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssW * (H / W) * dpr);
+      stat.width = canvas.width; stat.height = canvas.height;
+      view.staticDirty = true;
+    };
+
+    // ---------------------------------------------------------------- helpers
+    function rr(c, x, y, w, h, r) {
+      c.beginPath();
+      if (c.roundRect) c.roundRect(x, y, w, h, r);
+      else { c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+    }
+    function text(c, s, x, y, size, color, align, weight) {
+      c.font = `${weight || 500} ${size}px ui-monospace, Consolas, Menlo, monospace`;
+      c.fillStyle = color; c.textAlign = align || 'center'; c.textBaseline = 'alphabetic';
+      c.fillText(s, x, y);
+    }
+    const has = (s) => view.sim.P.cfg.stations.indexOf(s) >= 0;
+
+    // ---------------------------------------------------------------- static layer
+    function drawStatic() {
+      const c = stat.getContext('2d');
+      const k = view.scale * view.dpr;
+      c.setTransform(k, 0, 0, k, 0, 0);
+      c.clearRect(0, 0, W, H);
+      const col = view.colors, P = view.sim.P, cfg = P.cfg, x = cfg.x;
+      c.fillStyle = col.surface; c.fillRect(0, 0, W, H);
+      // belt
+      const bx0 = px(0) - 6, bx1 = px(cfg.convLen) + 6;
+      c.fillStyle = col.line; rr(c, bx0, BELT_Y, bx1 - bx0, BELT_H, 5); c.fill();
+      c.strokeStyle = col.muted; c.lineWidth = 1.5; rr(c, bx0, BELT_Y, bx1 - bx0, BELT_H, 5); c.stroke();
+      c.fillStyle = col.muted;
+      for (let lx = bx0 + 30; lx < bx1; lx += 150) c.fillRect(lx, BELT_Y + BELT_H, 5, 22);
+      c.fillRect(bx0, BELT_Y + BELT_H + 22, bx1 - bx0, 3);
+      // infeed funnel
+      if (has('infeed')) {
+        c.strokeStyle = col.muted; c.lineWidth = 1.5; c.setLineDash([4, 3]);
+        c.beginPath(); c.moveTo(X0 - 4, BELT_Y - 60); c.lineTo(X0 - 4, BELT_Y - 1); c.stroke(); c.setLineDash([]);
+        text(c, 'INFEED', px(60), BELT_Y + 40, 10, col.muted);
+      }
+      // filler head + nozzle housing
+      if (has('filler')) {
+        const fx = px(x.nozzle);
+        c.fillStyle = col.surface; c.strokeStyle = col.ink; c.lineWidth = 1.5;
+        rr(c, fx - 34, 70, 68, 34, 4); c.fill(); c.stroke();
+        c.fillStyle = col.ink; c.fillRect(fx - 4, 104, 8, 22);
+        text(c, 'FILLER', fx, 62, 11, col.ink, 'center', 700);
+      }
+      // capper
+      if (has('capper')) {
+        const cx = px(x.cap);
+        c.fillStyle = col.surface; c.strokeStyle = col.ink; c.lineWidth = 1.5;
+        rr(c, cx - 30, 70, 60, 34, 4); c.fill(); c.stroke();
+        text(c, 'CAPPER', cx, 62, 11, col.ink, 'center', 700);
+      }
+      if (has('sealer')) {
+        const sx = px(x.seal);
+        c.fillStyle = col.surface; c.strokeStyle = col.ink; c.lineWidth = 1.5;
+        rr(c, sx - 30, 80, 60, 24, 12); c.fill(); c.stroke();
+        c.beginPath(); c.arc(sx, 92, 6, 0, 6.3); c.stroke();
+        text(c, 'SEALER', sx, 72, 11, col.ink, 'center', 700);
+      }
+      if (has('labeler')) {
+        const lx = px(x.label);
+        c.fillStyle = col.surface; c.strokeStyle = col.ink; c.lineWidth = 1.5;
+        rr(c, lx - 30, 70, 60, 34, 4); c.fill(); c.stroke();
+        text(c, 'LABELER', lx, 62, 11, col.ink, 'center', 700);
+      }
+      if (has('reject')) {
+        const rx = px(x.reject);
+        c.strokeStyle = col.ink; c.lineWidth = 1.5; c.fillStyle = col.surface;
+        rr(c, rx - 20, 36, 40, 24, 3); c.fill(); c.stroke();
+        text(c, 'REJECT', rx, 28, 11, col.ink, 'center', 700);
+        // chute below the belt
+        c.setLineDash([3, 3]); c.beginPath(); c.moveTo(rx - 18, BELT_Y + BELT_H + 4); c.lineTo(rx - 26, BELT_Y + BELT_H + 40); c.lineTo(rx + 26, BELT_Y + BELT_H + 40); c.lineTo(rx + 18, BELT_Y + BELT_H + 4); c.stroke(); c.setLineDash([]);
+      }
+      if (has('exit')) text(c, 'OUTFEED →', px(cfg.convLen) - 40, BELT_Y + 40, 10, col.muted);
+      // tank
+      if (has('tank')) {
+        c.strokeStyle = col.ink; c.lineWidth = 1.5; c.fillStyle = col.surface;
+        rr(c, 12, 8, 54, 64, 5); c.fill(); c.stroke();
+        text(c, 'TANK', 39, 84, 10, col.muted);
+      }
+      view.staticDirty = false;
+    }
+
+    // ---------------------------------------------------------------- dynamic parts
+    function drawBottle(c, cx, b, alpha) {
+      const col = view.colors, cfg = view.sim.P.cfg;
+      const y0 = BELT_Y;
+      c.lineWidth = 1.5;
+      // glass
+      c.fillStyle = 'rgba(201,139,43,0.14)'; c.strokeStyle = col.ink;
+      rr(c, cx - BW / 2, y0 - BH, BW, BH, 5); c.fill();
+      // liquid
+      const lh = Math.max(0, Math.min(1, b.level / cfg.capacity)) * (BH - 4);
+      if (lh > 0.5) { c.fillStyle = '#C98B2B'; rr(c, cx - BW / 2 + 1.5, y0 - 2 - lh, BW - 3, lh, 3); c.fill(); }
+      c.strokeStyle = col.ink; rr(c, cx - BW / 2, y0 - BH, BW, BH, 5); c.stroke();
+      // neck
+      c.fillStyle = 'rgba(201,139,43,0.14)'; c.strokeStyle = col.ink;
+      rr(c, cx - 6, y0 - BH - NECK_H, 12, NECK_H + 1, 2); c.fill(); c.stroke();
+      if (b.capped) { c.fillStyle = col.power; rr(c, cx - 8, y0 - BH - NECK_H - 6, 16, 7, 2); c.fill(); }
+      if (b.sealed) { c.strokeStyle = col.surface; c.lineWidth = 2; c.beginPath(); c.moveTo(cx - 6, y0 - BH - NECK_H + 2); c.lineTo(cx + 6, y0 - BH - NECK_H + 2); c.stroke(); }
+      if (b.labeled) { c.fillStyle = col.surface; c.strokeStyle = col.ink; c.lineWidth = 1; rr(c, cx - 10, y0 - 28, 20, 16, 2); c.fill(); c.stroke(); c.fillStyle = col.ink; c.fillRect(cx - 7, y0 - 23, 14, 1.5); c.fillRect(cx - 7, y0 - 19, 9, 1.5); }
+      if (b.challenge) { c.fillStyle = col.alarm; c.beginPath(); c.moveTo(cx, y0 - BH - NECK_H - 16); c.lineTo(cx - 6, y0 - BH - NECK_H - 6); c.lineTo(cx + 6, y0 - BH - NECK_H - 6); c.closePath(); c.fill(); text(c, 'T', cx, y0 - BH - NECK_H - 19, 9, col.alarm, 'center', 700); }
+      if (b.melted) { c.strokeStyle = col.alarm; c.lineWidth = 2; c.setLineDash([3, 2]); rr(c, cx - BW / 2 - 2, y0 - BH - 2, BW + 4, BH + 4, 6); c.stroke(); c.setLineDash([]); }
+    }
+
+    function eyeList(P) {
+      const x = P.cfg.x, out = [];
+      const add = (name, ex, st) => { if (has(st)) out.push({ name, x: ex }); };
+      add('PE_Infeed', x.infeed, 'infeed');
+      add('PE_Fill', x.fillPE, 'filler');
+      add('PE_Cap', x.cap, 'capper');
+      add('PE_Reject', x.reject, 'reject');
+      add('PE_Exit', x.exit, 'exit');
+      add('PE_Backup', x.backup, 'backup');
+      return out;
+    }
+
+    function trackRejects(P) {
+      // bottles that vanish before reaching the end of the line were pushed off by the reject pusher
+      const now = Object.create(null);
+      for (const b of P.bottles) now[b.id] = b;
+      for (const id in view.seen) {
+        if (!now[id]) {
+          const b = view.seen[id];
+          if (b.x < P.cfg.convLen - 5) view.ghosts.push({ b, t0: P.t, x: b.x });
+        }
+      }
+      view.seen = now;
+    }
+
+    view.draw = function (alpha) {
+      const sim = view.sim;
+      if (!sim) return;
+      if (view.staticDirty) drawStatic();
+      const k = view.scale * view.dpr;
+      const c = ctx;
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.drawImage(stat, 0, 0);
+      c.setTransform(k, 0, 0, k, 0, 0);
+      const col = view.colors, P = sim.P, cfg = P.cfg, x = cfg.x;
+      alpha = alpha || 0;
+      trackRejects(P);
+
+      // belt chevrons: they move exactly with the conveyor
+      c.strokeStyle = col.muted; c.lineWidth = 1;
+      const off = (P.counts.dist % 40) * K;
+      for (let lx = X0 + off - 20; lx < px(cfg.convLen); lx += 20) {
+        if (lx < X0) continue;
+        c.beginPath(); c.moveTo(lx, BELT_Y + 3); c.lineTo(lx + 4, BELT_Y + BELT_H / 2); c.lineTo(lx, BELT_Y + BELT_H - 3); c.stroke();
+      }
+
+      // photo-eyes (blocked = thick solid beam + filled receiver + "ON"; clear = thin dashed + hollow)
+      for (const e of eyeList(P)) {
+        const ex = px(e.x), on = !!P.sens[e.name];
+        c.strokeStyle = on ? col.alarm : col.muted; c.lineWidth = on ? 3 : 1;
+        c.setLineDash(on ? [] : [3, 3]);
+        c.beginPath(); c.moveTo(ex, 128); c.lineTo(ex, BELT_Y - 1); c.stroke(); c.setLineDash([]);
+        c.fillStyle = col.surface; c.strokeStyle = on ? col.alarm : col.muted; c.lineWidth = 1.5;
+        rr(c, ex - 4, 120, 8, 8, 1); c.fill(); c.stroke();
+        if (on) { c.fillStyle = col.alarm; rr(c, ex - 4, 120, 8, 8, 1); c.fill(); }
+        text(c, e.name.replace('PE_', 'PE ') + (on ? ' ●' : ' ○'), ex, 118 + ((e.name === 'PE_Fill' || e.name === 'PE_Backup') ? -10 : 0), 9, on ? col.alarm : col.muted, 'center', on ? 700 : 500);
+      }
+
+      // stopper rod
+      if (has('stopper')) {
+        const sx = px(x.stopper), y = 100 + P.stopper.pos * 88;
+        c.fillStyle = col.surface; c.strokeStyle = col.ink; c.lineWidth = 1.5;
+        rr(c, sx - 5, 88, 10, 22, 2); c.fill(); c.stroke();
+        c.fillStyle = col.ink; c.fillRect(sx - 2, 108, 4, Math.max(0, y - 108)); c.fillRect(sx - 6, y - 2, 12, 5);
+        text(c, P.stopper.pos >= 0.97 ? 'EXT' : P.stopper.pos <= 0.03 ? 'RET' : '…', sx, 84, 9, col.muted);
+      }
+
+      // nozzle stream
+      const valveOn = P.outs.Fill_Valve && !P.relayOpen || (P.cfg.fillMode === 'piston' && P.outs.Fill_Valve && !P.relayOpen);
+      if (has('filler') && valveOn) {
+        const fx = px(x.nozzle);
+        c.strokeStyle = '#C98B2B'; c.lineWidth = 3; c.beginPath(); c.moveTo(fx, 126); c.lineTo(fx, BELT_Y - 20); c.stroke();
+      }
+      // piston pump
+      if (has('pump')) {
+        const fx = px(x.nozzle) - 70;
+        c.strokeStyle = col.ink; c.lineWidth = 1.5; c.fillStyle = col.surface;
+        rr(c, fx - 12, 70, 24, 56, 3); c.fill(); c.stroke();
+        c.fillStyle = col.ink; c.fillRect(fx - 10, 72 + (1 - P.pump.pos) * 40, 20, 5);
+        text(c, 'PUMP', fx, 64, 10, col.ink, 'center', 700);
+        text(c, P.pump.pos <= 0.02 ? 'HOME' : P.pump.pos >= 0.98 ? 'FULL' : '…', fx, 138, 9, col.muted);
+      }
+      // reject pusher arm
+      if (has('reject')) {
+        const rx = px(x.reject), y = 60 + P.pusher.pos * 100;
+        c.fillStyle = col.ink; c.fillRect(rx - 3, 60, 6, Math.max(0, y - 60)); c.fillRect(rx - 14, y, 28, 5);
+      }
+      // capper / sealer / labeler activity flags
+      if (has('capper') && P.capper.timer >= 0) { c.fillStyle = col.power; c.fillRect(px(x.cap) - 4, 104, 8, 6 + Math.sin(P.capper.timer / 300 * Math.PI) * 18); }
+      if (has('sealer') && P.outs.Sealer_Enable && !P.relayOpen) { c.strokeStyle = col.alarm; c.lineWidth = 2; c.beginPath(); c.arc(px(x.seal), 92, 10, 0, 6.3); c.stroke(); text(c, 'ON', px(x.seal), 120, 9, col.alarm, 'center', 700); }
+      if (has('labeler') && P.outs.Labeler_Trig && !P.relayOpen) text(c, 'LABEL', px(x.label), 120, 9, col.power, 'center', 700);
+
+      // tank level
+      if (has('tank')) {
+        const lh = Math.max(0, Math.min(1, P.tank.pct / 100)) * 52;
+        c.fillStyle = '#C98B2B'; c.fillRect(15, 68 - lh, 48, lh);
+        c.strokeStyle = col.alarm; c.lineWidth = 1; c.setLineDash([2, 2]);
+        const y15 = 68 - 0.15 * 52, y5 = 68 - 0.05 * 52;
+        c.beginPath(); c.moveTo(12, y15); c.lineTo(66, y15); c.moveTo(12, y5); c.lineTo(66, y5); c.stroke(); c.setLineDash([]);
+        text(c, Math.round(P.tank.pct) + '%', 39, 46, 11, col.ink, 'center', 700);
+        if (P.sens.Tank_LSL) text(c, P.sens.Tank_LSLL ? '▲ LSLL' : '▲ LSL', 39, 100, 10, col.alarm, 'center', 700);
+      }
+
+      // bottles
+      for (const b of P.bottles) {
+        const bx = b.x + (b.x - (b.px === undefined ? b.x : b.px)) * alpha;
+        drawBottle(c, px(bx), b, alpha);
+      }
+      // rejected bottles fall off the line
+      for (let i = view.ghosts.length - 1; i >= 0; i--) {
+        const g = view.ghosts[i], age = P.t - g.t0;
+        if (age > 700) { view.ghosts.splice(i, 1); continue; }
+        c.save(); c.globalAlpha = 1 - age / 700; c.translate(0, age * 0.12);
+        drawBottle(c, px(g.x), g.b, 0); c.restore();
+      }
+
+      // stack light + lamps
+      const sx = W - 40;
+      const lamp = (yy, on, letter, color) => {
+        c.fillStyle = on ? color : col.surface; c.strokeStyle = color; c.lineWidth = 2;
+        c.beginPath(); c.arc(sx, yy, 10, 0, 6.3); c.fill(); c.stroke();
+        text(c, letter, sx, yy + 3.5, 11, on ? col.surface : color, 'center', 700);
+      };
+      lamp(26, P.outs.Stack_Red, 'R', col.alarm); lamp(52, P.outs.Stack_Amber, 'A', col.amber); lamp(78, P.outs.Stack_Green, 'G', col.ok);
+      const lx = W - 92;
+      if (P.outs.Alarm_Lamp) { c.fillStyle = col.alarm; c.beginPath(); c.moveTo(lx, 16); c.lineTo(lx - 10, 34); c.lineTo(lx + 10, 34); c.closePath(); c.fill(); text(c, '!', lx, 32, 12, col.surface, 'center', 700); }
+      if (P.outs.Horn) text(c, 'HORN', lx, 52, 10, col.alarm, 'center', 700);
+      if (P.outs.Batch_Lamp) text(c, 'BATCH ✓', lx, 70, 10, col.ok, 'center', 700);
+      if (P.outs.CIP_Done) text(c, 'CIP ✓', lx, 84, 10, col.ok, 'center', 700);
+
+      // hardwired safety relay lamp
+      if (P.relayOpen) {
+        c.fillStyle = col.alarm; rr(c, W / 2 - 150, 6, 300, 22, 4); c.fill();
+        text(c, '⚠ SAFETY RELAY OPEN — power cut (hardwired)', W / 2, 21, 12, col.surface, 'center', 700);
+      } else {
+        text(c, 'safety relay: closed', 96, 272, 10, col.muted, 'left');
+      }
+      // line label
+      text(c, 't = ' + (sim.t / 1000).toFixed(2) + ' s', W - 10, 272, 10, col.muted, 'right');
+    };
+
+    view.refreshTheme();
+    view.resize();
+    if (globalThis.ResizeObserver) new ResizeObserver(() => view.resize()).observe(canvas);
+    return view;
+  }
+
+  SC.ui.PlantView = PlantView;
+})();
+
+</script>
+<script>
+/* ==== src/ui/app-ui.js ==== */
+/* Application shell: station map, level screen, game loop, operator panel, I/O strip, forces. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const U = SC.ui;
+  const h = U.h;
+
+  const ST = {
+    levels: [], level: null, sim: null, view: null, speed: 1, paused: false, acc: 0, last: 0,
+    program: { v: 1, rungs: [] }, userTags: [], root: null, raf: 0, ioState: Object.create(null),
+    fatResult: null, listeners: [],
+  };
+  U.state = ST;
+
+  // ---------------------------------------------------------------- levels
+  function loadLevels() {
+    try { return JSON.parse(document.getElementById('levels').textContent) || []; } catch (e) { return []; }
+  }
+
+  function sandboxLevel() {
+    return {
+      id: 'SBX', order: 0, sandbox: true,
+      title: { en: 'Sandbox', ar: 'ساحة التجربة' },
+      workOrder: {
+        en: 'Free play. All instructions are unlocked and the whole line is installed. Build anything, force inputs, press the E-stop.',
+        ar: 'لعب حر. كل التعليمات مفتوحة والخط كامل. ابني أي شي، اعمل {{force}} للمداخل، واضغط زر الطوارئ.',
+      },
+      palette: null,
+      tags: SC.IO.map((t) => t.name).concat([{ name: 'Run', addr: 'M0.0', type: 'Bool', user: true }, { name: 'Done', addr: 'M0.1', type: 'Bool', user: true }, { name: 'Busy', addr: 'M0.2', type: 'Bool', user: true }]),
+      plant: { stations: ['infeed', 'filler', 'stopper', 'capper', 'sealer', 'labeler', 'reject', 'exit', 'tank', 'backup'], bottlesPerMin: 24, startLevelPct: 80 },
+      starter: SC.dsl.parseProgram(SC.demo ? SC.demo.lines : []),
+      scenarios: [],
+    };
+  }
+
+  // ---------------------------------------------------------------- sim lifecycle
+  function newSim() {
+    const L = ST.level;
+    ST.sim = SC.sim.create({ level: L, program: ST.program, seed: 1, scenario: {}, userTags: ST.userTags });
+    ST.acc = 0;
+    if (ST.view) ST.view.setSim(ST.sim);
+  }
+
+  // hot-swap the program into the running sim (memory kept)
+  U.setProgram = function (program, userTags) {
+    ST.program = program;
+    if (userTags) ST.userTags = userTags;
+    if (!ST.sim) return;
+    const tags = SC.levelTags(ST.level).concat(ST.userTags);
+    ST.sim.compiled = SC.compile(ST.program, { tags, palette: ST.level.palette || null });
+    ST.listeners.forEach((f) => f());
+  };
+
+  // ---------------------------------------------------------------- main loop
+  function frame(ts) {
+    ST.raf = requestAnimationFrame(frame);
+    if (!ST.sim) return;
+    const dt = Math.min(250, ts - (ST.last || ts));
+    ST.last = ts;
+    if (!ST.paused) {
+      ST.acc += dt * ST.speed;
+      let n = 0;
+      while (ST.acc >= SC.SCAN_MS && n < 400) { ST.sim.step(); ST.acc -= SC.SCAN_MS; n++; }
+      if (n >= 400) ST.acc = 0;
+    }
+    ST.view.draw(ST.paused ? 0 : ST.acc / SC.SCAN_MS);
+    updateIO(ts);
+  }
+
+  // ---------------------------------------------------------------- I/O strip + panel
+  let ledEls = null, lastIO = 0, panelEls = null;
+
+  function tagsForLevel() {
+    return SC.levelTags(ST.level);
+  }
+
+  function buildIO(box) {
+    const L = ST.level, sim = ST.sim;
+    ledEls = [];
+    const tags = tagsForLevel();
+    const ins = tags.filter((t) => /^I/.test(t.addr)), outs = tags.filter((t) => /^Q/.test(t.addr));
+    const mk = (t) => {
+      const b = h('button', { class: 'led', type: 'button', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}`, 'aria-label': t.name,
+        onclick: () => cycleForce(t) },
+        h('span', { class: 'led-dot', 'aria-hidden': 'true' }),
+        h('span', { class: 'led-name' }, t.name),
+        h('span', { class: 'led-addr' }, U.useCodesys ? SC.addr.toCodesys(t.addr) : t.addr),
+        h('span', { class: 'led-val' }, '0'),
+        h('span', { class: 'led-lock', 'aria-hidden': 'true' }, '🔒'));
+      if (!/^I/.test(t.addr)) b.classList.add('led-out');
+      ledEls.push({ tag: t, el: b, val: null, forced: null });
+      return b;
+    };
+    box.append(
+      h('div', { class: 'io-group' }, h('h4', null, U.tEl('inputs')), h('div', { class: 'leds' }, ins.map(mk))),
+      h('div', { class: 'io-group' }, h('h4', null, U.tEl('outputs')), h('div', { class: 'leds' }, outs.map(mk))),
+      h('p', { class: 'muted small' }, U.tEl('forceHint')));
+  }
+
+  function cycleForce(t) {
+    if (!/^I/.test(t.addr)) return;
+    const sim = ST.sim;
+    const a = SC.addr.parseAddr(t.addr);
+    const cur = sim.forces[a.canon];
+    if (a.kind === 'word') return;
+    if (cur === undefined) sim.force(t.name, 1);
+    else if (cur === 1) sim.force(t.name, 0);
+    else sim.force(t.name, null);
+    updateForcesBanner();
+  }
+
+  function updateForcesBanner() {
+    const n = Object.keys(ST.sim.forces).length;
+    const b = document.getElementById('forces-banner');
+    if (b) {
+      b.hidden = n === 0;
+      b.querySelector('.fb-n').textContent = n;
+    }
+  }
+
+  function updateIO(ts) {
+    if (!ledEls || ts - lastIO < 90) return;
+    lastIO = ts;
+    const sim = ST.sim;
+    for (const L of ledEls) {
+      const a = SC.addr.parseAddr(L.tag.addr);
+      const v = sim.st[a.arr][a.idx];
+      const f = a.arr === 'I' || a.arr === 'IW' ? sim.forces[a.canon] : undefined;
+      if (L.val !== v || L.forced !== f) {
+        L.val = v; L.forced = f;
+        L.el.classList.toggle('on', !!v);
+        L.el.classList.toggle('forced', f !== undefined);
+        L.el.querySelector('.led-val').textContent = a.kind === 'word' ? String(v) : (v ? '1' : '0');
+      }
+    }
+  }
+
+  function buildPanel(box) {
+    const L = ST.level;
+    const tags = tagsForLevel().filter((t) => t.src === 'panel' && !/^IW/.test(t.addr));
+    panelEls = [];
+    for (const t of tags) {
+      const io = SC.ioByName[t.name];
+      const idle = io ? io.def : 0;
+      const momentary = io && ['start', 'stop', 'ack', 'reset', 'release', 'setpoint'].indexOf(io.role) >= 0;
+      const btn = h('button', { class: 'pbtn' + (t.role === 'stop' || t.name === 'Stop_PB' ? ' pb-stop' : ''), type: 'button', 'aria-pressed': 'false', title: `${t.name} (${t.addr}) — ${t.desc ? t.desc.en : ''}` },
+        h('span', { class: 'pb-name' }, t.name.replace(/_/g, ' ')),
+        h('span', { class: 'pb-sub' }, momentary ? (idle ? 'NC · hold' : 'NO · hold') : 'switch'));
+      const setP = (pressed) => {
+        ST.sim.setPanel(t.name, momentary ? (pressed ? (idle ? 0 : 1) : idle) : pressed);
+        btn.setAttribute('aria-pressed', String(!!pressed));
+        btn.classList.toggle('down', !!pressed);
+      };
+      if (momentary) {
+        let startSteps = 0, releasing = false;
+        const down = () => { if (btn.classList.contains('down') && !releasing) return; releasing = false; startSteps = ST.sim.steps; setP(true); };
+        // a quick tap must still be seen by the PLC: keep the button down for at least 4 scans (unless paused)
+        const up = () => {
+          if (!btn.classList.contains('down')) return;
+          releasing = true;
+          const wait = () => {
+            if (!releasing) return;
+            if (ST.paused || !ST.sim || ST.sim.steps - startSteps >= 4) { releasing = false; setP(false); return; }
+            requestAnimationFrame(wait);
+          };
+          wait();
+        };
+        btn.addEventListener('pointerdown', (e) => { btn.setPointerCapture && btn.setPointerCapture(e.pointerId); down(); });
+        btn.addEventListener('pointerup', up); btn.addEventListener('pointercancel', up); btn.addEventListener('lostpointercapture', up);
+        btn.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); down(); } });
+        btn.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') up(); });
+      } else {
+        let on = !!idle;
+        btn.addEventListener('click', () => { on = !on; setP(on); });
+        if (idle) setP(true);
+      }
+      panelEls.push(btn);
+    }
+    const estop = h('button', { class: 'pbtn pb-estop', type: 'button', 'aria-pressed': 'false', title: U.S.estopNote.en },
+      h('span', { class: 'pb-name' }, '⏻ ', U.t('estop')), h('span', { class: 'pb-sub' }, 'latching'));
+    estop.addEventListener('click', () => {
+      const on = !ST.sim.P.hw.estop;
+      ST.sim.P.hw.estop = on;
+      estop.setAttribute('aria-pressed', String(on)); estop.classList.toggle('down', on);
+    });
+    const door = h('button', { class: 'pbtn', type: 'button', 'aria-pressed': 'false', title: 'Guard door' },
+      h('span', { class: 'pb-name' }, U.t('door')), h('span', { class: 'pb-sub' }, U.t('doorClosed')));
+    door.addEventListener('click', () => {
+      const open = !ST.sim.P.hw.doorOpen;
+      ST.sim.P.hw.doorOpen = open;
+      door.setAttribute('aria-pressed', String(open)); door.classList.toggle('down', open);
+      door.querySelector('.pb-sub').textContent = open ? U.t('doorOpen') : U.t('doorClosed');
+    });
+    box.append(h('div', { class: 'pbtns' }, panelEls, estop, door), h('p', { class: 'muted small' }, U.tEl('estopNote')));
+  }
+
+  // ---------------------------------------------------------------- level screen
+  function openLevel(L) {
+    cancelAnimationFrame(ST.raf);
+    ST.level = L;
+    ST.userTags = [];
+    ST.program = SC.util.clone(L.starter || { v: 1, rungs: [] });
+    ST.fatResult = null;
+    ST.paused = false; ST.speed = 1;
+    renderLevel();
+  }
+
+  function renderLevel() {
+    const L = ST.level;
+    const root = ST.root;
+    root.innerHTML = '';
+    ST.listeners = [];
+
+    const canvas = h('canvas', { id: 'plant', class: 'plant', role: 'img', 'aria-label': 'Side view of the bottling line' });
+    const speedBtns = [0.25, 0.5, 1, 2, 4, 8].map((s) => h('button', { type: 'button', class: 'spd' + (s === ST.speed ? ' sel' : ''), 'aria-pressed': String(s === ST.speed),
+      onclick: (e) => { ST.speed = s; speedBtns.forEach((b) => { const on = b === e.currentTarget; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', String(on)); }); document.getElementById('fastwarn').hidden = s < 8; } }, '×' + s));
+    const runBtn = h('button', { type: 'button', class: 'btn', onclick: () => { ST.paused = !ST.paused; runBtn.textContent = ST.paused ? '▶ ' + U.t('run') : '⏸ ' + U.t('pause'); stepBtn.disabled = !ST.paused; } }, '⏸ ' + U.t('pause'));
+    const stepBtn = h('button', { type: 'button', class: 'btn', disabled: true, onclick: () => { ST.sim.step(); } }, '⏭ ' + U.t('step'));
+    const restartBtn = h('button', { type: 'button', class: 'btn', onclick: () => { newSim(); buildAll(); } }, '↻ ' + U.t('restart'));
+    const ioBox = h('div', { class: 'io' });
+    const panelBox = h('div', { class: 'panelbox' });
+    const ladderBox = h('div', { id: 'ladder-mount', class: 'ladder-mount' });
+
+    const header = h('header', { class: 'top' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => showMap() }, U.t('back')),
+      h('div', { class: 'ttl' }, h('b', null, L.sandbox ? '' : L.id + ' · '), U.lang === 'ar' ? U.arEl(L.title.ar) : U.enEl(L.title.en)),
+      h('div', { class: 'grow' }),
+      h('div', { id: 'forces-banner', class: 'forces', hidden: true, role: 'status' }, '⚠ ', U.tEl('forcesActive'), ' (', h('span', { class: 'fb-n' }, '0'), ') ',
+        h('button', { class: 'btn small', type: 'button', onclick: () => { ST.sim.clearForces(); updateForcesBanner(); } }, U.t('clearForces'))),
+      langBtn(), themeBtn());
+
+    const wo = h('aside', { class: 'card workorder' },
+      h('h3', null, U.tEl('workOrder')),
+      h('p', { lang: 'en', dir: 'ltr' }, L.workOrder.en),
+      h('section', { lang: 'ar', dir: 'rtl', class: 'ar-block', html: U.arHtml(L.workOrder.ar) }));
+
+    const stage = h('main', { class: 'stage' },
+      h('section', { class: 'card' }, canvas,
+        h('div', { class: 'ctrls' }, runBtn, stepBtn, restartBtn, h('span', { class: 'sp' }), h('span', { class: 'muted small' }, U.t('speed') + ':'), speedBtns),
+        h('p', { id: 'fastwarn', class: 'warn small', hidden: true }, '⚠ ', U.tEl('fastWarn'))),
+      h('section', { class: 'card' }, h('h3', null, U.tEl('panel')), panelBox),
+      h('section', { class: 'card' }, h('h3', null, 'I/O'), ioBox),
+      h('section', { class: 'card' }, h('h3', null, U.tEl('ladder')), ladderBox));
+
+    root.append(header, h('div', { class: 'level-grid' }, wo, stage));
+
+    ST.view = SC.ui.PlantView(canvas);
+    function buildAll() {
+      ioBox.innerHTML = ''; panelBox.innerHTML = '';
+      buildIO(ioBox); buildPanel(panelBox);
+      if (U.mountLadder) U.mountLadder(ladderBox);
+      else ladderBox.append(h('pre', { class: 'prog-text' }, programText()));
+    }
+    newSim();
+    buildAll();
+    ST.last = 0;
+    ST.raf = requestAnimationFrame(frame);
+  }
+
+  function programText() {
+    return ST.program.rungs.map((r, i) => `Rung ${i + 1}: ` + r.els.map((e) => e.t + (e.a ? '(' + e.a + ')' : '')).join(' ')).join('\n');
+  }
+
+  function langBtn() {
+    return h('button', { class: 'btn ghost', type: 'button', onclick: () => { U.setLang(U.lang === 'ar' ? 'en' : 'ar'); rerender(); } }, U.t('langBtn'));
+  }
+  function themeBtn() {
+    return h('button', { class: 'btn ghost', type: 'button', 'aria-label': 'Toggle dark mode', onclick: () => {
+      const cur = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next); U.store.set('theme', next);
+      if (ST.view) ST.view.refreshTheme();
+    } }, '◐');
+  }
+
+  function rerender() { if (ST.level) { const keep = ST.program; renderLevel(); } else showMap(); }
+
+  // ---------------------------------------------------------------- map
+  function showMap() {
+    cancelAnimationFrame(ST.raf);
+    ST.level = null; ST.sim = null; ledEls = null;
+    const root = ST.root;
+    root.innerHTML = '';
+    const cards = ST.levels.map((L) => h('button', { class: 'lvl', type: 'button', onclick: () => openLevel(L) },
+      h('b', null, L.id), h('span', null, U.lang === 'ar' ? L.title.ar : L.title.en)));
+    cards.unshift(h('button', { class: 'lvl sbx', type: 'button', onclick: () => openLevel(sandboxLevel()) },
+      h('b', null, '∞'), h('span', null, U.t('sandbox')), h('small', null, U.t('sandboxDesc'))));
+    root.append(
+      h('header', { class: 'top' }, h('div', { class: 'ttl' }, h('b', null, 'Scan Cycle')), h('div', { class: 'grow' }), langBtn(), themeBtn()),
+      h('main', { class: 'mapwrap' },
+        h('h1', null, U.tEl('app')), h('p', { class: 'lead' }, U.tEl('tagline')),
+        h('div', { class: 'levelmap' }, cards),
+        h('p', { class: 'muted small' }, U.tEl('offlineNote'))));
+  }
+
+  // ---------------------------------------------------------------- boot
+  U.start = function () {
+    ST.root = document.getElementById('app');
+    ST.levels = loadLevels();
+    const th = U.store.get('theme', null);
+    if (th) document.documentElement.setAttribute('data-theme', th);
+    if (location.hash === '#sandbox') openLevel(sandboxLevel());
+    else showMap();
+  };
+  U.openLevel = openLevel;
+  U.showMap = showMap;
+  U.rerender = rerender;
+})();
+
+</script>
+<script>
 /* ==== src/selftest/00-framework.js ==== */
 /* Tiny in-browser test framework. Results are rendered as a table and exposed as JSON for tools/selftest.py. */
 (function () {
@@ -1303,6 +2960,205 @@ code, pre { font-family: var(--mono); }
     t.eq(SC.fingerprint(st), before, 'scan() does not touch its input state');
     const a = SC.prng.next({ rng: SC.prng.seedOf(1) }), b = SC.prng.next({ rng: SC.prng.seedOf(1) });
     t.eq(a, b, 'PRNG is deterministic');
+  });
+})();
+
+</script>
+<script>
+/* ==== src/selftest/20-unit-plant.js ==== */
+/* Unit tests for the plant model, the sim and the scenario runner. */
+(function () {
+  'use strict';
+  const SC = globalThis.SC;
+  const T = SC.test;
+
+  const DEMO = SC.demo.lines, DEMO_TAGS = SC.demo.tags;
+
+  function mkSim(lines, plant, tags, extra) {
+    const level = Object.assign({ tags: tags || DEMO_TAGS, plant: plant || {} }, extra || {});
+    return SC.sim.create({ level, program: SC.dsl.parseProgram(lines), seed: 5, scenario: {} });
+  }
+
+  T.suite('plant: conveyor, accumulation, hardwired safety', (t) => {
+    let s = mkSim(['(Conveyor_Motor)'], { bottlesPerMin: 60 });
+    s.runUntil(3000);
+    t.ok(s.P.bottles.length > 0 && s.P.bottles[0].x > 300, 'motor on: bottles move down the line', JSON.stringify(s.P.bottles.map((b) => Math.round(b.x))));
+    s = mkSim(['(Conveyor_Motor)'], { bottlesPerMin: 60 });
+    s.runUntil(1000);
+    const x0 = s.P.bottles[0].x;
+    s.step(); s.step();
+    t.ok(s.P.bottles[0].x > x0, 'moves 1.5 mm per scan');
+    t.ok(Math.abs((s.P.bottles[0].x - x0) - 3) < 0.01, 'speed is 150 mm/s', String(s.P.bottles[0].x - x0));
+
+    s = mkSim(['Run (Conveyor_Motor)'], { bottlesPerMin: 60 }, DEMO_TAGS);
+    s.runUntil(500);
+    t.eq(s.P.counts.dist, 0, 'motor off: nothing moves');
+
+    // queue never overlaps
+    s = mkSim(['/Busy (Conveyor_Motor)', 'PE_Fill (Busy)'], { bottlesPerMin: 90, jitterMs: 0 });
+    s.runUntil(20000);
+    const xs = s.P.bottles.map((b) => b.x).sort((a, b) => a - b);
+    let minGap = 1e9; for (let i = 1; i < xs.length; i++) minGap = Math.min(minGap, xs[i] - xs[i - 1]);
+    t.ok(xs.length > 3 && minGap >= 99.9, 'bottles queue up without overlapping (min gap 100 mm)', 'minGap=' + minGap);
+
+    // E-stop cuts motor power even if the ladder keeps the output on
+    s = mkSim(['(Conveyor_Motor)'], { bottlesPerMin: 60 });
+    s.runUntil(2000);
+    SC.plant.applyEvent(s.P, { estop: true });
+    s.step();
+    const d = s.P.counts.dist;
+    s.runUntil(4000);
+    t.eq(s.P.counts.dist, d, 'E-stop: motor power is cut by the safety relay, bad program or not');
+    t.eq(s.read('Conveyor_Motor'), 1, 'the PLC output bit itself is still 1 (the PLC is graded on its own logic)');
+    t.eq(s.read('EStop_OK'), 0, 'EStop_OK = 0');
+    SC.plant.applyEvent(s.P, { estop: false });
+    s.step(); s.step();
+    t.eq(s.read('EStop_OK'), 1, 'released: relay closes again (auto reset) — the PLC must prevent the restart');
+    SC.plant.applyEvent(s.P, { door: 'open' });
+    s.step(); s.step();
+    t.eq([s.read('Door_Closed'), s.read('EStop_OK')], [0, 0], 'door open: Door_Closed = 0 and the relay opens');
+  });
+
+  T.suite('plant: stopper, filler, level', (t) => {
+    // forced start: Start_PB forced on -> demo program runs the line
+    let s = mkSim(DEMO, { bottlesPerMin: 30, convLen: 800 });
+    s.force('Start_PB', 1);
+    s.runUntil(40000);
+    t.ok(s.P.counts.filled >= 6, 'demo program fills bottles (forcing Start_PB moves the line)', 'filled=' + s.P.counts.filled);
+    t.eq(s.P.counts.spills, 0, 'no spills with a 3.0 s fill');
+    t.ok(s.P.counts.out >= 1, 'bottles leave the line');
+    t.eq(s.P.counts.badShipped, 0, 'every shipped bottle was filled');
+
+    // timed fill levels
+    function fillFor(ms, mul) {
+      const lv = { tags: ['Fill_Valve', 'PE_Fill', 'Conveyor_Motor'], plant: { bottlesPerMin: 30, preload: [{ x: 500 }], genOn: false } };
+      const q = SC.sim.create({ level: lv, program: SC.dsl.parseProgram([]), seed: 1, scenario: {} });
+      q.P.bottles[0].flowMul = mul || 1;
+      const out = { Fill_Valve: 1 };
+      for (let i = 0; i < ms / 10; i++) SC.plant.stepMut(q.P, out, 10);
+      out.Fill_Valve = 0; SC.plant.stepMut(q.P, out, 10);
+      return q;
+    }
+    let q = fillFor(3000);
+    t.ok(Math.abs(q.P.bottles[0].level - 0.9) < 0.005, '3.0 s of fill valve = 90 % level', String(q.P.bottles[0].level));
+    t.eq(q.P.sens.Level_OK, 1, 'Level_OK = 1 at 90 %');
+    t.eq(q.P.counts.spills, 0, 'no overflow');
+    q = fillFor(2500);
+    t.eq(q.P.sens.Level_OK, 0, '2.5 s: underfilled, Level_OK = 0');
+    q = fillFor(3600);
+    t.eq(q.P.counts.spills, 1, '3.6 s: overflow counted once');
+    t.eq(q.P.bottles[0].level, 1, 'level clamps at capacity');
+
+    // valve open without bottle = spill
+    q = fillFor(100);
+    q.P.bottles.length = 0;
+    SC.plant.stepMut(q.P, { Fill_Valve: 1 }, 10);
+    t.eq(q.P.counts.spills, 1, 'valve open with no bottle under the nozzle counts a spill');
+
+    // stopper holds a bottle at the filler
+    s = mkSim(['(Conveyor_Motor)', '(Stopper_SOL)'], { bottlesPerMin: 60 }, ['Conveyor_Motor', 'Stopper_SOL', 'PE_Fill', 'Stopper_Ext', 'Stopper_Ret']);
+    s.runUntil(6000);
+    const lead = s.P.bottles[0];
+    t.ok(Math.abs(lead.x - 500) < 0.01, 'extended stopper holds the first bottle at the nozzle (x = 500)', String(lead.x));
+    t.eq([s.read('PE_Fill'), s.read('Stopper_Ext'), s.read('Stopper_Ret')], [1, 1, 0], 'PE_Fill on, Stopper_Ext on, Stopper_Ret off');
+    t.ok(s.P.bottles.length >= 3, 'the others queue behind it');
+  });
+
+  T.suite('plant: cylinders, faults, reject, encoder', (t) => {
+    const tags = ['Conveyor_Motor', 'Stopper_SOL', 'Stopper_Ext', 'Stopper_Ret', 'Air_OK', 'Reject_Pusher', 'PE_Reject', 'Conv_Encoder', 'PE_Fill'];
+    function sim(lines, plant) { return mkSim(lines, plant, tags); }
+    let s = sim(['(Stopper_SOL)'], { genOn: false });
+    s.runUntil(380);
+    t.eq(s.read('Stopper_Ext'), 0, 'stopper still travelling at 380 ms');
+    s.runUntil(420);
+    t.eq(s.read('Stopper_Ext'), 1, 'stopper extended after about 400 ms');
+    s = sim(['(Stopper_SOL)'], { genOn: false });
+    SC.plant.setFault(s.P, 'airLow', null, true);
+    s.runUntil(900);
+    t.eq(s.read('Stopper_Ext'), 0, 'airLow: travel time x3 (not yet at 0.9 s)');
+    s.runUntil(1300);
+    t.eq(s.read('Stopper_Ext'), 1, 'airLow: extended by 1.3 s');
+    s = sim(['(Stopper_SOL)'], { genOn: false });
+    s.runUntil(200);
+    SC.plant.setFault(s.P, 'airLost', null, true);
+    s.runUntil(1500);
+    t.eq([s.read('Stopper_Ext'), s.read('Air_OK')], [0, 0], 'airLost: cylinder frozen, Air_OK = 0');
+
+    // reject pusher removes a bottle standing at the reject station; neighbours untouched
+    s = sim(['(Reject_Pusher)'], { genOn: false, preload: [{ x: 1320, level: 0.9 }, { x: 1220, level: 0.9 }, { x: 1420, level: 0.9 }] });
+    s.runUntil(300);
+    t.eq(s.P.counts.rejected, 1, 'pusher pulse rejects exactly one bottle');
+    t.eq(s.P.bottles.map((b) => Math.round(b.x)).sort().join(','), '1220,1420', 'the neighbours stay on the line');
+    t.eq(s.P.counts.goodLost, 1, 'pushing a good (filled) bottle counts goodLost');
+
+    // encoder: one rising edge per 50 mm
+    s = sim(['(Conveyor_Motor)'], { genOn: false });
+    let edges = 0, prev = s.read('Conv_Encoder');
+    for (let i = 0; i < 400; i++) { s.step(); const v = s.read('Conv_Encoder'); if (v && !prev) edges++; prev = v; }
+    // 400 scans * 1.5 mm = 600 mm -> 12 pitches
+    t.ok(edges === 11 || edges === 12, 'encoder gives one rising edge per pitch (600 mm = 12 edges)', 'edges=' + edges);
+
+    // photo-eye faults
+    s = sim(['(Conveyor_Motor)'], { genOn: false });
+    SC.plant.setFault(s.P, 'peStuckOn', 'PE_Fill', true);
+    s.step(); s.step();
+    t.eq(s.read('PE_Fill'), 1, 'peStuckOn: PE_Fill = 1 with no bottle');
+  });
+
+  T.suite('plant: capper, sealer, labeler', (t) => {
+    const lv = (extra) => Object.assign({ tags: ['Capper_Run', 'Sealer_Enable', 'Labeler_Trig', 'Cap_Present', 'Foil_Present'], plant: { stations: ['infeed', 'filler', 'capper', 'sealer', 'labeler', 'exit'], genOn: false } }, extra || {});
+    const mk = (plant, lines) => SC.sim.create({ level: lv({ plant: Object.assign({ stations: ['infeed', 'filler', 'capper', 'sealer', 'labeler', 'exit'], genOn: false }, plant) }), program: SC.dsl.parseProgram(lines), seed: 1, scenario: {} });
+    let s = mk({ preload: [{ x: 760, level: 0.9 }] }, ['(Capper_Run)']);
+    s.runUntil(600);
+    t.eq(s.P.bottles[0].capped, true, 'capper stroke caps the bottle at the capper');
+    s = mk({ preload: [{ x: 300 }] }, ['(Capper_Run)']);
+    s.runUntil(600);
+    t.eq(s.P.counts.wastedCaps, 1, 'capper stroke with no bottle wastes a cap');
+    s = mk({ preload: [{ x: 1000, capped: true }] }, ['(Sealer_Enable)']);
+    s.runUntil(500);
+    t.eq(s.P.bottles[0].sealed, true, 'sealer seals a capped bottle');
+    s.runUntil(2600);
+    t.eq([s.P.counts.melted, s.P.bottles[0].sealed], [1, false], 'a bottle stalled under the coil for > 2 s melts');
+    s = mk({ preload: [{ x: 1180, level: 0.9 }] }, ['(Labeler_Trig)']);
+    s.runUntil(100);
+    t.eq(s.P.bottles[0].labeled, true, 'labeler trigger labels the bottle in front of it');
+  });
+
+  T.suite('scenario runner', (t) => {
+    const level = { tags: DEMO_TAGS.concat(['Level_OK']), plant: { bottlesPerMin: 30 } };
+    const prog = SC.dsl.parseProgram(DEMO);
+    let r = SC.scenario.runScenario(level, prog, {
+      id: 'x', seed: 1, durationMs: 4000,
+      events: [{ t: 0, press: 'Start_PB', ms: 500 }],
+      asserts: [
+        { t: 1000, expect: { Run: true }, msg: { en: 'run', ar: 'تشغيل' } },
+        { t: 1000, expect: { Conveyor_Motor: true } },
+        { window: [0, 4000], never: { spills: { gte: 1 } } },
+      ],
+    });
+    t.ok(r.pass, 'passing scenario passes', JSON.stringify(r.failures[0] || ''));
+    r = SC.scenario.runScenario(level, prog, {
+      id: 'y', seed: 1, durationMs: 3000,
+      events: [{ t: 0, press: 'Start_PB', ms: 500 }],
+      asserts: [{ t: 1000, expect: { Conveyor_Motor: false }, msg: { en: 'must be off', ar: 'لازم off' } }],
+    });
+    t.ok(!r.pass && r.firstFailure.msg.en === 'must be off', 'failing assertion is reported with its message');
+    t.eq(r.firstFailure.actual, { Conveyor_Motor: 1 }, 'failure carries the actual value');
+    r = SC.scenario.runScenario(level, prog, {
+      id: 'z', seed: 1, durationMs: 3000, events: [{ t: 0, press: 'Start_PB', ms: 500 }],
+      asserts: [{ when: { Run: true }, within: 100, expect: { Conveyor_Motor: true } }, { when: { Run: true }, within: 1, expect: { Fill_Valve: true }, tol: 0 }],
+    });
+    t.eq(r.failures.length, 1, 'when/within: second obligation fails, first passes');
+    r = SC.scenario.runScenario(level, prog, { id: 'k', seed: 1, durationMs: 100, events: [], asserts: [{ t: 10, expect: { NoSuchTag: true } }] });
+    t.ok(!r.pass && r.failures[0].kind === 'bad_scenario', 'unknown keys in a scenario are flagged');
+    // determinism of whole runs
+    const sc = { id: 'd', seed: 77, durationMs: 15000, events: [{ t: 0, press: 'Start_PB', ms: 300 }], asserts: [] };
+    const a = SC.scenario.runScenario(level, prog, sc, { keepSim: true }), b = SC.scenario.runScenario(level, prog, sc, { keepSim: true });
+    t.eq(SC.fingerprint(a.sim.st) + JSON.stringify(a.sim.P), SC.fingerprint(b.sim.st) + JSON.stringify(b.sim.P), 'same seed -> identical plant and PLC state after a 15 s run');
+    // forces block passing
+    const lv2 = Object.assign({ scenarios: [{ id: 'q', seed: 1, durationMs: 500, events: [], asserts: [] }] }, level);
+    const rl = SC.scenario.runLevel(lv2, prog, { forces: { Start_PB: 1 } });
+    t.ok(!rl.pass, 'a level cannot pass while forces are active');
   });
 })();
 

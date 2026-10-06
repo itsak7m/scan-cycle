@@ -1,0 +1,69 @@
+[hidden] { display: none !important; }
+/* ---------- layout ---------- */
+button { font: inherit; color: inherit; }
+.top { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; }
+.top .ttl { font-size: 1.05rem; }
+.grow { flex: 1; }
+.btn { min-height: 44px; min-width: 44px; padding: 0 14px; border: 1.5px solid var(--ink); background: var(--surface); border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn:hover:not(:disabled) { background: var(--ground); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.ghost { border-color: var(--line); font-weight: 500; }
+.btn.small { min-height: 32px; padding: 0 10px; font-size: .85rem; }
+.btn.primary { background: var(--power); color: var(--surface); border-color: var(--power); }
+:focus-visible { outline: 3px solid var(--power); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+.card h3 { margin: 0 0 8px; font-size: .95rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.card h4 { margin: 8px 0 6px; font-size: .85rem; color: var(--muted); }
+.muted { color: var(--muted); } .small { font-size: .82rem; } .warn { color: var(--alarm); }
+.level-grid { display: grid; grid-template-columns: minmax(270px, 340px) 1fr; gap: 12px; padding: 12px; max-width: 1500px; margin: 0 auto; align-items: start; }
+.workorder { position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow: auto; }
+.ar-block { margin-top: 10px; padding: 10px; background: var(--ground); border-radius: 6px; line-height: 1.7; }
+@media (max-width: 920px) {
+  .level-grid { grid-template-columns: 1fr; padding: 8px; }
+  .workorder { position: static; max-height: none; order: 2; }
+  .stage { order: 1; }
+}
+.plant { width: 100%; aspect-ratio: 960 / 280; display: block; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); }
+.ctrls { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ctrls .sp { flex: 1; }
+.spd { min-height: 44px; min-width: 44px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: pointer; font-family: var(--mono); }
+.spd.sel { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.forces { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--alarm); color: #fff; border-radius: 6px; font-weight: 700; }
+.forces .btn { color: var(--ink); }
+
+/* ---------- operator panel ---------- */
+.pbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+.pbtn { min-height: 52px; min-width: 96px; padding: 4px 12px; border: 2px solid var(--ink); border-radius: 8px; background: var(--surface); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; touch-action: none; user-select: none; }
+.pbtn .pb-name { font-weight: 700; font-size: .9rem; }
+.pbtn .pb-sub { font-size: .7rem; color: var(--muted); font-family: var(--mono); }
+.pbtn.down { background: var(--ink); color: var(--surface); }
+.pbtn.down .pb-sub { color: var(--surface); }
+.pb-estop { border-color: var(--alarm); border-width: 3px; }
+.pb-estop.down { background: var(--alarm); border-color: var(--alarm); }
+
+/* ---------- I/O LED strip ---------- */
+.leds { display: flex; flex-wrap: wrap; gap: 6px; }
+.led { position: relative; min-height: 44px; padding: 2px 8px 2px 26px; border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface); cursor: default; display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: center; text-align: left; font-family: var(--mono); font-size: .74rem; }
+.led:not(.led-out) { cursor: pointer; }
+.led .led-dot { position: absolute; left: 7px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border: 2px solid var(--muted); border-radius: 2px; }
+.led .led-name { font-weight: 700; grid-column: 1; }
+.led .led-addr { color: var(--muted); grid-column: 1; font-size: .66rem; }
+.led .led-val { grid-column: 2; grid-row: 1 / span 2; font-weight: 700; font-size: .9rem; }
+.led.on { border-color: var(--power); }
+.led.on .led-dot { background: var(--power); border-color: var(--power); }
+.led.on .led-val { color: var(--power); }
+.led .led-lock { display: none; position: absolute; right: 2px; top: 0; font-size: .7rem; }
+.led.forced { border-width: 3px; border-color: var(--alarm); }
+.led.forced .led-lock { display: block; }
+.io-group { margin-bottom: 6px; }
+
+/* ---------- map ---------- */
+.mapwrap { max-width: 1000px; margin: 0 auto; padding: 18px 14px 40px; }
+.mapwrap h1 { margin: 6px 0 4px; }
+.lead { margin: 0 0 18px; font-size: 1.05rem; color: var(--muted); }
+.levelmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.lvl { min-height: 92px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 4px; }
+.lvl:hover { border-color: var(--ink); }
+.lvl b { font-family: var(--mono); font-size: 1.1rem; }
+.lvl.sbx { border-style: dashed; }
+.prog-text { font-family: var(--mono); font-size: .8rem; white-space: pre-wrap; margin: 0; }
